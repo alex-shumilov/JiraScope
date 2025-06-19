@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  jirascope-dev:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./config:/app/config
+    environment:
+      - JIRA_MCP_ENDPOINT=${JIRA_MCP_ENDPOINT:-}
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY:-}
+      - LMSTUDIO_ENDPOINT=http://lmstudio:1234/v1
+      - QDRANT_URL=http://qdrant:6333
+      - PYTHONPATH=/app/src
+    depends_on:
+      - qdrant
+    stdin_open: true
+    tty: true
+    command: ["tail", "-f", "/dev/null"]  # Keep container running for development
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+
+  # Optional: LM Studio replacement (if needed)
+  # embedding-service:
+  #   image: huggingface/text-embeddings-inference:latest
+  #   ports:
+  #     - "1234:80"
+  #   environment:
+  #     - MODEL_ID=BAAI/bge-large-en-v1.5
+  #   volumes:
+  #     - ./models:/data
+
+volumes:
+  qdrant_data:

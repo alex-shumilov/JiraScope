@@ -1,0 +1,128 @@
+"""Pydantic models for Jira work items."""
+
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+class WorkItem(BaseModel):
+    """Represents a Jira work item (issue, story, task, etc.)."""
+    
+    key: str = Field(..., description="Jira issue key (e.g., PROJ-123)")
+    summary: str = Field(..., description="Issue summary/title")
+    description: Optional[str] = Field(None, description="Issue description")
+    issue_type: str = Field(..., description="Type of issue (Story, Task, Bug, etc.)")
+    status: str = Field(..., description="Current status")
+    parent_key: Optional[str] = Field(None, description="Parent issue key if this is a subtask")
+    epic_key: Optional[str] = Field(None, description="Epic key this issue belongs to")
+    created: datetime = Field(..., description="Creation timestamp")
+    updated: datetime = Field(..., description="Last update timestamp")
+    assignee: Optional[str] = Field(None, description="Assigned user")
+    reporter: str = Field(..., description="Reporter/creator")
+    components: List[str] = Field(default_factory=list, description="Project components")
+    labels: List[str] = Field(default_factory=list, description="Issue labels")
+    
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+
+
+class EpicHierarchy(BaseModel):
+    """Represents an epic with its child work items."""
+    
+    epic: WorkItem = Field(..., description="The epic work item")
+    stories: List[WorkItem] = Field(default_factory=list, description="Stories under this epic")
+    tasks: List[WorkItem] = Field(default_factory=list, description="Tasks under this epic")
+    subtasks: List[WorkItem] = Field(default_factory=list, description="Subtasks under this epic")
+    
+    @property
+    def total_items(self) -> int:
+        """Total number of work items in this hierarchy."""
+        return len(self.stories) + len(self.tasks) + len(self.subtasks)
+    
+    @property
+    def all_items(self) -> List[WorkItem]:
+        """All work items in this hierarchy including the epic."""
+        return [self.epic] + self.stories + self.tasks + self.subtasks
+
+
+class EpicTree(BaseModel):
+    """Complete Epic hierarchy with all descendants."""
+    
+    epic: WorkItem = Field(..., description="The epic work item")
+    direct_children: List[WorkItem] = Field(default_factory=list, description="Direct children of the epic")
+    all_descendants: List[WorkItem] = Field(default_factory=list, description="All descendant work items")
+    hierarchy_depth: int = Field(..., description="Maximum depth of the hierarchy")
+    total_story_points: Optional[int] = Field(None, description="Total story points for all items")
+    completion_percentage: float = Field(0.0, ge=0.0, le=100.0, description="Completion percentage")
+    
+    @property
+    def total_items(self) -> int:
+        """Total number of work items in this tree."""
+        return 1 + len(self.all_descendants)
+
+
+class ExtractionCost(BaseModel):
+    """Cost tracking for Jira data extraction."""
+    
+    api_calls: int = Field(0, description="Number of API calls made")
+    items_processed: int = Field(0, description="Number of items processed")
+    processing_time: float = Field(0.0, description="Processing time in seconds")
+    estimated_cost: float = Field(0.0, description="Estimated monetary cost")
+    rate_limit_hits: int = Field(0, description="Number of rate limit hits")
+    
+    def add_call(self, processing_time: float = 0.0, items_count: int = 0):
+        """Add a single API call to the cost tracking."""
+        self.api_calls += 1
+        self.processing_time += processing_time
+        self.items_processed += items_count
+        # Rough estimate: $0.01 per API call
+        self.estimated_cost += 0.01
+
+
+class ProcessingResult(BaseModel):
+    """Result of batch processing operations."""
+    
+    processed_items: int = Field(0, description="Number of items successfully processed")
+    skipped_items: int = Field(0, description="Number of items skipped")
+    failed_items: int = Field(0, description="Number of items that failed processing")
+    total_cost: float = Field(0.0, description="Total monetary cost")
+    processing_time: float = Field(0.0, description="Total processing time in seconds")
+    batch_stats: Dict[str, float] = Field(default_factory=dict, description="Batch processing statistics")
+    errors: List[str] = Field(default_factory=list, description="Error messages")
+    
+    @property
+    def success_rate(self) -> float:
+        """Calculate success rate as percentage."""
+        total = self.processed_items + self.failed_items
+        if total == 0:
+            return 0.0
+        return (self.processed_items / total) * 100.0
+
+
+class QualityReport(BaseModel):
+    """Quality validation report for embeddings."""
+    
+    total_tests: int = Field(..., description="Total number of test queries")
+    passed_tests: int = Field(..., description="Number of tests that passed")
+    overall_score: float = Field(..., ge=0.0, le=100.0, description="Overall quality score")
+    results: List[Dict[str, Any]] = Field(default_factory=list, description="Detailed test results")
+    recommendations: List[str] = Field(default_factory=list, description="Improvement recommendations")
+    
+    @property
+    def pass_rate(self) -> float:
+        """Calculate pass rate as percentage."""
+        if self.total_tests == 0:
+            return 0.0
+        return (self.passed_tests / self.total_tests) * 100.0
+
+
+class AnalysisResult(BaseModel):
+    """Result of AI analysis on a work item."""
+    
+    work_item_key: str = Field(..., description="Key of the analyzed work item")
+    analysis_type: str = Field(..., description="Type of analysis performed")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
+    insights: Dict[str, Any] = Field(default_factory=dict, description="Analysis insights and results")
+    cost: Optional[float] = Field(None, description="API cost for this analysis")
+    timestamp: datetime = Field(default_factory=datetime.now, description="Analysis timestamp")
+    
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
