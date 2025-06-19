@@ -59,7 +59,7 @@ class TestContentAnalyzer:
     def mock_config(self):
         """Create mock configuration."""
         config = MagicMock(spec=Config)
-        config.claude.model = "claude-3-5-sonnet-20241022"
+        config.claude_model = "claude-3-5-sonnet-20241022"
         return config
     
     @pytest.fixture
@@ -278,7 +278,7 @@ class TestBatchContentAnalyzer:
     def mock_config(self):
         """Create mock configuration."""
         config = MagicMock(spec=Config)
-        config.claude.model = "claude-3-5-sonnet-20241022"
+        config.claude_model = "claude-3-5-sonnet-20241022"
         return config
     
     @pytest.fixture

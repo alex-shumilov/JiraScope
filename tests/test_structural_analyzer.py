@@ -84,8 +84,7 @@ class TestStructuralAnalyzer:
     def mock_config(self):
         """Create mock configuration."""
         config = MagicMock(spec=Config)
-        config.lmstudio.embedding_model = "test-model"
-        config.claude.model = "claude-3-5-sonnet-20241022"
+        config.claude_model = "claude-3-5-sonnet-20241022"
         return config
     
     @pytest.fixture
@@ -361,7 +360,7 @@ class TestStructuralAnalyzer:
     def test_tech_debt_cluster_model(self):
         """Test TechDebtCluster model creation and validation."""
         cluster = TechDebtCluster(
-            cluster_id="cluster-1",
+            cluster_id=1,
             theme="Legacy System Modernization",
             work_item_keys=["TEST-3", "TEST-4"],
             priority_score=0.75,
@@ -371,7 +370,7 @@ class TestStructuralAnalyzer:
             recommended_approach="Prioritize payment system refactor first"
         )
         
-        assert cluster.cluster_id == "cluster-1"
+        assert cluster.cluster_id == 1
         assert cluster.theme == "Legacy System Modernization"
         assert len(cluster.work_item_keys) == 2
         assert "TEST-3" in cluster.work_item_keys
@@ -385,7 +384,7 @@ class TestStructuralAnalyzer:
         """Test TechDebtReport model creation and structure."""
         clusters = [
             TechDebtCluster(
-                cluster_id="cluster-1",
+                cluster_id=1,
                 theme="Legacy System Updates",
                 work_item_keys=["TEST-3", "TEST-4"],
                 priority_score=0.8,
@@ -399,12 +398,12 @@ class TestStructuralAnalyzer:
         report = TechDebtReport(
             total_tech_debt_items=5,
             clusters=clusters,
-            analysis_cost=0.15
+            processing_cost=0.15
         )
         
         assert report.total_tech_debt_items == 5
         assert len(report.clusters) == 1
-        assert report.analysis_cost == 0.15
+        assert report.processing_cost == 0.15
     
     @pytest.mark.asyncio
     async def test_dbscan_clustering_algorithm(self, mock_config, mock_clients, sample_work_items):

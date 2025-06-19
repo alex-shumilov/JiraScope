@@ -13,7 +13,7 @@ class Config:
     
     jira_mcp_endpoint: str
     lmstudio_endpoint: str = "http://localhost:1234/v1"
-    qdrant_url: str = "http://10.16.10.53:6333"
+    qdrant_url: str = "http://localhost:6333"
     claude_api_key: str = ""
     claude_model: str = "claude-3-5-sonnet-20241022"
     

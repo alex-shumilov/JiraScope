@@ -81,7 +81,6 @@ class TestSimilarityAnalyzer:
     def mock_config(self):
         """Create mock configuration."""
         config = MagicMock(spec=Config)
-        config.lmstudio.embedding_model = "test-model"
         return config
     
     @pytest.fixture
@@ -230,6 +229,7 @@ class TestSimilarityAnalyzer:
             duplicate_key="TEST-2", 
             similarity_score=0.87,
             confidence_level="high",
+            review_priority=2,
             suggested_action="Review for potential merge"
         )
         
@@ -247,6 +247,7 @@ class TestSimilarityAnalyzer:
                 duplicate_key="TEST-2",
                 similarity_score=0.87,
                 confidence_level="high",
+                review_priority=2,
                 suggested_action="Review for potential merge"
             )
         ]
@@ -273,7 +274,7 @@ class TestSimilarityCalculations:
         vector2 = [1.0, 2.0, 3.0]
         
         # Mock the calculation method
-        client = LMStudioClient(Config())
+        client = LMStudioClient(Config(jira_mcp_endpoint="test"))
         similarity = client.calculate_similarity(vector1, vector2)
         
         # Identical vectors should have similarity close to 1.0
@@ -286,7 +287,7 @@ class TestSimilarityCalculations:
         vector1 = [1.0, 0.0, 0.0]
         vector2 = [0.0, 1.0, 0.0]
         
-        client = LMStudioClient(Config())
+        client = LMStudioClient(Config(jira_mcp_endpoint="test"))
         similarity = client.calculate_similarity(vector1, vector2)
         
         # Orthogonal vectors should have similarity close to 0.0
@@ -299,7 +300,7 @@ class TestSimilarityCalculations:
         vector1 = [1.0, 2.0, 3.0]
         vector2 = [-1.0, -2.0, -3.0]
         
-        client = LMStudioClient(Config())
+        client = LMStudioClient(Config(jira_mcp_endpoint="test"))
         similarity = client.calculate_similarity(vector1, vector2)
         
         # Opposite vectors should have similarity close to -1.0

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
 
 from jirascope.analysis.temporal_analyzer import TemporalAnalyzer, ScopeDriftDetector
-from jirascope.models import ScopeDriftReport, ChangeEvent, DriftAnalysis
+from jirascope.models import ScopeDriftAnalysis, ScopeDriftEvent
 from jirascope.core.config import Config
 from tests.fixtures.analysis_fixtures import AnalysisFixtures
 
@@ -90,8 +90,7 @@ class TestTemporalAnalyzer:
     def mock_config(self):
         """Create mock configuration."""
         config = MagicMock(spec=Config)
-        config.lmstudio.embedding_model = "test-model"
-        config.claude.model = "claude-3-5-sonnet-20241022"
+        config.claude_model = "claude-3-5-sonnet-20241022"
         return config
     
     @pytest.fixture

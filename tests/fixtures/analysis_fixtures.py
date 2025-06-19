@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import List
 import pytest
 
-from jirascope.models import WorkItem, Epic, EpicHierarchy
+from jirascope.models import WorkItem, EpicHierarchy
 
 
 class AnalysisFixtures:
@@ -148,33 +148,36 @@ As a business user, I want to see analytics widgets on my dashboard so that I ca
         ]
     
     @staticmethod
-    def create_sample_epics() -> List[Epic]:
+    def create_sample_epics() -> List[WorkItem]:
         """Create sample epics for testing."""
         base_time = datetime(2024, 1, 1, 12, 0, 0)
         
         return [
-            Epic(
+            WorkItem(
                 key="EPIC-USER-FEATURES",
                 summary="User Management Features",
                 description="Collection of user-related functionality including profiles, authentication, and preferences",
+                issue_type="Epic",
                 status="In Progress",
                 created=base_time,
                 updated=base_time + timedelta(days=5),
                 reporter="product.manager"
             ),
-            Epic(
+            WorkItem(
                 key="EPIC-INFRASTRUCTURE", 
                 summary="Infrastructure and DevOps",
                 description="Backend infrastructure, database, and deployment automation",
+                issue_type="Epic",
                 status="Open",
                 created=base_time + timedelta(days=1),
                 updated=base_time + timedelta(days=3),
                 reporter="tech.lead"
             ),
-            Epic(
+            WorkItem(
                 key="EPIC-ECOMMERCE",
                 summary="E-commerce Platform",
                 description="Complete e-commerce functionality including payments, orders, and inventory",
+                issue_type="Epic",
                 status="Open", 
                 created=base_time + timedelta(days=2),
                 updated=base_time + timedelta(days=2),

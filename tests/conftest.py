@@ -7,6 +7,9 @@ from unittest.mock import AsyncMock, Mock
 from src.jirascope.core.config import Config
 from src.jirascope.models import WorkItem, AnalysisResult
 
+# Import analysis fixtures to make them available
+from .fixtures.analysis_fixtures import *
+
 
 @pytest.fixture
 def event_loop():
@@ -90,9 +93,9 @@ def sample_work_items():
 def sample_embeddings():
     """Sample embeddings for testing."""
     return [
-        [0.1, 0.2, 0.3, 0.4, 0.5] * 204,  # 1020 dimensions
-        [0.2, 0.3, 0.4, 0.5, 0.6] * 204,
-        [0.3, 0.4, 0.5, 0.6, 0.7] * 204
+        [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8] * 128,
+        [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] * 128,
+        [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] * 128
     ]
 
 

@@ -17,7 +17,6 @@ class TestCrossEpicAnalyzer:
     def mock_config(self):
         """Create mock configuration."""
         config = MagicMock(spec=Config)
-        config.lmstudio.embedding_model = "test-model"
         return config
     
     @pytest.fixture
@@ -38,14 +37,14 @@ class TestCrossEpicAnalyzer:
         for hierarchy in sample_hierarchies:
             # Epic points
             epic_point = MagicMock()
-            epic_point.payload = hierarchy.epic.dict()
+            epic_point.payload = hierarchy.epic.model_dump()
             epic_point.payload['embedding'] = mock_embeddings[0]  # Mock epic embedding
             epic_points.append(epic_point)
             
             # Work item points
             for item in hierarchy.all_items:
                 work_item_point = MagicMock()
-                work_item_point.payload = item.dict()
+                work_item_point.payload = item.model_dump()
                 work_item_point.payload['embedding'] = mock_embeddings[1]  # Mock work item embedding
                 work_item_points.append(work_item_point)
         
@@ -53,9 +52,9 @@ class TestCrossEpicAnalyzer:
         def mock_scroll(*args, **kwargs):
             collection_name = kwargs.get('collection_name', '')
             if 'epic' in collection_name.lower():
-                return [epic_points], None
+                return epic_points, None
             else:
-                return [work_item_points], None
+                return work_item_points, None
         
         qdrant_client.client.scroll.side_effect = mock_scroll
         
@@ -77,8 +76,7 @@ class TestCrossEpicAnalyzer:
         qdrant_client, lm_client, claude_client = mock_clients
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 # Mock async context managers
@@ -86,8 +84,6 @@ class TestCrossEpicAnalyzer:
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 report = await analyzer.find_misplaced_work_items()
                 
@@ -101,16 +97,13 @@ class TestCrossEpicAnalyzer:
         qdrant_client, lm_client, claude_client = mock_clients
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 report = await analyzer.find_misplaced_work_items(project_key="TEST")
                 
@@ -126,16 +119,13 @@ class TestCrossEpicAnalyzer:
         sample_work_items = AnalysisFixtures.create_sample_work_items()[:3]
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 theme_embedding = await analyzer._calculate_epic_theme_embedding(
                     sample_epics[0], sample_work_items
@@ -157,16 +147,13 @@ class TestCrossEpicAnalyzer:
             item.embedding = mock_embeddings[i]
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 epic_theme = mock_embeddings[0]
                 coherence_score = await analyzer._calculate_epic_coherence_score(
@@ -184,16 +171,13 @@ class TestCrossEpicAnalyzer:
         sample_epics = AnalysisFixtures.create_sample_epics()
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 analysis = await analyzer._analyze_misplacement_with_claude(
                     sample_work_items[0], sample_epics[0], sample_epics[1]
@@ -208,7 +192,7 @@ class TestCrossEpicAnalyzer:
         """Test that async context manager properly initializes clients."""
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient') as mock_qdrant, \
              patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm, \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient') as mock_claude:
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm:
             
             mock_qdrant_instance = AsyncMock()
             mock_lm_instance = AsyncMock()
@@ -221,19 +205,17 @@ class TestCrossEpicAnalyzer:
                 # Verify clients were created and initialized
                 assert analyzer.qdrant_client is not None
                 assert analyzer.lm_client is not None
-                assert analyzer.claude_client is not None
                 
                 # Verify __aenter__ was called on all clients
                 mock_qdrant_instance.__aenter__.assert_called_once()
                 mock_lm_instance.__aenter__.assert_called_once()
-                mock_claude_instance.__aenter__.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_context_manager_cleanup(self, mock_config):
         """Test that async context manager properly cleans up clients."""
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient') as mock_qdrant, \
              patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm, \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient') as mock_claude:
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm:
             
             mock_qdrant_instance = AsyncMock()
             mock_lm_instance = AsyncMock()
@@ -259,16 +241,13 @@ class TestCrossEpicAnalyzer:
         qdrant_client.client.scroll.side_effect = Exception("Qdrant connection error")
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 with pytest.raises(Exception, match="Qdrant connection error"):
                     await analyzer.find_misplaced_work_items()
@@ -284,16 +263,13 @@ class TestCrossEpicAnalyzer:
         claude_client.analyze.side_effect = Exception("Claude API error")
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 # Should return fallback analysis when Claude fails
                 analysis = await analyzer._analyze_misplacement_with_claude(
@@ -310,6 +286,7 @@ class TestCrossEpicAnalyzer:
             current_epic_key="EPIC-A",
             suggested_epic_key="EPIC-B",
             confidence_score=0.75,
+            coherence_difference=0.25,
             reasoning="Better thematic alignment with Epic B based on content analysis"
         )
         
@@ -327,6 +304,7 @@ class TestCrossEpicAnalyzer:
                 current_epic_key="EPIC-A",
                 suggested_epic_key="EPIC-B",
                 confidence_score=0.75,
+                coherence_difference=0.25,
                 reasoning="Better alignment with Epic B"
             )
         ]
@@ -350,16 +328,13 @@ class TestCrossEpicAnalyzer:
         lm_client.calculate_similarity.return_value = 0.95
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
                 
                 report = await analyzer.find_misplaced_work_items()
                 
