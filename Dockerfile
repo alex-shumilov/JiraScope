@@ -10,11 +10,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY requirements.txt* pyproject.toml* ./
+COPY requirements.txt* pyproject.toml* README.md ./
 RUN pip install --no-cache-dir --upgrade pip
-RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; \
-    elif [ -f pyproject.toml ]; then pip install --no-cache-dir .; \
-    fi
 
 # Development stage
 FROM base as dev
@@ -25,7 +22,8 @@ RUN pip install --no-cache-dir pytest pytest-asyncio black ruff
 # Copy source code
 COPY . .
 
-# Install in development mode
+# Install dependencies and package in development mode
+RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
 RUN pip install -e .
 
 # Expose port for development server

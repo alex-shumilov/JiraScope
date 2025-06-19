@@ -407,6 +407,37 @@ def summary(ctx):
     cost_tracker.display_cost_summary()
 
 
+@cli.command()
+@click.option('--host', default='127.0.0.1', help='Host to bind to')
+@click.option('--port', default=8000, help='Port to bind to')
+@click.option('--reload', is_flag=True, help='Enable auto-reload for development')
+@click.pass_context
+def web(ctx, host: str, port: int, reload: bool):
+    """Start the web dashboard"""
+    try:
+        import uvicorn
+        from web.main import app
+        
+        console.print(f"[green]Starting JiraScope web dashboard...[/green]")
+        console.print(f"[cyan]Dashboard will be available at: http://{host}:{port}[/cyan]")
+        console.print(f"[dim]Press Ctrl+C to stop[/dim]")
+        
+        uvicorn.run(
+            "web.main:app",
+            host=host,
+            port=port,
+            reload=reload,
+            log_level="info"
+        )
+        
+    except ImportError:
+        console.print("[red]Error: uvicorn not installed. Install with: pip install uvicorn[/red]")
+        raise click.ClickException("Missing dependency: uvicorn")
+    except Exception as e:
+        console.print(f"[red]Error starting web server: {e}[/red]")
+        raise click.ClickException(f"Failed to start web server: {e}")
+
+
 # Health check functions
 async def _check_jira_health(config):
     from jirascope.clients.jira_client import JiraClient
