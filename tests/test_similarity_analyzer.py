@@ -134,8 +134,8 @@ class TestSimilarityAnalyzer:
         """Test when no duplicates are found."""
         lm_client, qdrant_client = mock_clients
         
-        # Mock low similarity
-        lm_client.calculate_similarity.return_value = 0.30
+        # Mock Qdrant to return no similar items (empty results)
+        qdrant_client.search_similar_work_items.return_value = []
         
         with patch('jirascope.analysis.similarity_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.similarity_analyzer.QdrantVectorClient', return_value=qdrant_client):
