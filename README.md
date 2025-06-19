@@ -24,7 +24,6 @@ Before running tests, ensure the following dependencies are set up:
 Set the embedding model configuration in your environment variables:
 ```bash
 export EMBEDDING_MODEL="your-embedding-model-name"
-export EMBEDDING_MODEL_URL="http://localhost:1234/v1"  # LMStudio default
 ```
 
 #### 3. Claude Code
