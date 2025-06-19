@@ -72,7 +72,7 @@ class MultiLevelSimilarityDetector:
         elif confidence_level == "high":
             return "High priority review - consider merging"
         elif confidence_level == "medium":
-            return "Review for relationship - may be related work"
+            return "Investigate potential relationship - compare for related work"
         else:
             return "Low priority - monitor for patterns"
     
