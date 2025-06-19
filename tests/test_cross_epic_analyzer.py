@@ -195,7 +195,7 @@ class TestCrossEpicAnalyzer:
         """Test that async context manager properly initializes clients."""
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient') as mock_qdrant, \
              patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm, \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm:
+             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient') as mock_claude:
             
             mock_qdrant_instance = AsyncMock()
             mock_lm_instance = AsyncMock()
@@ -208,17 +208,19 @@ class TestCrossEpicAnalyzer:
                 # Verify clients were created and initialized
                 assert analyzer.qdrant_client is not None
                 assert analyzer.lm_client is not None
+                assert analyzer.claude_client is not None
                 
                 # Verify __aenter__ was called on all clients
                 mock_qdrant_instance.__aenter__.assert_called_once()
                 mock_lm_instance.__aenter__.assert_called_once()
+                mock_claude_instance.__aenter__.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_context_manager_cleanup(self, mock_config):
         """Test that async context manager properly cleans up clients."""
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient') as mock_qdrant, \
              patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm, \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient') as mock_lm:
+             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient') as mock_claude:
             
             mock_qdrant_instance = AsyncMock()
             mock_lm_instance = AsyncMock()
