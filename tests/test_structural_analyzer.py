@@ -15,7 +15,12 @@ class TestTechDebtClusterer:
     
     def setup_method(self):
         """Setup test environment."""
-        self.config = Config()
+        self.config = Config(
+            jira_mcp_endpoint="http://localhost:8080/mcp",
+            lmstudio_endpoint="http://localhost:1234/v1", 
+            qdrant_url="http://localhost:6333",
+            claude_api_key="test-key"
+        )
         self.clusterer = TechDebtClusterer(self.config)
         
     def test_clustering_parameters(self):

@@ -21,6 +21,7 @@ class WorkItem(BaseModel):
     reporter: str = Field(..., description="Reporter/creator")
     components: List[str] = Field(default_factory=list, description="Project components")
     labels: List[str] = Field(default_factory=list, description="Issue labels")
+    embedding: Optional[List[float]] = Field(None, description="Vector embedding for similarity analysis")
     
     model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 

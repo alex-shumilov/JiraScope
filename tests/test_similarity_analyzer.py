@@ -12,65 +12,70 @@ from tests.fixtures.analysis_fixtures import AnalysisFixtures
 
 class TestMultiLevelSimilarityDetector:
     """Test the multi-level similarity detection logic."""
-    
-    def setup_method(self):
-        """Setup test environment."""
-        self.config = Config()
-        self.detector = MultiLevelSimilarityDetector(self.config)
         
-    def test_similarity_thresholds(self):
+    def test_similarity_thresholds(self, mock_qdrant_client, mock_lmstudio_client):
         """Test that similarity thresholds are correctly defined."""
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
         expected_thresholds = {
             "exact": 0.95,
             "high": 0.85,
             "medium": 0.70,
             "low": 0.55
         }
-        assert self.detector.similarity_thresholds == expected_thresholds
+        assert detector.similarity_thresholds == expected_thresholds
     
-    def test_classify_similarity_exact(self):
+    def test_classify_similarity_exact(self, mock_qdrant_client, mock_lmstudio_client):
         """Test exact similarity classification."""
-        result = self.detector.classify_similarity(0.96)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        result = detector.classify_similarity(0.96)
         assert result == "exact"
         
-    def test_classify_similarity_high(self):
+    def test_classify_similarity_high(self, mock_qdrant_client, mock_lmstudio_client):
         """Test high similarity classification."""
-        result = self.detector.classify_similarity(0.87)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        result = detector.classify_similarity(0.87)
         assert result == "high"
         
-    def test_classify_similarity_medium(self):
+    def test_classify_similarity_medium(self, mock_qdrant_client, mock_lmstudio_client):
         """Test medium similarity classification."""
-        result = self.detector.classify_similarity(0.72)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        result = detector.classify_similarity(0.72)
         assert result == "medium"
         
-    def test_classify_similarity_low(self):
+    def test_classify_similarity_low(self, mock_qdrant_client, mock_lmstudio_client):
         """Test low similarity classification."""
-        result = self.detector.classify_similarity(0.58)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        result = detector.classify_similarity(0.58)
         assert result == "low"
         
-    def test_classify_similarity_below_threshold(self):
+    def test_classify_similarity_below_threshold(self, mock_qdrant_client, mock_lmstudio_client):
         """Test similarity below all thresholds."""
-        result = self.detector.classify_similarity(0.30)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        result = detector.classify_similarity(0.30)
         assert result is None
     
-    def test_generate_suggested_action_exact(self):
+    def test_generate_suggested_action_exact(self, mock_qdrant_client, mock_lmstudio_client):
         """Test suggested action for exact matches."""
-        action = self.detector.generate_suggested_action("exact", 0.96)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        action = detector.generate_suggested_action("exact", 0.96)
         assert "merge" in action.lower() or "duplicate" in action.lower()
         
-    def test_generate_suggested_action_high(self):
+    def test_generate_suggested_action_high(self, mock_qdrant_client, mock_lmstudio_client):
         """Test suggested action for high similarity."""
-        action = self.detector.generate_suggested_action("high", 0.87)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        action = detector.generate_suggested_action("high", 0.87)
         assert "review" in action.lower()
         
-    def test_generate_suggested_action_medium(self):
+    def test_generate_suggested_action_medium(self, mock_qdrant_client, mock_lmstudio_client):
         """Test suggested action for medium similarity."""
-        action = self.detector.generate_suggested_action("medium", 0.72)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        action = detector.generate_suggested_action("medium", 0.72)
         assert "investigate" in action.lower() or "compare" in action.lower()
         
-    def test_generate_suggested_action_low(self):
+    def test_generate_suggested_action_low(self, mock_qdrant_client, mock_lmstudio_client):
         """Test suggested action for low similarity."""
-        action = self.detector.generate_suggested_action("low", 0.58)
+        detector = MultiLevelSimilarityDetector(mock_qdrant_client, mock_lmstudio_client)
+        action = detector.generate_suggested_action("low", 0.58)
         assert "monitor" in action.lower() or "track" in action.lower()
 
 

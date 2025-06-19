@@ -27,13 +27,17 @@ class MultiLevelSimilarityDetector:
             "low": 0.55         # Somewhat related
         }
     
-    def _get_confidence_level(self, similarity_score: float) -> Optional[str]:
-        """Get confidence level based on similarity score."""
+    def classify_similarity(self, similarity_score: float) -> Optional[str]:
+        """Classify similarity score into confidence levels."""
         for level, threshold in sorted(self.similarity_thresholds.items(), 
                                      key=lambda x: x[1], reverse=True):
             if similarity_score >= threshold:
                 return level
         return None
+    
+    def _get_confidence_level(self, similarity_score: float) -> Optional[str]:
+        """Get confidence level based on similarity score."""
+        return self.classify_similarity(similarity_score)
     
     def _calculate_review_priority(self, original: WorkItem, similar_item: Dict) -> int:
         """Calculate review priority (1-5, higher is more urgent)."""
@@ -61,19 +65,20 @@ class MultiLevelSimilarityDetector:
             
         return min(priority, 5)
     
-    def _determine_suggested_action(self, candidate: DuplicateCandidate) -> str:
-        """Determine suggested action based on candidate properties."""
-        if candidate.confidence_level == "exact":
+    def generate_suggested_action(self, confidence_level: str, similarity_score: float) -> str:
+        """Generate suggested action based on confidence level and score."""
+        if confidence_level == "exact":
             return "Immediate review - likely exact duplicate"
-        elif candidate.confidence_level == "high":
-            if candidate.review_priority >= 4:
-                return "High priority review - consider merging"
-            else:
-                return "Review for potential consolidation"
-        elif candidate.confidence_level == "medium":
+        elif confidence_level == "high":
+            return "High priority review - consider merging"
+        elif confidence_level == "medium":
             return "Review for relationship - may be related work"
         else:
-            return "Low priority - check if truly related"
+            return "Low priority - monitor for patterns"
+    
+    def _determine_suggested_action(self, candidate: DuplicateCandidate) -> str:
+        """Determine suggested action based on candidate properties."""
+        return self.generate_suggested_action(candidate.confidence_level, candidate.similarity_score)
     
     def _analyze_similarity_reasons(self, original: WorkItem, similar_item: Dict, score: float) -> List[str]:
         """Analyze why items are similar."""

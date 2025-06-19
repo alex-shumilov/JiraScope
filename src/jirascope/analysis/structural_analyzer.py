@@ -25,6 +25,87 @@ class TechDebtClusterer:
         self.qdrant_client: Optional[QdrantVectorClient] = None
         self.claude_client: Optional[ClaudeClient] = None
         
+        # Clustering parameters
+        self.min_samples = 2
+        self.eps = 0.3  # Default eps value
+        self.max_clusters = 10
+    
+    def _identify_tech_debt_items(self, work_items: List[WorkItem]) -> List[WorkItem]:
+        """Identify work items that represent technical debt."""
+        tech_debt_items = []
+        
+        tech_debt_keywords = [
+            'refactor', 'cleanup', 'legacy', 'technical debt', 'debt', 'deprecated',
+            'old', 'outdated', 'improve', 'optimization', 'performance', 'maintainability'
+        ]
+        
+        for item in work_items:
+            title_lower = item.summary.lower()
+            desc_lower = (item.description or '').lower()
+            labels_lower = [label.lower() for label in item.labels]
+            
+            # Check if any tech debt keywords are present
+            if any(keyword in title_lower or keyword in desc_lower for keyword in tech_debt_keywords):
+                tech_debt_items.append(item)
+                continue
+            
+            # Check labels for tech debt indicators
+            if any(keyword in label for label in labels_lower for keyword in tech_debt_keywords):
+                tech_debt_items.append(item)
+        
+        return tech_debt_items
+    
+    def _calculate_priority_score(self, summary: str, description: str, labels: List[str]) -> float:
+        """Calculate priority score for a tech debt item."""
+        score = 0.0
+        
+        # High priority keywords
+        high_priority_keywords = ['critical', 'urgent', 'security', 'outage', 'performance']
+        medium_priority_keywords = ['improvement', 'optimization', 'maintainability']
+        
+        text = f"{summary} {description}".lower()
+        labels_text = ' '.join(labels).lower()
+        
+        # Check for high priority indicators
+        for keyword in high_priority_keywords:
+            if keyword in text or keyword in labels_text:
+                score += 0.3
+        
+        # Check for medium priority indicators
+        for keyword in medium_priority_keywords:
+            if keyword in text or keyword in labels_text:
+                score += 0.2
+        
+        # Normalize score to 0-1 range
+        return min(score, 1.0)
+    
+    def _estimate_effort_from_description(self, description: str) -> str:
+        """Estimate effort based on description content."""
+        if not description:
+            return "Unknown"
+        
+        desc_lower = description.lower()
+        
+        # Count complexity indicators
+        complexity_indicators = [
+            'complete', 'entire', 'full', 'comprehensive', 'major', 'significant',
+            'multiple', 'all', 'everything', 'throughout', 'across'
+        ]
+        
+        simple_indicators = [
+            'simple', 'minor', 'small', 'quick', 'easy', 'basic', 'single'
+        ]
+        
+        complexity_count = sum(1 for indicator in complexity_indicators if indicator in desc_lower)
+        simple_count = sum(1 for indicator in simple_indicators if indicator in desc_lower)
+        
+        if complexity_count > simple_count:
+            return "High (5-10 days)"
+        elif simple_count > complexity_count:
+            return "Low (1-2 days)"
+        else:
+            return "Medium (3-5 days)"
+        
     async def __aenter__(self):
         """Async context manager entry."""
         self.qdrant_client = QdrantVectorClient(self.config)
@@ -453,3 +534,126 @@ class StructuralAnalyzer:
             return True
         
         return False
+    
+    def _identify_tech_debt_items(self, work_items: List) -> List:
+        """Identify tech debt items from a list of work items."""
+        tech_debt_items = []
+        
+        for item in work_items:
+            # Convert WorkItem object to dict if needed
+            if hasattr(item, 'dict'):
+                work_item_dict = item.dict()
+            elif hasattr(item, '__dict__'):
+                work_item_dict = item.__dict__
+            else:
+                work_item_dict = item
+            
+            if self._is_tech_debt_item(work_item_dict):
+                tech_debt_items.append(item)
+        
+        return tech_debt_items
+    
+    def _calculate_priority_score(self, title: str, description: str, labels: List[str]) -> float:
+        """Calculate priority score for tech debt item based on content."""
+        score = 0.0
+        
+        # High priority keywords
+        high_priority_terms = [
+            'critical', 'urgent', 'security', 'vulnerability', 'outage', 
+            'failure', 'bug', 'crash', 'error', 'broken', 'blocking'
+        ]
+        
+        # Medium priority keywords
+        medium_priority_terms = [
+            'performance', 'slow', 'optimization', 'deprecated', 
+            'legacy', 'debt', 'refactor', 'improvement'
+        ]
+        
+        # Low priority keywords
+        low_priority_terms = [
+            'cleanup', 'style', 'formatting', 'documentation', 
+            'typo', 'minor', 'enhancement'
+        ]
+        
+        # Combine text for analysis
+        text = f"{title} {description}".lower()
+        label_text = " ".join(labels).lower()
+        all_text = f"{text} {label_text}"
+        
+        # Score based on high priority terms
+        high_count = sum(1 for term in high_priority_terms if term in all_text)
+        score += high_count * 0.3
+        
+        # Score based on medium priority terms
+        medium_count = sum(1 for term in medium_priority_terms if term in all_text)
+        score += medium_count * 0.2
+        
+        # Penalty for low priority terms
+        low_count = sum(1 for term in low_priority_terms if term in all_text)
+        score -= low_count * 0.1
+        
+        # Base score for any tech debt item
+        score += 0.3
+        
+        # Check for specific high-priority labels
+        high_priority_labels = ['critical', 'urgent', 'security', 'blocking']
+        if any(label in label_text for label in high_priority_labels):
+            score += 0.2
+        
+        # Normalize score to 0-1 range
+        return max(0.0, min(1.0, score))
+    
+    def _estimate_effort_from_description(self, description: str) -> str:
+        """Estimate effort required based on description content."""
+        if not description:
+            return "Small"
+        
+        desc_lower = description.lower()
+        word_count = len(description.split())
+        line_count = len(description.split('\n'))
+        
+        # Count complexity indicators
+        complex_terms = [
+            'architecture', 'system', 'migration', 'overhaul', 'complete',
+            'entire', 'multiple', 'integration', 'infrastructure', 'platform',
+            'security audit', 'performance optimization', 'api', 'database'
+        ]
+        
+        simple_terms = [
+            'typo', 'style', 'formatting', 'minor', 'small', 'quick',
+            'simple', 'fix', 'update', 'documentation'
+        ]
+        
+        # Score based on content analysis
+        complexity_score = 0
+        
+        # Word and line count indicators
+        if word_count > 100:
+            complexity_score += 2
+        elif word_count > 50:
+            complexity_score += 1
+        
+        if line_count > 10:
+            complexity_score += 2
+        elif line_count > 5:
+            complexity_score += 1
+        
+        # Complex terms
+        complex_count = sum(1 for term in complex_terms if term in desc_lower)
+        complexity_score += complex_count * 2
+        
+        # Simple terms (reduce complexity)
+        simple_count = sum(1 for term in simple_terms if term in desc_lower)
+        complexity_score -= simple_count
+        
+        # Check for lists or bullet points (indicating multiple tasks)
+        if '- ' in description or '* ' in description or description.count('\n-') > 2:
+            complexity_score += 2
+        
+        # Determine effort level
+        if complexity_score >= 5:
+            return "Large"
+        elif complexity_score >= 2:
+            return "Medium"
+        else:
+            return "Small"

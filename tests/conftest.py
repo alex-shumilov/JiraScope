@@ -37,56 +37,7 @@ def mock_config():
     )
 
 
-@pytest.fixture
-def sample_work_items():
-    """Sample work items for testing."""
-    return [
-        WorkItem(
-            key="PROJ-1",
-            summary="Implement user authentication",
-            description="Add login and logout functionality",
-            issue_type="Story",
-            status="In Progress",
-            parent_key=None,
-            epic_key="PROJ-100",
-            created=datetime.now(),
-            updated=datetime.now(),
-            assignee="John Doe",
-            reporter="Jane Smith",
-            components=["Backend", "Security"],
-            labels=["auth", "security"]
-        ),
-        WorkItem(
-            key="PROJ-2",
-            summary="Fix login bug",
-            description="Users cannot login with special characters",
-            issue_type="Bug",
-            status="Open",
-            parent_key=None,
-            epic_key="PROJ-100",
-            created=datetime.now(),
-            updated=datetime.now(),
-            assignee="John Doe",
-            reporter="Support Team",
-            components=["Backend"],
-            labels=["bug", "auth"]
-        ),
-        WorkItem(
-            key="PROJ-3",
-            summary="Update user profile API",
-            description="Allow users to update their profile information",
-            issue_type="Task",
-            status="To Do",
-            parent_key="PROJ-1",
-            epic_key="PROJ-100",
-            created=datetime.now(),
-            updated=datetime.now(),
-            assignee=None,
-            reporter="Product Manager",
-            components=["Backend", "API"],
-            labels=["api", "profile"]
-        )
-    ]
+# sample_work_items fixture is imported from analysis_fixtures
 
 
 @pytest.fixture
@@ -141,11 +92,13 @@ def mock_qdrant_client():
 @pytest.fixture
 def mock_claude_client():
     """Mock Claude client for testing."""
-    mock = Mock()
+    mock = AsyncMock()
     mock.analyze_work_item = AsyncMock()
     mock.calculate_cost = Mock(return_value=0.001)
     mock.get_session_cost = Mock(return_value=0.05)
     mock.reset_session_cost = Mock()
+    mock.__aenter__ = AsyncMock(return_value=mock)
+    mock.__aexit__ = AsyncMock()
     return mock
 
 
