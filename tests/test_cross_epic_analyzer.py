@@ -60,7 +60,7 @@ class TestCrossEpicAnalyzer:
         
         # Mock LM Studio embeddings
         lm_client.generate_embeddings.return_value = mock_embeddings[:3]
-        lm_client.calculate_similarity.return_value = 0.65  # Moderate similarity
+        lm_client.calculate_similarity = MagicMock(return_value=0.65)  # Moderate similarity
         
         # Mock Claude analysis
         claude_client.analyze.return_value = AsyncMock(
@@ -116,7 +116,7 @@ class TestCrossEpicAnalyzer:
         """Test epic theme embedding calculation."""
         qdrant_client, lm_client, claude_client = mock_clients
         sample_epics = AnalysisFixtures.create_sample_epics()
-        sample_work_items = AnalysisFixtures.create_sample_work_items()[:3]
+        sample_work_items = AnalysisFixtures.create_sample_work_items()[-2:]  # Get items with epic_key
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
              patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
@@ -171,13 +171,16 @@ class TestCrossEpicAnalyzer:
         sample_epics = AnalysisFixtures.create_sample_epics()
         
         with patch('jirascope.analysis.cross_epic_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client):
+             patch('jirascope.analysis.cross_epic_analyzer.LMStudioClient', return_value=lm_client), \
+             patch('jirascope.analysis.cross_epic_analyzer.ClaudeClient', return_value=claude_client):
             
             async with CrossEpicAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
+                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
+                claude_client.__aexit__ = AsyncMock()
                 
                 analysis = await analyzer._analyze_misplacement_with_claude(
                     sample_work_items[0], sample_epics[0], sample_epics[1]

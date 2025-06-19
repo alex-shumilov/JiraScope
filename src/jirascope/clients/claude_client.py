@@ -17,6 +17,15 @@ class ClaudeClient:
         self.config = config
         self.client = Anthropic(api_key=config.claude_api_key)
         self.session_cost = 0.0
+    
+    async def __aenter__(self):
+        """Async context manager entry."""
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        # No cleanup needed for Anthropic client
+        pass
         
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Calculate the cost of a Claude API call."""
@@ -188,3 +197,47 @@ Respond in JSON format with these fields:
     def reset_session_cost(self):
         """Reset the session cost counter."""
         self.session_cost = 0.0
+    
+    async def analyze(self, prompt: str, analysis_type: str = "general") -> AnalysisResult:
+        """Generic analysis method using Claude."""
+        # Check budget constraints
+        if self.session_cost >= CLAUDE_CONFIG["session_budget"]:
+            raise ValueError(f"Session budget of ${CLAUDE_CONFIG['session_budget']} exceeded")
+        
+        try:
+            response = self.client.messages.create(
+                model=self.config.claude_model,
+                max_tokens=CLAUDE_CONFIG["max_tokens"],
+                temperature=CLAUDE_CONFIG["temperature"],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+            
+            # Calculate cost
+            cost = self.calculate_cost(
+                response.usage.input_tokens,
+                response.usage.output_tokens
+            )
+            self.session_cost += cost
+            
+            # Create a simple response object
+            class SimpleResponse:
+                def __init__(self, content: str, cost: float):
+                    self.content = content
+                    self.cost = cost
+            
+            result = SimpleResponse(
+                content=response.content[0].text,
+                cost=cost
+            )
+            
+            logger.info(f"Analyzed prompt ({analysis_type}) - Cost: ${cost:.4f}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to analyze prompt: {e}")
+            raise
