@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
 
 from jirascope.analysis.temporal_analyzer import TemporalAnalyzer, ScopeDriftDetector
-from jirascope.models import ScopeDriftAnalysis, ScopeDriftEvent
+from jirascope.models import ScopeDriftAnalysis, ScopeDriftEvent, BatchAnalysisResult
 from jirascope.core.config import Config
 from tests.fixtures.analysis_fixtures import AnalysisFixtures
 
@@ -22,6 +22,7 @@ class TestScopeDriftDetector:
             claude_api_key="test-key"
         )
         self.detector = ScopeDriftDetector(self.config)
+        self.detector.lm_client = AsyncMock()
         
     @pytest.mark.asyncio
     async def test_calculate_semantic_similarity(self):
@@ -90,12 +91,13 @@ class TestTemporalAnalyzer:
         
         # Mock change history
         scope_drift_history = AnalysisFixtures.create_scope_drift_history()
-        jira_client.get_work_item_change_history.return_value = scope_drift_history
+        jira_client.get_work_item.return_value = scope_drift_history[0] if scope_drift_history else None
         
         # Mock embedding generation
         mock_embeddings = AnalysisFixtures.create_mock_embeddings()
         lm_client.generate_embeddings.return_value = mock_embeddings[:3]
         lm_client.calculate_similarity.return_value = 0.25  # Low similarity for drift
+        lm_client._generate_batch_embeddings = AsyncMock(return_value=mock_embeddings[:3])
         
         # Mock Claude analysis
         claude_client.analyze.return_value = AsyncMock(
@@ -110,7 +112,7 @@ class TestTemporalAnalyzer:
         """Test successful scope drift analysis."""
         jira_client, lm_client, claude_client = mock_clients
         
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient', return_value=jira_client), \
+        with patch('jirascope.analysis.temporal_analyzer.MCPClient', return_value=jira_client), \
              patch('jirascope.analysis.temporal_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.temporal_analyzer.ClaudeClient', return_value=claude_client):
             
@@ -126,10 +128,10 @@ class TestTemporalAnalyzer:
                 work_item = sample_work_items[0]
                 analysis = await analyzer.analyze_scope_drift(work_item)
                 
-                assert isinstance(analysis, DriftAnalysis)
+                assert isinstance(analysis, ScopeDriftAnalysis)
                 assert analysis.work_item_key == work_item.key
-                assert 0.0 <= analysis.drift_score <= 1.0
-                assert analysis.drift_level in ["none", "minor", "moderate", "major", "critical"]
+                assert 0.0 <= analysis.overall_drift_score <= 1.0
+                assert isinstance(analysis.has_drift, bool)
                 assert len(analysis.change_events) > 0
                 assert analysis.analysis_cost > 0
     
@@ -139,9 +141,9 @@ class TestTemporalAnalyzer:
         jira_client, lm_client, claude_client = mock_clients
         
         # Mock empty change history
-        jira_client.get_work_item_change_history.return_value = []
+        jira_client.get_work_item.return_value = None
         
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient', return_value=jira_client), \
+        with patch('jirascope.analysis.temporal_analyzer.MCPClient', return_value=jira_client), \
              patch('jirascope.analysis.temporal_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.temporal_analyzer.ClaudeClient', return_value=claude_client):
             
@@ -156,8 +158,8 @@ class TestTemporalAnalyzer:
                 work_item = sample_work_items[0]
                 analysis = await analyzer.analyze_scope_drift(work_item)
                 
-                assert analysis.drift_score == 0.0
-                assert analysis.drift_level == "none"
+                assert analysis.overall_drift_score == 0.0
+                assert analysis.has_drift is False
                 assert len(analysis.change_events) == 0
     
     @pytest.mark.asyncio
@@ -166,9 +168,9 @@ class TestTemporalAnalyzer:
         jira_client, lm_client, claude_client = mock_clients
         
         # Mock work items for project
-        jira_client.get_project_work_items.return_value = sample_work_items[:3]
+        jira_client.get_work_items.return_value = sample_work_items[:3]
         
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient', return_value=jira_client), \
+        with patch('jirascope.analysis.temporal_analyzer.MCPClient', return_value=jira_client), \
              patch('jirascope.analysis.temporal_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.temporal_analyzer.ClaudeClient', return_value=claude_client):
             
@@ -182,10 +184,10 @@ class TestTemporalAnalyzer:
                 
                 report = await analyzer.detect_scope_drift_for_project("TEST")
                 
-                assert isinstance(report, ScopeDriftReport)
+                assert isinstance(report, BatchAnalysisResult)
                 assert report.project_key == "TEST"
                 assert report.total_items_analyzed == 3
-                assert report.items_with_drift >= 0
+                assert report.successful_analyses >= 0
                 assert len(report.drift_analyses) == 3
                 assert report.total_analysis_cost > 0
     
@@ -195,9 +197,9 @@ class TestTemporalAnalyzer:
         jira_client, lm_client, claude_client = mock_clients
         
         # Mock filtered work items
-        jira_client.get_project_work_items.return_value = sample_work_items[:2]
+        jira_client.get_work_items.return_value = sample_work_items[:2]
         
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient', return_value=jira_client), \
+        with patch('jirascope.analysis.temporal_analyzer.MCPClient', return_value=jira_client), \
              patch('jirascope.analysis.temporal_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.temporal_analyzer.ClaudeClient', return_value=claude_client):
             
@@ -217,7 +219,7 @@ class TestTemporalAnalyzer:
                 )
                 
                 # Verify time range was passed to Jira client
-                jira_client.get_project_work_items.assert_called_with(
+                jira_client.get_work_items.assert_called_with(
                     "TEST", start_date=start_date, end_date=end_date
                 )
                 assert report.total_items_analyzed == 2
@@ -252,9 +254,9 @@ class TestTemporalAnalyzer:
         jira_client, lm_client, claude_client = mock_clients
         
         # Mock Jira failure
-        jira_client.get_work_item_change_history.side_effect = Exception("Jira API error")
+        jira_client.get_work_item.side_effect = Exception("Jira API error")
         
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient', return_value=jira_client), \
+        with patch('jirascope.analysis.temporal_analyzer.MCPClient', return_value=jira_client), \
              patch('jirascope.analysis.temporal_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.temporal_analyzer.ClaudeClient', return_value=claude_client):
             
@@ -279,7 +281,7 @@ class TestTemporalAnalyzer:
         # Mock Claude failure
         claude_client.analyze.side_effect = Exception("Claude API error")
         
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient', return_value=jira_client), \
+        with patch('jirascope.analysis.temporal_analyzer.MCPClient', return_value=jira_client), \
              patch('jirascope.analysis.temporal_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.temporal_analyzer.ClaudeClient', return_value=claude_client):
             
@@ -298,81 +300,78 @@ class TestTemporalAnalyzer:
                 assert analysis.claude_insights == "Analysis unavailable due to API error"
     
     def test_change_event_model(self):
-        """Test ChangeEvent model creation and validation."""
-        change_event = ChangeEvent(
+        """Test ScopeDriftEvent model creation and validation."""
+        change_event = ScopeDriftEvent(
             timestamp=datetime(2024, 1, 15, 10, 30, 0),
-            field_changed="description",
-            old_value="Simple login form",
-            new_value="Login form with OAuth2 support",
-            author="developer"
+            similarity_score=0.7,
+            change_type="expansion",
+            impact_level="moderate",
+            description="Changed from simple login form to OAuth2 support",
+            changed_by="developer"
         )
         
         assert change_event.timestamp == datetime(2024, 1, 15, 10, 30, 0)
-        assert change_event.field_changed == "description"
-        assert "Simple login form" in change_event.old_value
-        assert "OAuth2" in change_event.new_value
-        assert change_event.author == "developer"
+        assert change_event.similarity_score == 0.7
+        assert change_event.change_type == "expansion"
+        assert change_event.impact_level == "moderate"
+        assert "OAuth2" in change_event.description
+        assert change_event.changed_by == "developer"
     
     def test_drift_analysis_model(self):
-        """Test DriftAnalysis model creation and validation."""
-        change_events = [
-            ChangeEvent(
+        """Test ScopeDriftAnalysis model creation and validation."""
+        drift_events = [
+            ScopeDriftEvent(
                 timestamp=datetime(2024, 1, 1, 12, 0, 0),
-                field_changed="description",
-                old_value="Simple form",
-                new_value="Complex system",
-                author="developer"
+                similarity_score=0.7,
+                change_type="expansion",
+                impact_level="moderate",
+                description="Changed from simple form to complex system",
+                changed_by="developer"
             )
         ]
         
-        analysis = DriftAnalysis(
+        analysis = ScopeDriftAnalysis(
             work_item_key="TEST-1",
-            drift_score=0.75,
-            drift_level="major",
-            change_events=change_events,
-            semantic_similarity=0.25,
-            complexity_increase=0.80,
-            claude_insights="Significant scope expansion detected",
-            analysis_cost=0.025
+            has_drift=True,
+            drift_events=drift_events,
+            overall_drift_score=0.75,
+            analysis_timestamp=datetime.now(),
+            total_changes=1
         )
         
         assert analysis.work_item_key == "TEST-1"
-        assert analysis.drift_score == 0.75
-        assert analysis.drift_level == "major"
-        assert len(analysis.change_events) == 1
-        assert analysis.semantic_similarity == 0.25
-        assert analysis.complexity_increase == 0.80
-        assert "expansion" in analysis.claude_insights
-        assert analysis.analysis_cost == 0.025
+        assert analysis.has_drift is True
+        assert analysis.overall_drift_score == 0.75
+        assert len(analysis.drift_events) == 1
+        assert analysis.total_changes == 1
     
     def test_scope_drift_report_model(self):
-        """Test ScopeDriftReport model creation and structure."""
+        """Test BatchAnalysisResult model for scope drift reports."""
         drift_analyses = [
-            DriftAnalysis(
+            ScopeDriftAnalysis(
                 work_item_key="TEST-1",
-                drift_score=0.75,
-                drift_level="major",
-                change_events=[],
-                semantic_similarity=0.25,
-                complexity_increase=0.80,
-                claude_insights="Scope expansion",
-                analysis_cost=0.025
+                has_drift=True,
+                drift_events=[],
+                overall_drift_score=0.75,
+                analysis_timestamp=datetime.now(),
+                total_changes=1
             )
         ]
         
-        report = ScopeDriftReport(
-            project_key="TEST",
-            total_items_analyzed=5,
-            items_with_drift=1,
-            drift_analyses=drift_analyses,
-            total_analysis_cost=0.125
+        report = BatchAnalysisResult(
+            total_items_processed=5,
+            successful_analyses=5,
+            failed_analyses=0,
+            total_cost=0.125,
+            processing_time=1.5,
+            analysis_results=[drift_analysis.model_dump() for drift_analysis in drift_analyses]
         )
         
-        assert report.project_key == "TEST"
-        assert report.total_items_analyzed == 5
-        assert report.items_with_drift == 1
-        assert len(report.drift_analyses) == 1
-        assert report.total_analysis_cost == 0.125
+        assert report.total_items_processed == 5
+        assert report.successful_analyses == 5
+        assert report.failed_analyses == 0
+        assert len(report.analysis_results) == 1
+        assert report.total_cost == 0.125
     
     @pytest.mark.asyncio
     async def test_batch_analysis_performance(self, mock_config, mock_clients, sample_work_items):
@@ -383,7 +382,7 @@ class TestTemporalAnalyzer:
         large_work_items = sample_work_items * 5  # 40 items total
         jira_client.get_project_work_items.return_value = large_work_items
         
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient', return_value=jira_client), \
+        with patch('jirascope.analysis.temporal_analyzer.MCPClient', return_value=jira_client), \
              patch('jirascope.analysis.temporal_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.temporal_analyzer.ClaudeClient', return_value=claude_client):
             
