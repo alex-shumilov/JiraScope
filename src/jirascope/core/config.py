@@ -26,6 +26,9 @@ class Config:
     report_retention_days: int = 30
     cost_tracking: bool = True
     
+    daily_budget: float = 50.0
+    monthly_budget: float = 1000.0
+    
     jira_dry_run: bool = True
     
     @classmethod
@@ -42,6 +45,8 @@ class Config:
             similarity_threshold=float(os.getenv("SIMILARITY_THRESHOLD", "0.8")),
             report_retention_days=int(os.getenv("REPORT_RETENTION_DAYS", "30")),
             cost_tracking=os.getenv("COST_TRACKING", "true").lower() == "true",
+            daily_budget=float(os.getenv("DAILY_BUDGET", "50.0")),
+            monthly_budget=float(os.getenv("MONTHLY_BUDGET", "1000.0")),
             jira_dry_run=os.getenv("JIRA_DRY_RUN", "true").lower() == "true",
         )
     
