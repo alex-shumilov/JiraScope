@@ -23,7 +23,39 @@ class WorkItem(BaseModel):
     labels: List[str] = Field(default_factory=list, description="Issue labels")
     embedding: Optional[List[float]] = Field(None, description="Vector embedding for similarity analysis")
     
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+    model_config = {
+        "json_schema_extra": {"example": {
+            "key": "PROJ-123",
+            "summary": "Implement login functionality",
+            "description": "Create the login page with validation",
+            "issue_type": "Story",
+            "status": "In Progress",
+            "created": "2023-01-15T10:00:00",
+            "updated": "2023-01-16T14:30:00",
+            "reporter": "jdoe"
+        }}
+    }
+    
+    @classmethod
+    def model_json_schema(cls, *args, **kwargs):
+        """Customize the JSON schema for serialization."""
+        schema = super().model_json_schema(*args, **kwargs)
+        return schema
+        
+    def model_dump_json(self, *args, **kwargs):
+        """Customize JSON serialization."""
+        kwargs["exclude_none"] = kwargs.get("exclude_none", True)
+        data = self.model_dump(*args, **kwargs)
+        
+        # Convert datetime objects to ISO format
+        if isinstance(data.get("created"), datetime):
+            data["created"] = data["created"].isoformat()
+        if isinstance(data.get("updated"), datetime):
+            data["updated"] = data["updated"].isoformat()
+            
+        # Use default json serializer
+        import json
+        return json.dumps(data, default=str)
 
 
 class EpicHierarchy(BaseModel):
@@ -126,4 +158,25 @@ class AnalysisResult(BaseModel):
     cost: Optional[float] = Field(None, description="API cost for this analysis")
     timestamp: datetime = Field(default_factory=datetime.now, description="Analysis timestamp")
     
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+    model_config = {
+        "json_schema_extra": {"example": {
+            "work_item_key": "PROJ-123",
+            "analysis_type": "quality",
+            "confidence": 0.85,
+            "insights": {"score": 4.2, "suggestions": ["Improve clarity"]},
+            "timestamp": "2023-01-20T10:15:30"
+        }}
+    }
+    
+    def model_dump_json(self, *args, **kwargs):
+        """Customize JSON serialization."""
+        kwargs["exclude_none"] = kwargs.get("exclude_none", True)
+        data = self.model_dump(*args, **kwargs)
+        
+        # Convert datetime objects to ISO format
+        if isinstance(data.get("timestamp"), datetime):
+            data["timestamp"] = data["timestamp"].isoformat()
+            
+        # Use default json serializer
+        import json
+        return json.dumps(data, default=str)
