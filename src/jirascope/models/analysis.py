@@ -130,6 +130,8 @@ class ScopeDriftAnalysis(BaseModel):
     overall_drift_score: float = Field(0.0, ge=0.0, le=1.0, description="Overall drift severity")
     analysis_timestamp: datetime = Field(default_factory=datetime.now)
     total_changes: int = Field(0, description="Total number of changes analyzed")
+    analysis_cost: float = Field(0.0, description="Cost of this analysis")
+    claude_insights: str = Field("", description="Insights from Claude analysis")
 
 
 class TechDebtCluster(BaseModel):
