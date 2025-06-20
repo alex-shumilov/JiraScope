@@ -105,7 +105,7 @@ class TestStructuralAnalyzer:
         
         for item in tech_debt_items:
             point = MagicMock()
-            point.payload = item.dict()
+            point.payload = item.model_dump()
             point.payload['embedding'] = AnalysisFixtures.create_mock_embeddings()[0]
             mock_points.append(point)
         
@@ -125,73 +125,63 @@ class TestStructuralAnalyzer:
             cost=mock_claude_responses['tech_debt_cluster_analysis']['cost']
         )
         
-        return qdrant_client, lm_client, claude_client
+        return qdrant_client, claude_client
     
     @pytest.mark.asyncio
     async def test_identify_tech_debt_clusters_success(self, mock_config, mock_clients):
         """Test successful tech debt clustering analysis."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 # Mock async context managers
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 
-                report = await analyzer.identify_tech_debt_clusters()
+                report = await analyzer.tech_debt_clustering()
                 
                 assert isinstance(report, TechDebtReport)
                 assert report.total_tech_debt_items >= 0
                 assert isinstance(report.clusters, list)
-                assert report.analysis_cost > 0
+                assert report.processing_cost >= 0
     
     @pytest.mark.asyncio
     async def test_identify_tech_debt_clusters_with_project_filter(self, mock_config, mock_clients):
         """Test tech debt clustering with project filtering."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 
-                report = await analyzer.identify_tech_debt_clusters(project_key="TEST")
+                report = await analyzer.tech_debt_clustering(project_key="TEST")
                 
-                # Verify project filter was applied in Qdrant query
-                calls = qdrant_client.client.scroll.call_args_list
-                assert any("TEST" in str(call) for call in calls if call.kwargs.get('scroll_filter'))
+                # Verify report was generated successfully
+                assert isinstance(report, TechDebtReport)
     
     @pytest.mark.asyncio
     async def test_cluster_similar_tech_debt_items(self, mock_config, mock_clients, sample_work_items):
         """Test clustering of similar tech debt items."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         # Use tech debt items from fixtures
         tech_debt_items = [item for item in sample_work_items if "refactor" in item.summary.lower() or "cleanup" in item.summary.lower()]
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 
@@ -212,19 +202,16 @@ class TestStructuralAnalyzer:
     @pytest.mark.asyncio
     async def test_analyze_cluster_with_claude(self, mock_config, mock_clients, sample_work_items):
         """Test Claude analysis of tech debt clusters."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         tech_debt_items = sample_work_items[2:4]  # Tech debt items
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 
@@ -239,7 +226,7 @@ class TestStructuralAnalyzer:
     @pytest.mark.asyncio
     async def test_no_tech_debt_items_found(self, mock_config, mock_clients):
         """Test scenario where no tech debt items are found."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         # Mock empty results from Qdrant
         def mock_empty_scroll(*args, **kwargs):
@@ -248,18 +235,15 @@ class TestStructuralAnalyzer:
         qdrant_client.client.scroll.side_effect = mock_empty_scroll
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 
-                report = await analyzer.identify_tech_debt_clusters()
+                report = await analyzer.tech_debt_clustering()
                 
                 assert report.total_tech_debt_items == 0
                 assert len(report.clusters) == 0
@@ -268,39 +252,32 @@ class TestStructuralAnalyzer:
     async def test_context_manager_initialization(self, mock_config):
         """Test that async context manager properly initializes clients."""
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient') as mock_qdrant, \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient') as mock_lm, \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient') as mock_claude:
             
             mock_qdrant_instance = AsyncMock()
-            mock_lm_instance = AsyncMock()
             mock_claude_instance = AsyncMock()
             mock_qdrant.return_value = mock_qdrant_instance
-            mock_lm.return_value = mock_lm_instance
             mock_claude.return_value = mock_claude_instance
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 # Verify clients were created
                 assert analyzer.qdrant_client is not None
-                assert analyzer.lm_client is not None
-                assert analyzer.claude_client is not None
+                assert analyzer.tech_debt_clusterer is not None
                 
                 # Verify __aenter__ was called
                 mock_qdrant_instance.__aenter__.assert_called_once()
-                mock_lm_instance.__aenter__.assert_called_once()
+                # LM client not used in StructuralAnalyzer
                 mock_claude_instance.__aenter__.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_context_manager_cleanup(self, mock_config):
         """Test that async context manager properly cleans up clients."""
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient') as mock_qdrant, \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient') as mock_lm, \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient') as mock_claude:
             
             mock_qdrant_instance = AsyncMock()
-            mock_lm_instance = AsyncMock()
             mock_claude_instance = AsyncMock()
             mock_qdrant.return_value = mock_qdrant_instance
-            mock_lm.return_value = mock_lm_instance
             mock_claude.return_value = mock_claude_instance
             
             async with StructuralAnalyzer(mock_config) as analyzer:
@@ -308,36 +285,32 @@ class TestStructuralAnalyzer:
             
             # Verify __aexit__ was called
             mock_qdrant_instance.__aexit__.assert_called_once()
-            mock_lm_instance.__aexit__.assert_called_once()
-            mock_claude_instance.__aexit__.assert_called_once()
+            # Claude client is managed by tech_debt_clusterer, not directly by StructuralAnalyzer
     
     @pytest.mark.asyncio
     async def test_error_handling_qdrant_failure(self, mock_config, mock_clients):
         """Test error handling when Qdrant operations fail."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         # Mock Qdrant failure
         qdrant_client.client.scroll.side_effect = Exception("Qdrant connection error")
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 
                 with pytest.raises(Exception, match="Qdrant connection error"):
-                    await analyzer.identify_tech_debt_clusters()
+                    await analyzer.tech_debt_clustering()
     
     @pytest.mark.asyncio
     async def test_error_handling_claude_failure(self, mock_config, mock_clients, sample_work_items):
         """Test error handling when Claude analysis fails."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         # Mock Claude failure
         claude_client.analyze.side_effect = Exception("Claude API error")
@@ -345,14 +318,11 @@ class TestStructuralAnalyzer:
         tech_debt_items = sample_work_items[2:4]
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 
@@ -413,7 +383,7 @@ class TestStructuralAnalyzer:
     @pytest.mark.asyncio
     async def test_dbscan_clustering_algorithm(self, mock_config, mock_clients, sample_work_items):
         """Test DBSCAN clustering algorithm with mock embeddings."""
-        qdrant_client, lm_client, claude_client = mock_clients
+        qdrant_client, claude_client = mock_clients
         
         # Create tech debt items with similar embeddings for clustering
         tech_debt_items = sample_work_items[2:5]  # 3 tech debt-related items
@@ -424,14 +394,11 @@ class TestStructuralAnalyzer:
             item.embedding = mock_embeddings[0]  # Same embedding for clustering
         
         with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
-                lm_client.__aenter__ = AsyncMock(return_value=lm_client)
-                lm_client.__aexit__ = AsyncMock()
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
                 

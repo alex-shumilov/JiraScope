@@ -102,7 +102,7 @@ class TestSimilarityAnalyzer:
         # Mock Qdrant search
         work_items = AnalysisFixtures.create_sample_work_items()
         qdrant_client.search_similar_work_items.return_value = [
-            {"work_item": item.dict(), "score": 0.87} for item in work_items[:2]
+            {"work_item": item.model_dump(), "score": 0.87} for item in work_items[:2]
         ]
         
         return lm_client, qdrant_client
@@ -152,9 +152,13 @@ class TestSimilarityAnalyzer:
                 assert all(len(candidates) == 0 for candidates in report.candidates_by_level.values())
     
     @pytest.mark.asyncio
-    async def test_find_potential_duplicates_single_item(self, mock_config, mock_clients, sample_work_items):
+    async def test_find_potential_duplicates_single_item(self, mock_config, sample_work_items):
         """Test with single work item (should return empty report)."""
-        lm_client, qdrant_client = mock_clients
+        lm_client = AsyncMock()
+        qdrant_client = AsyncMock()
+        
+        # Mock empty search results for single item
+        qdrant_client.search_similar_work_items.return_value = []
         
         with patch('jirascope.analysis.similarity_analyzer.LMStudioClient', return_value=lm_client), \
              patch('jirascope.analysis.similarity_analyzer.QdrantVectorClient', return_value=qdrant_client):
