@@ -319,7 +319,19 @@ Optimize the frontend build process to reduce build times and improve developer 
                 )
                 
                 assert fallback["title_template"] == expected_title
-                assert "## Description" in fallback["description_template"] or "## User Story" in fallback["description_template"]
+                # Check that the fallback template contains appropriate headers for the issue type
+                if issue_type == "Bug":
+                    assert "## Summary" in fallback["description_template"]
+                elif issue_type == "Story":
+                    assert "## User Story" in fallback["description_template"]
+                elif issue_type == "Epic":
+                    assert "## Epic Description" in fallback["description_template"]
+                elif issue_type == "Task":
+                    assert "## Description" in fallback["description_template"]
+                elif issue_type == "Improvement":
+                    assert "## Current State" in fallback["description_template"]
+                else:
+                    assert "## Description" in fallback["description_template"]
                 assert fallback["confidence_score"] == 0.5
     
     @pytest.mark.asyncio

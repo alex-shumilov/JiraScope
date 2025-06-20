@@ -63,7 +63,7 @@ class QdrantVectorClient:
         points = []
         for work_item, embedding in zip(work_items, embeddings):
             point = PointStruct(
-                id=hash(work_item.key),  # Use hash of key as ID
+                id=abs(hash(work_item.key)),  # Use absolute hash of key as ID
                 vector=embedding,
                 payload={
                     "key": work_item.key,

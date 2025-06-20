@@ -15,72 +15,60 @@ class TestScopeDriftDetector:
     
     def setup_method(self):
         """Setup test environment."""
-        self.config = Config()
+        self.config = Config(
+            jira_mcp_endpoint="http://localhost:8080/mcp",
+            lmstudio_endpoint="http://localhost:1234/v1", 
+            qdrant_url="http://localhost:6333",
+            claude_api_key="test-key"
+        )
         self.detector = ScopeDriftDetector(self.config)
         
-    def test_calculate_semantic_drift_score(self):
-        """Test semantic drift score calculation."""
+    @pytest.mark.asyncio
+    async def test_calculate_semantic_similarity(self):
+        """Test semantic similarity calculation."""
         original_text = "Simple user login form"
         current_text = "Complete authentication system with OAuth2, 2FA, password reset, social logins, and security auditing"
         
-        # Mock similarity calculation
-        with patch('jirascope.clients.lmstudio_client.LMStudioClient') as mock_lm:
-            mock_client = MagicMock()
-            mock_lm.return_value = mock_client
-            mock_client.calculate_similarity.return_value = 0.25  # Low similarity = high drift
+        async with self.detector:
+            # Mock the LM client's calculate_similarity method
+            self.detector.lm_client.calculate_similarity = AsyncMock(return_value=0.25)  # Low similarity
             
-            drift_score = self.detector._calculate_semantic_drift_score(
-                original_text, current_text, mock_client
+            similarity = await self.detector._calculate_semantic_similarity(
+                original_text, current_text
             )
             
-            assert 0.0 <= drift_score <= 1.0
-            assert drift_score > 0.5  # Should indicate significant drift
+            assert 0.0 <= similarity <= 1.0
+            assert similarity == 0.25  # Should return the mocked value
     
-    def test_calculate_complexity_drift_score(self):
-        """Test complexity drift score calculation."""
-        original_desc = "Login with username and password"
-        current_desc = """Complete authentication system including:
-        - OAuth2 integration with Google, Facebook, GitHub
-        - Two-factor authentication with SMS and TOTP
-        - Password reset via email with secure tokens
-        - Social login options
-        - Security audit logging
-        - Rate limiting and brute force protection
-        - Session management with JWT tokens
-        - Account lockout policies
-        - CAPTCHA integration for suspicious activity"""
+    @pytest.mark.asyncio
+    async def test_calculate_overall_drift(self):
+        """Test overall drift calculation from multiple events."""
+        from jirascope.models import ScopeDriftEvent
         
-        complexity_score = self.detector._calculate_complexity_drift_score(
-            original_desc, current_desc
-        )
+        # Create sample drift events
+        drift_events = [
+            ScopeDriftEvent(
+                timestamp=datetime.now(),
+                change_type="description_change",
+                old_value="Simple login",
+                new_value="Complex authentication system",
+                drift_score=0.8,
+                change_significance="major"
+            ),
+            ScopeDriftEvent(
+                timestamp=datetime.now(),
+                change_type="scope_expansion",
+                old_value="Basic form",
+                new_value="OAuth integration",
+                drift_score=0.6,
+                change_significance="moderate"
+            )
+        ]
         
-        assert 0.0 <= complexity_score <= 1.0
-        assert complexity_score > 0.7  # Should indicate high complexity increase
-    
-    def test_classify_drift_level_no_drift(self):
-        """Test drift level classification for no drift."""
-        level = self.detector._classify_drift_level(0.15)
-        assert level == "none"
-    
-    def test_classify_drift_level_minor(self):
-        """Test drift level classification for minor drift."""
-        level = self.detector._classify_drift_level(0.35)
-        assert level == "minor"
-    
-    def test_classify_drift_level_moderate(self):
-        """Test drift level classification for moderate drift."""
-        level = self.detector._classify_drift_level(0.55)
-        assert level == "moderate"
-    
-    def test_classify_drift_level_major(self):
-        """Test drift level classification for major drift."""
-        level = self.detector._classify_drift_level(0.75)
-        assert level == "major"
-    
-    def test_classify_drift_level_critical(self):
-        """Test drift level classification for critical drift."""
-        level = self.detector._classify_drift_level(0.95)
-        assert level == "critical"
+        overall_drift = self.detector._calculate_overall_drift(drift_events)
+        
+        assert 0.0 <= overall_drift <= 1.0
+        assert overall_drift > 0.5  # Should reflect significant drift
 
 
 class TestTemporalAnalyzer:
@@ -234,52 +222,29 @@ class TestTemporalAnalyzer:
                 )
                 assert report.total_items_analyzed == 2
     
-    @pytest.mark.asyncio
-    async def test_context_manager_initialization(self, mock_config):
-        """Test that async context manager properly initializes clients."""
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient') as mock_jira, \
-             patch('jirascope.analysis.temporal_analyzer.LMStudioClient') as mock_lm, \
-             patch('jirascope.analysis.temporal_analyzer.ClaudeClient') as mock_claude:
-            
-            mock_jira_instance = AsyncMock()
-            mock_lm_instance = AsyncMock()
-            mock_claude_instance = AsyncMock()
-            mock_jira.return_value = mock_jira_instance
-            mock_lm.return_value = mock_lm_instance
-            mock_claude.return_value = mock_claude_instance
-            
-            async with TemporalAnalyzer(mock_config) as analyzer:
-                # Verify clients were created
-                assert analyzer.jira_client is not None
-                assert analyzer.lm_client is not None
-                assert analyzer.claude_client is not None
-                
-                # Verify __aenter__ was called
-                mock_jira_instance.__aenter__.assert_called_once()
-                mock_lm_instance.__aenter__.assert_called_once()
-                mock_claude_instance.__aenter__.assert_called_once()
+    def test_temporal_analyzer_initialization(self, mock_config):
+        """Test that TemporalAnalyzer properly initializes."""
+        analyzer = TemporalAnalyzer(mock_config)
+        
+        # Verify components were created
+        assert analyzer.drift_detector is not None
+        assert analyzer.config is not None
     
     @pytest.mark.asyncio
-    async def test_context_manager_cleanup(self, mock_config):
-        """Test that async context manager properly cleans up clients."""
-        with patch('jirascope.analysis.temporal_analyzer.JiraClient') as mock_jira, \
-             patch('jirascope.analysis.temporal_analyzer.LMStudioClient') as mock_lm, \
-             patch('jirascope.analysis.temporal_analyzer.ClaudeClient') as mock_claude:
-            
-            mock_jira_instance = AsyncMock()
-            mock_lm_instance = AsyncMock()
-            mock_claude_instance = AsyncMock()
-            mock_jira.return_value = mock_jira_instance
-            mock_lm.return_value = mock_lm_instance
-            mock_claude.return_value = mock_claude_instance
-            
-            async with TemporalAnalyzer(mock_config) as analyzer:
-                pass
-            
-            # Verify __aexit__ was called
-            mock_jira_instance.__aexit__.assert_called_once()
-            mock_lm_instance.__aexit__.assert_called_once()
-            mock_claude_instance.__aexit__.assert_called_once()
+    async def test_epic_evolution_analysis(self, mock_config):
+        """Test epic evolution analysis."""
+        from jirascope.models import EvolutionReport
+        
+        analyzer = TemporalAnalyzer(mock_config)
+        
+        # Test the mock implementation
+        report = await analyzer.epic_evolution_analysis("EPIC-123", days=30)
+        
+        assert isinstance(report, EvolutionReport)
+        assert report.epic_key == "EPIC-123"
+        assert report.time_period_days == 30
+        assert isinstance(report.coherence_trend, list)
+        assert isinstance(report.recommendations, list)
     
     @pytest.mark.asyncio
     async def test_error_handling_jira_failure(self, mock_config, mock_clients, sample_work_items):

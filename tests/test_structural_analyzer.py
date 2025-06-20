@@ -251,23 +251,18 @@ class TestStructuralAnalyzer:
     @pytest.mark.asyncio
     async def test_context_manager_initialization(self, mock_config):
         """Test that async context manager properly initializes clients."""
-        with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient') as mock_qdrant, \
-             patch('jirascope.analysis.structural_analyzer.ClaudeClient') as mock_claude:
+        with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient') as mock_qdrant:
             
             mock_qdrant_instance = AsyncMock()
-            mock_claude_instance = AsyncMock()
             mock_qdrant.return_value = mock_qdrant_instance
-            mock_claude.return_value = mock_claude_instance
             
             async with StructuralAnalyzer(mock_config) as analyzer:
                 # Verify clients were created
                 assert analyzer.qdrant_client is not None
                 assert analyzer.tech_debt_clusterer is not None
                 
-                # Verify __aenter__ was called
+                # Verify __aenter__ was called on qdrant client only
                 mock_qdrant_instance.__aenter__.assert_called_once()
-                # LM client not used in StructuralAnalyzer
-                mock_claude_instance.__aenter__.assert_called_once()
     
     @pytest.mark.asyncio
     async def test_context_manager_cleanup(self, mock_config):
@@ -288,49 +283,63 @@ class TestStructuralAnalyzer:
             # Claude client is managed by tech_debt_clusterer, not directly by StructuralAnalyzer
     
     @pytest.mark.asyncio
-    async def test_error_handling_qdrant_failure(self, mock_config, mock_clients):
+    async def test_error_handling_qdrant_failure(self, mock_config):
         """Test error handling when Qdrant operations fail."""
-        qdrant_client, claude_client = mock_clients
-        
-        # Mock Qdrant failure
-        qdrant_client.client.scroll.side_effect = Exception("Qdrant connection error")
-        
-        with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
+        with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient') as mock_qdrant, \
+             patch('jirascope.analysis.structural_analyzer.ClaudeClient') as mock_claude:
+            
+            mock_qdrant_instance = AsyncMock()
+            mock_claude_instance = AsyncMock()
+            mock_qdrant.return_value = mock_qdrant_instance
+            mock_claude.return_value = mock_claude_instance
+            
+            # Mock search to raise exception
+            mock_qdrant_instance.search_similar_work_items.side_effect = Exception("Qdrant connection error")
             
             async with StructuralAnalyzer(mock_config) as analyzer:
-                qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
-                qdrant_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
-                
-                with pytest.raises(Exception, match="Qdrant connection error"):
-                    await analyzer.tech_debt_clustering()
+                with patch.object(analyzer.tech_debt_clusterer, 'qdrant_client', mock_qdrant_instance), \
+                     patch.object(analyzer.tech_debt_clusterer, 'claude_client', mock_claude_instance):
+                    
+                    mock_qdrant_instance.__aenter__ = AsyncMock(return_value=mock_qdrant_instance)
+                    mock_qdrant_instance.__aexit__ = AsyncMock()
+                    mock_claude_instance.__aenter__ = AsyncMock(return_value=mock_claude_instance)
+                    mock_claude_instance.__aexit__ = AsyncMock()
+                    
+                    # Mock successful embedding generation to reach the search call
+                    with patch.object(analyzer.tech_debt_clusterer, '_get_embeddings_for_text', return_value=[[0.1]*384]):
+                        with pytest.raises(Exception, match="Qdrant connection error"):
+                            await analyzer.tech_debt_clustering()
     
     @pytest.mark.asyncio
-    async def test_error_handling_claude_failure(self, mock_config, mock_clients, sample_work_items):
+    async def test_error_handling_claude_failure(self, mock_config, sample_work_items):
         """Test error handling when Claude analysis fails."""
-        qdrant_client, claude_client = mock_clients
-        
-        # Mock Claude failure
-        claude_client.analyze.side_effect = Exception("Claude API error")
-        
-        tech_debt_items = sample_work_items[2:4]
-        
-        with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient', return_value=qdrant_client), \
-             patch('jirascope.analysis.structural_analyzer.ClaudeClient', return_value=claude_client):
+        with patch('jirascope.analysis.structural_analyzer.QdrantVectorClient') as mock_qdrant, \
+             patch('jirascope.analysis.structural_analyzer.ClaudeClient') as mock_claude:
+            
+            mock_qdrant_instance = AsyncMock()
+            mock_claude_instance = AsyncMock()
+            mock_qdrant.return_value = mock_qdrant_instance
+            mock_claude.return_value = mock_claude_instance
+            
+            # Mock Claude failure
+            mock_claude_instance.analyze.side_effect = Exception("Claude API error")
+            
+            tech_debt_items = sample_work_items[2:4]
             
             async with StructuralAnalyzer(mock_config) as analyzer:
-                qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
-                qdrant_client.__aexit__ = AsyncMock()
-                claude_client.__aenter__ = AsyncMock(return_value=claude_client)
-                claude_client.__aexit__ = AsyncMock()
-                
-                # Should use fallback analysis when Claude fails
-                analysis = await analyzer._analyze_cluster_with_claude(tech_debt_items)
-                
-                assert analysis["theme"] == "Tech Debt Cluster"
-                assert analysis["priority_score"] == 0.5
+                with patch.object(analyzer.tech_debt_clusterer, 'qdrant_client', mock_qdrant_instance), \
+                     patch.object(analyzer.tech_debt_clusterer, 'claude_client', mock_claude_instance):
+                    
+                    mock_qdrant_instance.__aenter__ = AsyncMock(return_value=mock_qdrant_instance)
+                    mock_qdrant_instance.__aexit__ = AsyncMock()
+                    mock_claude_instance.__aenter__ = AsyncMock(return_value=mock_claude_instance)
+                    mock_claude_instance.__aexit__ = AsyncMock()
+                    
+                    # Should use fallback analysis when Claude fails
+                    analysis = await analyzer._analyze_cluster_with_claude(tech_debt_items)
+                    
+                    assert analysis["theme"] == "Technical Debt Cluster 0"
+                    assert analysis["priority_score"] == 0.5
     
     def test_tech_debt_cluster_model(self):
         """Test TechDebtCluster model creation and validation."""

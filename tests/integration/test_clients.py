@@ -133,7 +133,7 @@ async def test_qdrant_client_store_work_items(mock_config, sample_work_items, sa
             call_args = mock_client.upsert.call_args
             points = call_args[1]["points"]
             assert len(points) == 1
-            assert points[0].payload["key"] == "PROJ-1"
+            assert points[0].payload["key"] == "TEST-1"
 
 
 def test_claude_client_calculate_cost(mock_config):
@@ -163,7 +163,7 @@ async def test_claude_client_analyze_work_item(mock_config, sample_work_items):
         
         result = await client.analyze_work_item(sample_work_items[0], "complexity")
         
-        assert result.work_item_key == "PROJ-1"
+        assert result.work_item_key == "TEST-1"
         assert result.analysis_type == "complexity"
         assert result.cost > 0
         assert "confidence" in result.insights
