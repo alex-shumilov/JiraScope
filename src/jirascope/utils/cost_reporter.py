@@ -473,7 +473,7 @@ class AdvancedCostReporter:
         return CostEfficiencyReport(
             efficiency_score=efficiency_score,
             breakdown_by_service=base_report.service_breakdown,
-            optimization_suggestions=[opt.dict() for opt in optimizations],
+            optimization_suggestions=[opt.model_dump() for opt in optimizations],
             potential_savings=potential_savings,
             risk_assessment=risk_assessment
         )

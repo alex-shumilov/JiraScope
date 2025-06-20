@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from jirascope.pipeline.rag_quality_tester import (
     RAGQualityTester, 
-    TestQuery, 
+    RagTestQuery, 
     RAGQualityReport
 )
 from jirascope.core.config import Config
@@ -23,7 +23,7 @@ def mock_config():
 def sample_test_queries():
     """Sample test queries for testing."""
     return [
-        TestQuery(
+        RagTestQuery(
             id="auth_query",
             query_text="user authentication and login",
             expected_work_items=["PROJ-123", "PROJ-456"],
@@ -31,7 +31,7 @@ def sample_test_queries():
             category="functional",
             description="Test for authentication features"
         ),
-        TestQuery(
+        RagTestQuery(
             id="db_query",
             query_text="database migration",
             expected_work_items=["PROJ-789", "PROJ-012"],

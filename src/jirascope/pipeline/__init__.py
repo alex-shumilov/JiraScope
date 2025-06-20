@@ -5,7 +5,7 @@ from .quality_validator import EmbeddingQualityValidator
 from .incremental_processor import IncrementalProcessor
 from .rag_quality_tester import (
     RAGQualityTester, 
-    TestQuery, 
+    RagTestQuery, 
     RAGTestResult,
     RAGQualityReport,
     EmbeddingConsistencyReport, 
@@ -29,7 +29,7 @@ __all__ = [
     "EmbeddingQualityValidator", 
     "IncrementalProcessor",
     "RAGQualityTester",
-    "TestQuery",
+    "RagTestQuery",
     "RAGTestResult",
     "RAGQualityReport",
     "EmbeddingConsistencyReport",

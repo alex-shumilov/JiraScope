@@ -18,7 +18,7 @@ from ..utils.logging import StructuredLogger
 logger = StructuredLogger(__name__)
 
 
-class TestQuery(BaseModel):
+class RagTestQuery(BaseModel):
     """Test query for RAG quality testing."""
     
     id: str = Field(..., description="Unique identifier for this test query")
@@ -93,7 +93,7 @@ class QualityTestSuite:
     
     def __init__(self):
         self.test_queries = [
-            TestQuery(
+            RagTestQuery(
                 id="auth_functionality",
                 query_text="user authentication and login functionality",
                 expected_work_items=["PROJ-123", "PROJ-456"],
@@ -101,7 +101,7 @@ class QualityTestSuite:
                 category="functional",
                 description="Should find authentication-related work items"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="database_migration",
                 query_text="database schema changes and migrations",
                 expected_work_items=["PROJ-789", "PROJ-012"],
@@ -109,7 +109,7 @@ class QualityTestSuite:
                 category="technical",
                 description="Should identify database-related tasks"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="ui_improvements",
                 query_text="user interface and user experience improvements",
                 expected_work_items=["PROJ-345", "PROJ-678"],
@@ -117,7 +117,7 @@ class QualityTestSuite:
                 category="functional",
                 description="Should find UI/UX related work"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="performance_optimization",
                 query_text="application performance and speed optimization",
                 expected_work_items=["PROJ-901", "PROJ-234"],
@@ -125,7 +125,7 @@ class QualityTestSuite:
                 category="technical",
                 description="Should identify performance-related tasks"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="api_documentation",
                 query_text="REST API documentation and endpoint specifications",
                 expected_work_items=["PROJ-567", "PROJ-890"],
@@ -135,7 +135,7 @@ class QualityTestSuite:
             )
         ]
     
-    async def create_custom_test_from_epic(self, epic_key: str, jira_client: MCPClient, claude_client: ClaudeClient) -> TestQuery:
+    async def create_custom_test_from_epic(self, epic_key: str, jira_client: MCPClient, claude_client: ClaudeClient) -> RagTestQuery:
         """Generate test query from Epic content."""
         epic_data = await jira_client.get_issue(epic_key)
         
@@ -156,7 +156,7 @@ class QualityTestSuite:
         epic_work_items = await jira_client.get_epic_issues(epic_key)
         work_item_keys = [item["key"] for item in epic_work_items]
         
-        return TestQuery(
+        return RagTestQuery(
             id=f"epic_{epic_key.lower()}",
             query_text=query,
             expected_work_items=work_item_keys,
@@ -169,7 +169,7 @@ class QualityTestSuite:
 class RAGQualityTester:
     """Comprehensive RAG quality testing system."""
     
-    def __init__(self, config: Config, test_queries: Optional[List[TestQuery]] = None):
+    def __init__(self, config: Config, test_queries: Optional[List[RagTestQuery]] = None):
         self.config = config
         self.test_queries = test_queries or QualityTestSuite().test_queries
         self.baseline_results = {}

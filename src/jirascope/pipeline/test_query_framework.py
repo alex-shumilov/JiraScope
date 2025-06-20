@@ -11,7 +11,7 @@ from ..clients.claude_client import ClaudeClient
 from ..clients.mcp_client import MCPClient
 from ..core.config import Config
 from ..utils.logging import StructuredLogger
-from .rag_quality_tester import TestQuery
+from .rag_quality_tester import RagTestQuery
 
 logger = StructuredLogger(__name__)
 
@@ -22,7 +22,7 @@ class TestCategory(BaseModel):
     name: str = Field(..., description="Category name")
     description: str = Field(..., description="Category description")
     min_coverage: int = Field(3, description="Minimum number of tests required in this category")
-    tests: List[TestQuery] = Field(default_factory=list, description="Tests in this category")
+    tests: List[RagTestQuery] = Field(default_factory=list, description="Tests in this category")
 
 
 class TestQueryCollection(BaseModel):
@@ -31,7 +31,7 @@ class TestQueryCollection(BaseModel):
     categories: Dict[str, TestCategory] = Field(default_factory=dict)
     total_tests: int = 0
     
-    def add_test(self, test: TestQuery):
+    def add_test(self, test: RagTestQuery):
         """Add a test to the appropriate category."""
         if test.category not in self.categories:
             self.categories[test.category] = TestCategory(
@@ -43,11 +43,11 @@ class TestQueryCollection(BaseModel):
         self.categories[test.category].tests.append(test)
         self.total_tests += 1
     
-    def get_tests_by_category(self, category: str) -> List[TestQuery]:
+    def get_tests_by_category(self, category: str) -> List[RagTestQuery]:
         """Get all tests in a specific category."""
         return self.categories.get(category, TestCategory(name=category, description="", tests=[])).tests
     
-    def get_all_tests(self) -> List[TestQuery]:
+    def get_all_tests(self) -> List[RagTestQuery]:
         """Get all tests across all categories."""
         all_tests = []
         for category in self.categories.values():
@@ -109,7 +109,7 @@ class TestQueryManager:
         
         # Add sample tests based on category
         functional_tests = [
-            TestQuery(
+            RagTestQuery(
                 id="auth_functionality",
                 query_text="user authentication and login functionality",
                 expected_work_items=[],
@@ -117,7 +117,7 @@ class TestQueryManager:
                 category="functional",
                 description="Should find authentication-related work items"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="user_management",
                 query_text="user account management and permissions",
                 expected_work_items=[],
@@ -125,7 +125,7 @@ class TestQueryManager:
                 category="functional", 
                 description="Should find user management-related work items"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="reporting_features", 
                 query_text="reporting and analytics features",
                 expected_work_items=[],
@@ -136,7 +136,7 @@ class TestQueryManager:
         ]
         
         technical_tests = [
-            TestQuery(
+            RagTestQuery(
                 id="database_migration",
                 query_text="database schema changes and migrations",
                 expected_work_items=[],
@@ -144,7 +144,7 @@ class TestQueryManager:
                 category="technical",
                 description="Should identify database-related tasks"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="performance_optimization",
                 query_text="application performance and speed optimization",
                 expected_work_items=[],
@@ -152,7 +152,7 @@ class TestQueryManager:
                 category="technical",
                 description="Should identify performance-related tasks"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="security_implementation",
                 query_text="security implementation and vulnerability fixes",
                 expected_work_items=[],
@@ -163,7 +163,7 @@ class TestQueryManager:
         ]
         
         business_tests = [
-            TestQuery(
+            RagTestQuery(
                 id="api_documentation",
                 query_text="REST API documentation and endpoint specifications",
                 expected_work_items=[],
@@ -171,7 +171,7 @@ class TestQueryManager:
                 category="business",
                 description="Should find documentation tasks"
             ),
-            TestQuery(
+            RagTestQuery(
                 id="business_rules",
                 query_text="business logic and workflow rules implementation",
                 expected_work_items=[],
@@ -211,7 +211,7 @@ class TestQueryManager:
             
             # Load tests
             for test_data in data.get("tests", []):
-                test = TestQuery(
+                test = RagTestQuery(
                     id=test_data["id"],
                     query_text=test_data["query_text"],
                     expected_work_items=test_data.get("expected_work_items", []),
@@ -311,7 +311,7 @@ class TestQueryManager:
         epic_key: str, 
         jira_client: MCPClient, 
         claude_client: ClaudeClient
-    ) -> Optional[TestQuery]:
+    ) -> Optional[RagTestQuery]:
         """Generate a test query from an Epic."""
         try:
             # Get Epic details
@@ -338,7 +338,7 @@ class TestQueryManager:
             epic_work_items = await jira_client.get_epic_issues(epic_key)
             work_item_keys = [item["key"] for item in epic_work_items]
             
-            test = TestQuery(
+            test = RagTestQuery(
                 id=f"epic_{epic_key.lower()}",
                 query_text=query,
                 expected_work_items=work_item_keys,
@@ -357,7 +357,7 @@ class TestQueryManager:
             logger.error(f"Failed to generate test from Epic {epic_key}", error=str(e))
             return None
     
-    def get_test_queries(self, category: Optional[str] = None) -> List[TestQuery]:
+    def get_test_queries(self, category: Optional[str] = None) -> List[RagTestQuery]:
         """Get test queries, optionally filtered by category."""
         if category:
             return self.collection.get_tests_by_category(category)

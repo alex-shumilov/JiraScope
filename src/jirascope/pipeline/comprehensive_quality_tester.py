@@ -13,7 +13,8 @@ from ..clients.claude_client import ClaudeClient
 from ..clients.mcp_client import MCPClient
 from ..utils.logging import StructuredLogger
 from .rag_quality_tester import RAGQualityTester, RAGQualityReport
-from .test_query_framework import TestQueryManager, TestQuery
+from .test_query_framework import TestQueryManager
+from .rag_quality_tester import RagTestQuery
 
 logger = StructuredLogger(__name__)
 
@@ -298,7 +299,7 @@ class ComprehensiveQualityTester:
             return False
     
     async def test_with_custom_queries(self, 
-                                     queries: List[TestQuery], 
+                                     queries: List[RagTestQuery], 
                                      test_name: str = "Custom Query Test") -> Dict[str, Any]:
         """Run quality tests with custom queries."""
         logger.info(f"Running quality assessment with {len(queries)} custom queries")
