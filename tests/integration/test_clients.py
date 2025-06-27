@@ -1,8 +1,10 @@
 """Integration tests for client classes."""
 
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
-from src.jirascope.clients import MCPClient, LMStudioClient, QdrantVectorClient, ClaudeClient
+
+import pytest
+
+from src.jirascope.clients import ClaudeClient, LMStudioClient, MCPClient, QdrantVectorClient
 
 
 @pytest.mark.asyncio
@@ -11,14 +13,16 @@ async def test_mcp_client_get_work_items(mock_config, mock_httpx_responses):
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_response = AsyncMock()
-        mock_response.json = Mock(return_value=mock_httpx_responses["jira_search"])  # Use Mock not AsyncMock
+        mock_response.json = Mock(
+            return_value=mock_httpx_responses["jira_search"]
+        )  # Use Mock not AsyncMock
         mock_response.raise_for_status = Mock()
         mock_client.post.return_value = mock_response
         mock_client_class.return_value = mock_client
-        
+
         async with MCPClient(mock_config) as client:
             work_items = await client.get_work_items("project = PROJ")
-            
+
             assert len(work_items) == 1
             assert work_items[0].key == "PROJ-1"
             assert work_items[0].summary == "Test issue"
@@ -29,14 +33,14 @@ async def test_mcp_client_get_work_items(mock_config, mock_httpx_responses):
 async def test_mcp_client_update_work_item_dry_run(mock_config):
     """Test MCP client dry run mode."""
     mock_config.jira_dry_run = True
-    
+
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client_class.return_value = mock_client
-        
+
         async with MCPClient(mock_config) as client:
             result = await client.update_work_item("PROJ-1", {"summary": "Updated"})
-            
+
             assert result is True
             mock_client.put.assert_not_called()  # Should not make actual API call
 
@@ -51,10 +55,10 @@ async def test_lmstudio_client_health_check(mock_config, mock_httpx_responses):
         mock_response.raise_for_status = Mock()
         mock_client.get.return_value = mock_response
         mock_client_class.return_value = mock_client
-        
+
         async with LMStudioClient(mock_config) as client:
             health = await client.health_check()
-            
+
             assert health is True
             mock_client.get.assert_called_once()
 
@@ -69,10 +73,10 @@ async def test_lmstudio_client_generate_embeddings(mock_config, mock_httpx_respo
         mock_response.raise_for_status = Mock()
         mock_client.post.return_value = mock_response
         mock_client_class.return_value = mock_client
-        
+
         async with LMStudioClient(mock_config) as client:
             embeddings = await client.generate_embeddings(["test text"])
-            
+
             assert len(embeddings) == 1
             assert len(embeddings[0]) == 1023  # 341 * 3
             mock_client.post.assert_called_once()
@@ -81,19 +85,19 @@ async def test_lmstudio_client_generate_embeddings(mock_config, mock_httpx_respo
 def test_lmstudio_client_calculate_similarity(mock_config):
     """Test LMStudio client similarity calculation."""
     client = LMStudioClient(mock_config)
-    
+
     # Test identical vectors
     vec1 = [1.0, 0.0, 0.0]
     vec2 = [1.0, 0.0, 0.0]
     similarity = client.calculate_similarity(vec1, vec2)
     assert similarity == 1.0
-    
+
     # Test orthogonal vectors
     vec1 = [1.0, 0.0, 0.0]
     vec2 = [0.0, 1.0, 0.0]
     similarity = client.calculate_similarity(vec1, vec2)
     assert similarity == 0.0
-    
+
     # Test zero vectors
     vec1 = [0.0, 0.0, 0.0]
     vec2 = [1.0, 0.0, 0.0]
@@ -105,11 +109,11 @@ def test_qdrant_client_initialization(mock_config):
     """Test Qdrant client initialization."""
     # Create a mock object that verifies client initialization without async
     mock_client = Mock()
-    
+
     # Patch the QdrantClient class constructor directly
     with patch("src.jirascope.clients.qdrant_client.QdrantClient", return_value=mock_client):
         # Test basic initialization
-        client = QdrantVectorClient(mock_config) 
+        client = QdrantVectorClient(mock_config)
         # Verify expected properties
         assert client.collection_name == "jirascope_work_items"
         # Verify client was created with proper URL
@@ -125,28 +129,28 @@ async def test_qdrant_client_store_work_items(mock_config, sample_work_items, sa
     mock_collections.collections = [Mock(name="jirascope_work_items")]
     mock_client.get_collections.return_value = mock_collections
     mock_client.upsert = Mock()
-    
+
     with patch("src.jirascope.clients.qdrant_client.QdrantClient", return_value=mock_client):
         # Create client and initialize directly
         client = QdrantVectorClient(mock_config)
         await client.initialize_collection()
-        
+
         # Store work items
         await client.store_work_items(sample_work_items[:1], sample_embeddings[:1])
-        
+
         # Verify upsert was called
         mock_client.upsert.assert_called_once()
         call_args = mock_client.upsert.call_args
         assert "points" in call_args[1]
         assert call_args[1]["collection_name"] == "jirascope_work_items"
-        
+
         # We can't easily check points details with Mock objects, so just verify the call happened
 
 
 def test_claude_client_calculate_cost(mock_config):
     """Test Claude client cost calculation."""
     client = ClaudeClient(mock_config)
-    
+
     cost = client.calculate_cost(input_tokens=1000, output_tokens=500)
     expected = (1000 * 0.000003) + (500 * 0.000015)
     assert cost == expected
@@ -159,7 +163,7 @@ async def test_claude_client_analyze_work_item(mock_config, sample_work_items):
         client = ClaudeClient.__new__(ClaudeClient)
         client.config = mock_config
         client.session_cost = 0.0
-        
+
         # Mock the Anthropic client
         mock_anthropic = Mock()
         mock_response = Mock()
@@ -167,9 +171,9 @@ async def test_claude_client_analyze_work_item(mock_config, sample_work_items):
         mock_response.usage = Mock(input_tokens=100, output_tokens=50)
         mock_anthropic.messages.create.return_value = mock_response
         client.client = mock_anthropic
-        
+
         result = await client.analyze_work_item(sample_work_items[0], "complexity")
-        
+
         assert result.work_item_key == "TEST-1"
         assert result.analysis_type == "complexity"
         assert result.cost > 0
