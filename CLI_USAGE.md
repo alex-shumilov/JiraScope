@@ -170,3 +170,54 @@ jirascope --help
 jirascope analyze --help
 jirascope sync --help
 ```
+
+## SSE Authentication
+
+### Authenticate with Atlassian Cloud
+
+```bash
+# Set up SSE endpoint
+export JIRA_MCP_ENDPOINT=https://mcp.atlassian.com/v1/sse
+
+# Authenticate (opens browser)
+jirascope auth
+
+# Check authentication status
+jirascope auth-status
+```
+
+### Authentication Management
+
+```bash
+# Force re-authentication
+jirascope auth
+
+# Check token status and expiration
+jirascope auth-status
+
+# Clear cached tokens (requires re-authentication)
+jirascope auth-clear
+```
+
+### Example Authentication Flow
+
+```bash
+$ jirascope auth
+🔐 Starting SSE authentication flow...
+🔐 Opening browser for authentication...
+If browser doesn't open automatically, visit: https://...
+
+⏳ Waiting for authentication...
+✅ Authentication successful!
+   Token expires: 2024-12-31 23:59:59
+   Saved to: /Users/alex/.jirascope/auth_cache.json
+
+$ jirascope auth-status
+✅ Authentication tokens are valid.
+   Expires in: 23h 59m
+   Cache file: /Users/alex/.jirascope/auth_cache.json
+
+# Now all commands work with authenticated access
+$ jirascope fetch -p PROJ
+# ... fetches from authenticated Atlassian Cloud
+```
