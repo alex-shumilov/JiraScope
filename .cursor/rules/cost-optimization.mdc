@@ -1,0 +1,141 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Cost Optimization and Monitoring
+
+This guide covers cost optimization strategies and monitoring for AI services used in JiraScope.
+
+## Cost Components
+
+### Primary Cost Sources
+- **Claude API**: Text analysis and content generation
+- **LMStudio**: Local embedding generation (hardware costs)
+- **Qdrant**: Vector database storage and operations
+
+### Cost Monitoring Tools
+
+#### Cost Reporter
+**File**: [src/jirascope/utils/cost_reporter.py](mdc:src/jirascope/utils/cost_reporter.py)
+- **Purpose**: Tracks and reports API usage costs
+- **Features**: Token counting, cost estimation, usage reporting
+- **Usage**: `jirascope cost` command
+
+#### Cost Optimizer
+**File**: [src/jirascope/utils/cost_optimizer.py](mdc:src/jirascope/utils/cost_optimizer.py)
+- **Purpose**: Optimizes operations to minimize costs
+- **Features**: Batch processing, caching, intelligent retry logic
+- **Integration**: Used throughout analysis pipeline
+
+## Optimization Strategies
+
+### Embedding Generation Optimization
+- **Batch Processing**: Process multiple items in single API calls
+- **Local Models**: Use LMStudio for embedding generation to avoid API costs
+- **Caching**: Store and reuse embeddings for unchanged content
+- **Incremental Updates**: Only process new/changed items
+
+### Claude API Optimization
+- **Prompt Engineering**: Optimize prompts for shorter responses
+- **Batch Analysis**: Analyze multiple items in single requests when possible
+- **Smart Fallbacks**: Use local models when available
+- **Rate Limiting**: Respect API limits to avoid additional costs
+
+### Storage Optimization
+- **Vector Compression**: Use appropriate precision for embeddings
+- **Data Retention**: Implement retention policies for old data
+- **Efficient Indexing**: Optimize Qdrant collections for performance
+
+## Cost Monitoring Commands
+
+### Usage Tracking
+```bash
+# View current cost estimates
+jirascope cost
+
+# Detailed cost breakdown by operation
+jirascope cost --detailed
+
+# Cost analysis for specific time period
+jirascope cost --since=2024-01-01
+```
+
+### Budget Management
+```bash
+# Set cost alerts
+jirascope config set cost.alert_threshold 100.00
+
+# View cost projections
+jirascope cost --project
+```
+
+## Configuration for Cost Control
+
+### Environment Variables
+- `CLAUDE_COST_LIMIT`: Maximum monthly Claude API spend
+- `EMBEDDING_BATCH_SIZE`: Batch size for embedding operations
+- `CACHE_TTL`: Time-to-live for cached results
+
+### Cost-Aware Processing
+- **Smart Batching**: Automatically determine optimal batch sizes
+- **Priority Processing**: Process high-value items first
+- **Graceful Degradation**: Fall back to cheaper alternatives when limits approached
+
+## Best Practices
+
+### Development
+- Use smaller datasets during development
+- Mock expensive operations in tests
+- Monitor costs in development environments
+
+### Production
+- Implement cost budgets and alerts
+- Regular cost analysis and optimization reviews
+- Monitor usage patterns and adjust configurations
+
+### Service Selection
+- **Local vs. Cloud**: Balance between local compute costs and API costs
+- **Model Selection**: Choose appropriate models for each task
+- **Caching Strategy**: Aggressive caching for repetitive operations
+
+## Cost Analysis Reports
+
+### Metrics Tracked
+- **Token Usage**: Input/output tokens per operation
+- **API Calls**: Number and frequency of service calls
+- **Processing Time**: Time spent on various operations
+- **Error Rates**: Failed operations that waste resources
+
+### Report Generation
+Cost reports include:
+- Daily/monthly usage trends
+- Cost per analysis type
+- Efficiency metrics
+- Optimization recommendations
+
+### Integration with Analysis Pipeline
+Cost monitoring is integrated throughout:
+- **Extraction**: [src/jirascope/extractors/jira_extractor.py](mdc:src/jirascope/extractors/jira_extractor.py)
+- **Embedding**: [src/jirascope/pipeline/embedding_processor.py](mdc:src/jirascope/pipeline/embedding_processor.py)
+- **Analysis**: All modules in [src/jirascope/analysis/](mdc:src/jirascope/analysis)
+- **Quality Testing**: [src/jirascope/pipeline/rag_quality_tester.py](mdc:src/jirascope/pipeline/rag_quality_tester.py)
+
+## Troubleshooting Cost Issues
+
+### High Costs
+- Review batch sizes and processing patterns
+- Check for unnecessary repeated operations
+- Verify caching is working effectively
+- Analyze failed operations that waste resources
+
+### Budget Alerts
+- Investigate sudden spikes in usage
+- Review recent configuration changes
+- Check for runaway processes or loops
+- Verify service quotas and limits
+
+### Performance vs. Cost Trade-offs
+- Balance analysis quality with cost constraints
+- Use tiered analysis strategies (fast screening, detailed analysis)
+- Implement smart sampling for large datasets

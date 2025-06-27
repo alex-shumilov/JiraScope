@@ -1,0 +1,94 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# External Services Integration
+
+JiraScope integrates with multiple external services through dedicated client classes in [src/jirascope/clients/](mdc:src/jirascope/clients).
+
+## Service Clients
+
+### Qdrant Vector Database
+**File**: [src/jirascope/clients/qdrant_client.py](mdc:src/jirascope/clients/qdrant_client.py)
+- **Purpose**: Vector storage and semantic search
+- **Features**:
+  - Embedding storage and retrieval
+  - Similarity search with configurable limits
+  - Collection management
+  - Health checking
+- **Configuration**: Requires Qdrant server URL and settings
+
+### LMStudio Client
+**File**: [src/jirascope/clients/lmstudio_client.py](mdc:src/jirascope/clients/lmstudio_client.py)
+- **Purpose**: Local LLM integration for embeddings
+- **Features**:
+  - Embedding generation
+  - Text processing
+  - Batch operations
+  - Health monitoring
+- **Configuration**: Local LMStudio server endpoint
+
+### Claude AI Client
+**File**: [src/jirascope/clients/claude_client.py](mdc:src/jirascope/clients/claude_client.py)
+- **Purpose**: Anthropic Claude integration for analysis
+- **Features**:
+  - Content analysis
+  - Quality assessment
+  - Template generation
+  - Cost tracking
+- **Configuration**: Anthropic API key required
+
+### MCP Client
+**File**: [src/jirascope/clients/mcp_client.py](mdc:src/jirascope/clients/mcp_client.py)
+- **Purpose**: Model Context Protocol integration
+- **Features**:
+  - Unified model interface
+  - Context management
+  - Multi-provider support
+
+### Authentication Service
+**File**: [src/jirascope/clients/auth.py](mdc:src/jirascope/clients/auth.py)
+- **Purpose**: Centralized authentication management
+- **Features**:
+  - Multi-service credential management
+  - Secure credential storage
+  - Token refresh handling
+
+## Client Design Patterns
+
+### Async Context Manager
+All clients implement the async context manager protocol:
+```python
+async with ClientClass(config) as client:
+    result = await client.some_operation()
+```
+
+### Health Checking
+Every client provides a `health_check()` method:
+- Returns boolean health status
+- Used by `jirascope health` command
+- Enables service monitoring
+
+### Configuration Injection
+- All clients accept a config object in constructor
+- Configuration handled through [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
+- Environment variables and config files supported
+
+### Error Handling
+- Graceful degradation when services unavailable
+- Structured error responses
+- Logging integration through [src/jirascope/utils/logging.py](mdc:src/jirascope/utils/logging.py)
+
+## Service Dependencies
+
+### Required for Core Functionality
+- **Qdrant**: Vector storage and search
+- **LMStudio**: Embedding generation
+
+### Optional Services
+- **Claude**: Enhanced analysis features
+- **MCP**: Advanced model integration
+
+### Environment Setup
+Configure service endpoints and credentials in environment variables or [config/env.example](mdc:config/env.example).

@@ -1,0 +1,97 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Data Processing Pipeline
+
+The data pipeline in [src/jirascope/pipeline/](mdc:src/jirascope/pipeline) handles the transformation of Jira work items into analyzable vector embeddings.
+
+## Pipeline Components
+
+### Jira Data Extraction
+**File**: [src/jirascope/extractors/jira_extractor.py](mdc:src/jirascope/extractors/jira_extractor.py)
+- **Purpose**: Fetches work items from Jira API
+- **Features**:
+  - Hierarchical data extraction (epics → stories → subtasks)
+  - Incremental updates support
+  - JQL query filtering
+  - Cost tracking for API calls
+- **Output**: Structured work item objects
+
+### Embedding Processing
+**File**: [src/jirascope/pipeline/embedding_processor.py](mdc:src/jirascope/pipeline/embedding_processor.py)
+- **Purpose**: Converts work item text into vector embeddings
+- **Features**:
+  - Batch processing for efficiency
+  - Text preprocessing and cleaning
+  - Integration with LMStudio for embeddings
+  - Storage in Qdrant vector database
+- **Input**: Work item objects
+- **Output**: Vector embeddings stored in Qdrant
+
+### Incremental Processing
+**File**: [src/jirascope/pipeline/incremental_processor.py](mdc:src/jirascope/pipeline/incremental_processor.py)
+- **Purpose**: Handles incremental updates and change detection
+- **Features**:
+  - Track last sync timestamps
+  - Identify changed/new work items
+  - Update existing embeddings
+  - Maintain data consistency
+- **Usage**: Enables efficient `--incremental` mode
+
+### Quality Validation
+**File**: [src/jirascope/pipeline/quality_validator.py](mdc:src/jirascope/pipeline/quality_validator.py)
+- **Purpose**: Validates embedding quality and data integrity
+- **Features**:
+  - Embedding quality metrics
+  - Data consistency checks
+  - Performance monitoring
+  - Error detection and reporting
+- **Usage**: `jirascope validate` command
+
+### RAG Quality Testing
+**File**: [src/jirascope/pipeline/rag_quality_tester.py](mdc:src/jirascope/pipeline/rag_quality_tester.py)
+- **Purpose**: Tests Retrieval-Augmented Generation quality
+- **Features**:
+  - Query-response quality evaluation
+  - Retrieval accuracy testing
+  - Performance benchmarking
+
+### Comprehensive Quality Testing
+**File**: [src/jirascope/pipeline/comprehensive_quality_tester.py](mdc:src/jirascope/pipeline/comprehensive_quality_tester.py)
+- **Purpose**: End-to-end quality assurance
+- **Features**:
+  - Full pipeline testing
+  - Integration validation
+  - Performance analysis
+
+### Test Query Framework
+**File**: [src/jirascope/pipeline/test_query_framework.py](mdc:src/jirascope/pipeline/test_query_framework.py)
+- **Purpose**: Framework for testing search and analysis queries
+- **Features**:
+  - Automated query testing
+  - Result validation
+  - Performance monitoring
+
+## Data Flow
+
+1. **Extract**: Jira work items → [jira_extractor.py](mdc:src/jirascope/extractors/jira_extractor.py)
+2. **Transform**: Text → Embeddings via [embedding_processor.py](mdc:src/jirascope/pipeline/embedding_processor.py)
+3. **Store**: Embeddings → Qdrant via [qdrant_client.py](mdc:src/jirascope/clients/qdrant_client.py)
+4. **Analyze**: Embeddings → Insights via [analysis modules](mdc:src/jirascope/analysis)
+5. **Validate**: Quality checks via [quality_validator.py](mdc:src/jirascope/pipeline/quality_validator.py)
+
+## Pipeline Configuration
+
+Pipeline behavior is controlled through:
+- **Configuration**: [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
+- **Environment Variables**: See [config/env.example](mdc:config/env.example)
+- **CLI Options**: Project keys, incremental flags, JQL filters
+
+## Error Handling
+
+- Graceful handling of API failures
+- Retry logic for transient errors
+- Comprehensive logging via [src/jirascope/utils/logging.py](mdc:src/jirascope/utils/logging.py)
+- Cost tracking and reporting via [src/jirascope/utils/cost_reporter.py](mdc:src/jirascope/utils/cost_reporter.py)

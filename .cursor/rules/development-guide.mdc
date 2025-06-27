@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Development Guide
+
+## Development Setup
+
+### Prerequisites
+1. Python 3.11+ (defined in [pyproject.toml](mdc:pyproject.toml))
+2. Poetry for dependency management
+3. External services: LMStudio, Qdrant, Claude API
+
+### Installation
+```bash
+poetry install
+poetry shell
+pip install -e .
+```
+
+### Environment Setup
+Copy [config/env.example](mdc:config/env.example) to configure required environment variables for Jira, Claude, and other service integrations.
+
+## Code Organization Patterns
+
+### Async/Await Pattern
+- All external service calls use async/await
+- Main CLI commands wrap async functions with `asyncio.run()`
+- Client classes use async context managers (`async with`)
+
+### Configuration Management
+- All modules receive config via dependency injection
+- Configuration loaded once in CLI entry point at [src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py)
+- Config class defined in [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
+
+### Error Handling
+- Use try/except blocks for external service calls
+- Log errors using the logging utility from [src/jirascope/utils/logging.py](mdc:src/jirascope/utils/logging.py)
+- Return structured error responses where appropriate
+
+### Client Pattern
+All external service clients follow this pattern:
+- Async context manager implementation
+- Health check method
+- Configuration-based initialization
+- Located in [src/jirascope/clients/](mdc:src/jirascope/clients)
+
+## Testing Guidelines
+
+### Running Tests
+- Full suite: `pytest`
+- Unit tests: `pytest tests/unit/`
+- Integration tests: `pytest tests/integration/`
+- With coverage: `pytest --cov=src/jirascope`
+
+### Test Structure
+- Test files follow `test_*.py` naming convention
+- Use fixtures from [tests/conftest.py](mdc:tests/conftest.py) and [tests/fixtures/](mdc:tests/fixtures)
+- Mock external services in unit tests
+- Use real services for integration tests (ensure they're running)
+
+## Code Quality
+
+### Formatting and Linting
+- Black formatter with 100 character line length
+- Ruff linter for code quality
+- Configuration in [pyproject.toml](mdc:pyproject.toml)
+
+### Type Hints
+- Use type hints throughout the codebase
+- Leverage Pydantic models for data validation
+- Import types from typing module as needed

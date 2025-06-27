@@ -1,0 +1,145 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Troubleshooting Guide
+
+Common issues and debugging strategies for JiraScope development and deployment.
+
+## Common Issues
+
+### Service Connection Problems
+
+#### Qdrant Connection Failures
+- **Check**: Qdrant server is running and accessible
+- **Debug**: Run `jirascope health` to check service status
+- **Config**: Verify Qdrant URL in [config/env.example](mdc:config/env.example)
+- **Logs**: Check connection logs via [src/jirascope/utils/logging.py](mdc:src/jirascope/utils/logging.py)
+
+#### LMStudio Connection Issues
+- **Check**: LMStudio local server is running
+- **Debug**: Verify model is loaded and server is accessible
+- **Config**: Confirm LMStudio endpoint configuration
+- **Alternative**: Switch to different embedding provider
+
+#### Claude API Errors
+- **Check**: Anthropic API key is valid and has quota
+- **Debug**: Monitor API usage and rate limits
+- **Config**: Verify API key in environment variables
+- **Fallback**: Some features work without Claude integration
+
+### CLI Command Issues
+
+#### Command Not Found
+```bash
+# Ensure package is installed correctly
+pip install -e .
+
+# Check entry point registration
+pip show jirascope
+
+# Verify virtual environment is activated
+which jirascope
+```
+
+#### Import Errors
+- **Check**: All dependencies installed via `poetry install`
+- **Debug**: Python path includes src directory
+- **Fix**: Reinstall in development mode with `pip install -e .`
+
+### Data Processing Problems
+
+#### Embedding Generation Failures
+- **Cause**: LMStudio service unavailable or model not loaded
+- **Debug**: Check [src/jirascope/clients/lmstudio_client.py](mdc:src/jirascope/clients/lmstudio_client.py) health check
+- **Fix**: Restart LMStudio and verify model is loaded
+
+#### Incremental Sync Issues
+- **Cause**: Missing or corrupted sync timestamps
+- **Debug**: Check [src/jirascope/pipeline/incremental_processor.py](mdc:src/jirascope/pipeline/incremental_processor.py) state
+- **Fix**: Clear sync state and perform full sync
+
+#### Vector Search Problems
+- **Cause**: Empty or corrupted Qdrant collection
+- **Debug**: Verify embeddings exist in Qdrant
+- **Fix**: Re-run embedding generation with `jirascope fetch`
+
+## Debugging Tools
+
+### Logging Configuration
+Enable verbose logging with:
+```bash
+jirascope --verbose [command]
+jirascope --log-file debug.log [command]
+```
+
+### Health Checks
+Comprehensive service testing:
+```bash
+# Check all services
+jirascope health
+
+# Validate embedding quality
+jirascope validate
+```
+
+### Cost Monitoring
+Track API usage:
+```bash
+jirascope cost
+```
+
+## Development Debugging
+
+### Test Failures
+- **Unit Tests**: Run specific test modules in [tests/unit/](mdc:tests/unit)
+- **Integration Tests**: Ensure services are running for [tests/integration/](mdc:tests/integration)
+- **Component Tests**: Check individual analysis modules
+
+### Performance Issues
+- **Profiling**: Use Python profilers for performance analysis
+- **Batch Size**: Adjust embedding batch sizes in configuration
+- **Caching**: Verify cache effectiveness for repeated operations
+
+### Configuration Problems
+- **Environment**: Check all required environment variables
+- **Config File**: Validate configuration in [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
+- **Defaults**: Ensure sensible defaults for optional settings
+
+## Getting Help
+
+### Log Analysis
+- **Location**: Logs written to configured log file or console
+- **Levels**: DEBUG, INFO, WARNING, ERROR
+- **Context**: Includes operation context and service responses
+
+### Error Messages
+Most error messages include:
+- Clear description of the problem
+- Suggested resolution steps
+- Relevant configuration or service information
+
+### Docker Troubleshooting
+```bash
+# Check container status
+docker-compose ps
+
+# View container logs
+docker-compose logs jirascope-dev
+
+# Rebuild containers
+docker-compose build --no-cache
+```
+
+## Performance Optimization
+
+### Embedding Performance
+- Use batch processing in [src/jirascope/pipeline/embedding_processor.py](mdc:src/jirascope/pipeline/embedding_processor.py)
+- Optimize LMStudio model selection
+- Consider hardware acceleration
+
+### Search Performance
+- Monitor Qdrant collection size and performance
+- Optimize similarity thresholds
+- Use appropriate batch sizes for analysis operations

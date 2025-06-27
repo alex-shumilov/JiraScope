@@ -1,0 +1,94 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# CLI Commands Reference
+
+The main CLI entry point is [src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py) which provides the `jirascope` command defined in [pyproject.toml](mdc:pyproject.toml).
+
+## Core Commands
+
+### Service Health Check
+```bash
+jirascope health
+```
+Checks connectivity to Qdrant, LMStudio, and other required services.
+
+### Data Extraction
+```bash
+# Full extraction for a project
+jirascope fetch --project PROJECT_KEY
+
+# Incremental sync (only changed items)
+jirascope fetch --project PROJECT_KEY --incremental
+
+# With additional JQL filtering
+jirascope fetch --project PROJECT_KEY --jql "created >= -30d"
+```
+
+### Semantic Search
+```bash
+jirascope search --query "search terms" --limit 10
+```
+
+### Authentication Management
+```bash
+jirascope auth        # Interactive auth setup
+jirascope auth-status # Check current auth status  
+jirascope auth-clear  # Clear stored credentials
+```
+
+## Analysis Commands
+
+Analysis commands are grouped under `jirascope analyze`:
+
+### Duplicate Detection
+```bash
+jirascope analyze duplicates --project PROJECT_KEY --threshold 0.8
+```
+
+### Cross-Epic Analysis
+```bash
+jirascope analyze cross-epic --project PROJECT_KEY
+```
+
+### Quality Analysis
+```bash
+jirascope analyze quality WORK-ITEM-123
+```
+
+### Template Inference
+```bash
+jirascope analyze template --issue-type Story --project PROJECT_KEY
+```
+
+### Technical Debt Analysis
+```bash
+jirascope analyze tech-debt --project PROJECT_KEY
+```
+
+## Utility Commands
+
+### Validation
+```bash
+jirascope validate  # Run embedding quality validation
+```
+
+### Cost Reporting
+```bash
+jirascope cost  # Show API usage and cost estimates
+```
+
+### Cache Cleanup
+```bash
+jirascope cleanup --days 30  # Clean cache files older than 30 days
+```
+
+## Command Implementation
+
+All commands are implemented as Click command groups in [src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py). Each command:
+- Receives configuration through Click context
+- Uses async/await for external service calls
+- Wraps async operations with `asyncio.run()`
+- Handles errors gracefully with user-friendly messages

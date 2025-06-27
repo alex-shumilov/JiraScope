@@ -1,0 +1,79 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Analysis Modules Guide
+
+The analysis modules in [src/jirascope/analysis/](mdc:src/jirascope/analysis) provide different types of semantic analysis for Jira work items.
+
+## Core Analysis Components
+
+### Similarity Analyzer
+**File**: [src/jirascope/analysis/similarity_analyzer.py](mdc:src/jirascope/analysis/similarity_analyzer.py)
+- **Purpose**: Detects duplicate or highly similar work items
+- **Features**: 
+  - Cosine similarity calculation between embeddings
+  - Configurable similarity thresholds
+  - Batch processing capabilities
+- **Usage**: `jirascope analyze duplicates`
+
+### Cross-Epic Analyzer  
+**File**: [src/jirascope/analysis/cross_epic_analyzer.py](mdc:src/jirascope/analysis/cross_epic_analyzer.py)
+- **Purpose**: Identifies work items that might belong to different epics
+- **Features**:
+  - Epic boundary analysis
+  - Work item clustering across epics
+  - Scope drift detection
+- **Usage**: `jirascope analyze cross-epic`
+
+### Content Analyzer
+**File**: [src/jirascope/analysis/content_analyzer.py](mdc:src/jirascope/analysis/content_analyzer.py)
+- **Purpose**: Analyzes quality and completeness of work item descriptions
+- **Features**:
+  - Content quality scoring
+  - Missing information detection
+  - Batch content analysis capabilities
+- **Usage**: `jirascope analyze quality`
+
+### Template Inference Engine
+**File**: [src/jirascope/analysis/template_inference.py](mdc:src/jirascope/analysis/template_inference.py)
+- **Purpose**: Generates templates for work items based on existing patterns
+- **Features**:
+  - Pattern extraction from similar work items
+  - Template generation for different issue types
+  - Project-specific template inference
+- **Usage**: `jirascope analyze template`
+
+### Temporal Analyzer
+**File**: [src/jirascope/analysis/temporal_analyzer.py](mdc:src/jirascope/analysis/temporal_analyzer.py)
+- **Purpose**: Analyzes changes and patterns over time
+- **Features**:
+  - Timeline analysis of work items
+  - Change pattern detection
+  - Temporal clustering
+
+### Structural Analyzer
+**File**: [src/jirascope/analysis/structural_analyzer.py](mdc:src/jirascope/analysis/structural_analyzer.py)
+- **Purpose**: Analyzes hierarchical relationships and project structure
+- **Features**:
+  - Epic-story relationship analysis
+  - Project structure validation
+  - Technical debt clustering
+- **Usage**: `jirascope analyze tech-debt`
+
+## Analysis Workflow
+
+1. **Data Extraction**: [src/jirascope/extractors/jira_extractor.py](mdc:src/jirascope/extractors/jira_extractor.py) fetches work items
+2. **Embedding Generation**: [src/jirascope/pipeline/embedding_processor.py](mdc:src/jirascope/pipeline/embedding_processor.py) creates vector representations
+3. **Analysis Execution**: Appropriate analyzer processes the embeddings
+4. **Results**: Structured output with recommendations and insights
+
+## Common Patterns
+
+All analyzers follow similar patterns:
+- Accept configuration objects
+- Work with vector embeddings from Qdrant
+- Provide async interfaces
+- Return structured analysis results
+- Support batch processing when applicable

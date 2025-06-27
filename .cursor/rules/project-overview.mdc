@@ -1,0 +1,41 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# JiraScope Project Overview
+
+JiraScope is an AI-powered Jira work item analysis and management tool that provides semantic analysis of work items to improve quality, identify duplicates, and analyze scope drift over time.
+
+## Architecture Overview
+
+The project follows a modular architecture with clear separation of concerns:
+
+- **CLI Interface**: Main entry point at [src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py)
+- **Web Interface**: FastAPI-based web service at [src/web/main.py](mdc:src/web/main.py)
+- **Configuration**: Centralized config management at [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
+- **Analysis Modules**: Various analyzers in [src/jirascope/analysis/](mdc:src/jirascope/analysis)
+- **External Clients**: Service integrations in [src/jirascope/clients/](mdc:src/jirascope/clients)
+- **Data Processing**: Pipeline components in [src/jirascope/pipeline/](mdc:src/jirascope/pipeline)
+
+## Key Dependencies
+
+- **qdrant-client**: Vector database for semantic search
+- **anthropic**: Claude AI integration for analysis
+- **click**: CLI framework
+- **fastapi**: Web API framework
+- **scikit-learn**: Machine learning utilities
+- **pandas/numpy**: Data processing
+
+## Project Configuration
+
+- **Package Configuration**: [pyproject.toml](mdc:pyproject.toml) defines dependencies and CLI entry points
+- **Docker**: [docker-compose.yml](mdc:docker-compose.yml) and [Dockerfile](mdc:Dockerfile) for containerized deployment
+- **Environment**: Sample configuration in [config/env.example](mdc:config/env.example)
+
+## Testing Strategy
+
+Comprehensive test suite with three levels:
+- **Unit Tests**: [tests/unit/](mdc:tests/unit) for isolated component testing
+- **Integration Tests**: [tests/integration/](mdc:tests/integration) for external service integration
+- **Component Tests**: Root-level tests for full pipeline testing

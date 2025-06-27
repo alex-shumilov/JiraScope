@@ -1,0 +1,124 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Testing and CI Workflow
+
+This guide covers testing strategies, pre-commit hooks, and continuous integration practices for JiraScope.
+
+## Testing Strategy
+
+### Test Organization
+The test suite is organized into three levels in [tests/](mdc:tests):
+
+- **Unit Tests**: [tests/unit/](mdc:tests/unit) - Fast, isolated tests for individual components
+- **Integration Tests**: [tests/integration/](mdc:tests/integration) - Tests external service integrations  
+- **Component Tests**: Root-level tests - Full pipeline and cross-module testing
+
+### Test Configuration
+
+#### Running Tests
+```bash
+# Full test suite (excluding problematic tests)
+pytest -v --tb=short --ignore=tests/integration --ignore=tests/unit/test_config.py
+
+# Unit tests only
+pytest tests/unit/
+
+# Integration tests (ensure services are running)
+pytest tests/integration/
+
+# Specific test module
+pytest tests/test_content_analyzer.py
+
+# With coverage reporting
+pytest --cov=src/jirascope --cov-report=html
+```
+
+#### Test Fixtures
+- **Configuration**: [tests/conftest.py](mdc:tests/conftest.py) provides shared fixtures
+- **Analysis Fixtures**: [tests/fixtures/analysis_fixtures.py](mdc:tests/fixtures/analysis_fixtures.py) for test data
+- **Service Mocking**: Mock external services in unit tests, use real services for integration tests
+
+### Test Exclusions
+The following tests are excluded from automated runs:
+- **Integration Tests**: Require external services to be running
+- **Config Tests**: May fail in CI environments due to environment dependencies
+
+## Pre-commit Hooks
+
+Pre-commit configuration is defined in [.pre-commit-config.yaml](mdc:.pre-commit-config.yaml) and includes:
+
+### Code Quality Checks
+- **Trailing Whitespace**: Removes trailing whitespace
+- **End of File**: Ensures files end with newline
+- **YAML/TOML/JSON**: Validates configuration file syntax
+- **Large Files**: Prevents committing large files
+- **Merge Conflicts**: Detects merge conflict markers
+- **Debug Statements**: Catches debug statements in code
+
+### Python Code Quality
+- **Black**: Code formatting with 100 character line length
+- **Ruff**: Fast Python linting with auto-fixes
+- **isort**: Import sorting with Black compatibility
+- **MyPy**: Type checking (excludes tests)
+- **Bandit**: Security vulnerability scanning
+
+### Automated Testing
+- **Pytest**: Runs core test suite automatically on commit
+- **Exclusions**: Skips integration tests and problematic config tests
+
+### Running Pre-commit
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run hooks manually on all files
+pre-commit run --all-files
+
+# Run specific hook
+pre-commit run black --all-files
+
+# Skip hooks for emergency commits
+git commit --no-verify -m "Emergency fix"
+```
+
+## CI/CD Considerations
+
+### Environment Requirements
+- Python 3.11+ compatibility
+- External service dependencies (Qdrant, LMStudio, Claude API)
+- Environment variable configuration
+
+### Test Environment Setup
+For CI environments that cannot run full integration tests:
+1. Use the pytest exclusion pattern from pre-commit configuration
+2. Mock external services using fixtures
+3. Validate configuration loading without actual service connections
+
+### Quality Gates
+All commits should pass:
+- Code formatting (Black, isort)
+- Linting (Ruff)
+- Type checking (MyPy) 
+- Security scanning (Bandit)
+- Core unit tests (non-integration)
+
+## Debugging Test Issues
+
+### Common Test Problems
+- **Service Dependencies**: Integration tests require running services
+- **Environment Variables**: Config tests may need specific environment setup
+- **Async Context**: Ensure proper async context management in tests
+- **Mock Configuration**: Verify mocks are properly configured for external services
+
+### Test Data Management
+- Use fixtures for consistent test data
+- Mock external API responses for reliable tests
+- Clean up test artifacts between runs
+
+### Performance Testing
+- Monitor test execution time
+- Use pytest markers to categorize slow tests
+- Consider parallel test execution for large test suites

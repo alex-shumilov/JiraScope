@@ -1,0 +1,107 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Web Interface Guide
+
+The web interface provides a REST API and web UI for JiraScope functionality, implemented in [src/web/](mdc:src/web).
+
+## Web Application Structure
+
+### Main Application
+**File**: [src/web/main.py](mdc:src/web/main.py)
+- **Framework**: FastAPI with async support
+- **Purpose**: REST API endpoints for JiraScope operations
+- **Features**:
+  - Async request handling
+  - WebSocket support for real-time updates
+  - CORS configuration for web UI
+  - Health check endpoints
+
+### Data Models
+**File**: [src/web/models.py](mdc:src/web/models.py)
+- **Purpose**: Pydantic models for API request/response
+- **Features**:
+  - Input validation
+  - Serialization/deserialization
+  - API documentation generation
+  - Type safety
+
+### Business Logic
+**File**: [src/web/services.py](mdc:src/web/services.py)
+- **Purpose**: Service layer connecting web API to core functionality
+- **Features**:
+  - Orchestrates CLI operations through web interface
+  - Handles async operations
+  - Manages configuration and dependencies
+  - Error handling and response formatting
+
+### Frontend Interface
+**File**: [src/web/static/index.html](mdc:src/web/static/index.html)
+- **Purpose**: Web UI for JiraScope operations
+- **Features**:
+  - Interactive interface for analysis commands
+  - Real-time updates via WebSocket
+  - Result visualization
+  - Modern responsive design
+
+## API Endpoints
+
+The web API provides endpoints corresponding to CLI functionality:
+
+### Health and Status
+- `GET /health` - Service health check
+- `GET /status` - Application status and configuration
+
+### Data Operations
+- `POST /fetch` - Trigger data extraction (equivalent to `jirascope fetch`)
+- `GET /search` - Semantic search (equivalent to `jirascope search`)
+
+### Analysis Endpoints
+- `POST /analyze/duplicates` - Duplicate detection
+- `POST /analyze/cross-epic` - Cross-epic analysis
+- `POST /analyze/quality` - Quality analysis
+- `POST /analyze/template` - Template inference
+- `POST /analyze/tech-debt` - Technical debt analysis
+
+### Utility Endpoints
+- `POST /validate` - Run validation
+- `GET /cost` - Cost reporting
+- `POST /cleanup` - Cache cleanup
+
+## WebSocket Integration
+
+Real-time updates for long-running operations:
+- Connection endpoint: `/ws`
+- Progress updates for analysis operations
+- Real-time cost tracking
+- Status notifications
+
+## Running the Web Interface
+
+### Development Server
+```bash
+# Start with uvicorn directly
+uvicorn src.web.main:app --reload --host 0.0.0.0 --port 8000
+
+# Or through the CLI (if implemented)
+jirascope web --port 8000
+```
+
+### Docker Deployment
+```bash
+docker-compose up web
+```
+
+## Integration with Core
+
+The web interface reuses all core functionality:
+- Same configuration system via [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
+- Same client integrations from [src/jirascope/clients/](mdc:src/jirascope/clients)
+- Same analysis modules from [src/jirascope/analysis/](mdc:src/jirascope/analysis)
+- Same pipeline components from [src/jirascope/pipeline/](mdc:src/jirascope/pipeline)
+
+## Usage Documentation
+
+Detailed web interface usage is documented in [WEB_USAGE.md](mdc:WEB_USAGE.md).
