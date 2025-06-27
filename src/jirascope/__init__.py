@@ -3,16 +3,16 @@
 __version__ = "0.1.0"
 
 from .extractors import JiraExtractor
+from .models import AnalysisResult, EpicHierarchy, EpicTree, WorkItem
 from .pipeline import EmbeddingProcessor, EmbeddingQualityValidator, IncrementalProcessor
-from .models import WorkItem, EpicHierarchy, EpicTree, AnalysisResult
 
 __all__ = [
     "JiraExtractor",
-    "EmbeddingProcessor", 
+    "EmbeddingProcessor",
     "EmbeddingQualityValidator",
     "IncrementalProcessor",
     "WorkItem",
-    "EpicHierarchy", 
+    "EpicHierarchy",
     "EpicTree",
-    "AnalysisResult"
+    "AnalysisResult",
 ]
