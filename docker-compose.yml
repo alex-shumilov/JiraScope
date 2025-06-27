@@ -44,9 +44,6 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
-    environment:
-      - QDRANT__SERVICE__HTTP_PORT=6333
-      - QDRANT__SERVICE__GRPC_PORT=6334
 
   # Optional: LM Studio replacement (if needed)
   # embedding-service:
@@ -54,7 +51,7 @@ services:
   #   ports:
   #     - "1234:80"
   #   environment:
-  #     - MODEL_ID=BAAI/bge-large-en-v1.5
+  #     - MODEL_ID=bge-large-en-v1.5-gguf/bge-large-en-v1.5-q8_0.gguf
   #   volumes:
   #     - ./models:/data
 
