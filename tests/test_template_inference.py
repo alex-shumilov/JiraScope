@@ -1,41 +1,41 @@
 """Tests for template inference engine."""
 
-import pytest
-import json
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from jirascope.analysis.template_inference import TemplateInferenceEngine
-from jirascope.models import TemplateInference, WorkItem
 from jirascope.core.config import Config
+from jirascope.models import TemplateInference, WorkItem
 from tests.fixtures.analysis_fixtures import AnalysisFixtures
 
 
 class TestTemplateInferenceEngine:
     """Test the template inference engine functionality."""
-    
+
     @pytest.fixture
     def mock_config(self):
         """Create mock configuration."""
         config = MagicMock(spec=Config)
         config.claude_model = "claude-3-5-sonnet-20241022"
         return config
-    
+
     @pytest.fixture
     def mock_claude_client(self, mock_claude_responses):
         """Create mock Claude client."""
         claude_client = AsyncMock()
         claude_client.analyze.return_value = AsyncMock(
-            content=mock_claude_responses['template_inference']['content'],
-            cost=mock_claude_responses['template_inference']['cost']
+            content=mock_claude_responses["template_inference"]["content"],
+            cost=mock_claude_responses["template_inference"]["cost"],
         )
         return claude_client
-    
+
     @pytest.fixture
     def high_quality_stories(self):
         """Create high-quality story samples for template inference."""
         base_time = datetime(2024, 1, 1, 12, 0, 0)
-        
+
         return [
             WorkItem(
                 key="PROJ-1",
@@ -60,7 +60,7 @@ As a registered user, I want to manage my profile information so that I can keep
                 updated=base_time,
                 reporter="product.manager",
                 components=["frontend", "backend"],
-                labels=["user-management", "profile", "high-quality"]
+                labels=["user-management", "profile", "high-quality"],
             ),
             WorkItem(
                 key="PROJ-2",
@@ -85,7 +85,7 @@ As a customer, I want to add items to my shopping cart so that I can purchase mu
                 updated=base_time,
                 reporter="product.manager",
                 components=["frontend", "backend"],
-                labels=["ecommerce", "cart", "high-quality"]
+                labels=["ecommerce", "cart", "high-quality"],
             ),
             WorkItem(
                 key="PROJ-3",
@@ -110,15 +110,15 @@ As a user, I want to receive email notifications for important account activitie
                 updated=base_time,
                 reporter="product.manager",
                 components=["backend", "email"],
-                labels=["notifications", "communication", "high-quality"]
-            )
+                labels=["notifications", "communication", "high-quality"],
+            ),
         ]
-    
+
     @pytest.fixture
     def high_quality_tasks(self):
         """Create high-quality task samples for template inference."""
         base_time = datetime(2024, 1, 1, 12, 0, 0)
-        
+
         return [
             WorkItem(
                 key="TASK-1",
@@ -143,7 +143,7 @@ Migrate the user_profiles table to include new fields for enhanced profile manag
                 updated=base_time,
                 reporter="tech.lead",
                 components=["backend", "database"],
-                labels=["migration", "database", "high-quality"]
+                labels=["migration", "database", "high-quality"],
             ),
             WorkItem(
                 key="TASK-2",
@@ -168,7 +168,7 @@ Implement rate limiting for public API endpoints to prevent abuse and ensure fai
                 updated=base_time,
                 reporter="tech.lead",
                 components=["backend", "api"],
-                labels=["security", "performance", "high-quality"]
+                labels=["security", "performance", "high-quality"],
             ),
             WorkItem(
                 key="TASK-3",
@@ -193,20 +193,24 @@ Optimize the frontend build process to reduce build times and improve developer 
                 updated=base_time,
                 reporter="tech.lead",
                 components=["frontend", "devops"],
-                labels=["optimization", "build", "high-quality"]
-            )
+                labels=["optimization", "build", "high-quality"],
+            ),
         ]
-    
+
     @pytest.mark.asyncio
-    async def test_infer_templates_from_samples_success(self, mock_config, mock_claude_client, high_quality_stories):
+    async def test_infer_templates_from_samples_success(
+        self, mock_config, mock_claude_client, high_quality_stories
+    ):
         """Test successful template inference from high-quality samples."""
-        with patch('jirascope.analysis.template_inference.ClaudeClient', return_value=mock_claude_client):
+        with patch(
+            "jirascope.analysis.template_inference.ClaudeClient", return_value=mock_claude_client
+        ):
             async with TemplateInferenceEngine(mock_config) as engine:
                 mock_claude_client.__aenter__ = AsyncMock(return_value=mock_claude_client)
                 mock_claude_client.__aexit__ = AsyncMock()
-                
+
                 template = await engine.infer_templates_from_samples("Story", high_quality_stories)
-                
+
                 assert isinstance(template, TemplateInference)
                 assert template.issue_type == "Story"
                 assert template.title_template is not None
@@ -217,107 +221,119 @@ Optimize the frontend build process to reduce build times and improve developer 
                 assert 0.0 <= template.confidence_score <= 1.0
                 assert template.sample_count == len(high_quality_stories)
                 assert template.generation_cost > 0
-    
+
     @pytest.mark.asyncio
     async def test_infer_templates_insufficient_samples(self, mock_config, mock_claude_client):
         """Test error handling when insufficient samples provided."""
-        with patch('jirascope.analysis.template_inference.ClaudeClient', return_value=mock_claude_client):
+        with patch(
+            "jirascope.analysis.template_inference.ClaudeClient", return_value=mock_claude_client
+        ):
             async with TemplateInferenceEngine(mock_config) as engine:
                 mock_claude_client.__aenter__ = AsyncMock(return_value=mock_claude_client)
                 mock_claude_client.__aexit__ = AsyncMock()
-                
+
                 # Only provide 2 samples (need at least 3)
                 insufficient_samples = AnalysisFixtures.create_sample_work_items()[:2]
-                
+
                 with pytest.raises(ValueError, match="Need at least 3 high-quality samples"):
                     await engine.infer_templates_from_samples("Story", insufficient_samples)
-    
+
     @pytest.mark.asyncio
-    async def test_infer_templates_with_json_parsing_failure(self, mock_config, high_quality_stories):
+    async def test_infer_templates_with_json_parsing_failure(
+        self, mock_config, high_quality_stories
+    ):
         """Test template inference with malformed JSON response."""
         claude_client = AsyncMock()
         claude_client.analyze.return_value = AsyncMock(
-            content="Malformed JSON response from Claude",
-            cost=0.04
+            content="Malformed JSON response from Claude", cost=0.04
         )
-        
-        with patch('jirascope.analysis.template_inference.ClaudeClient', return_value=claude_client):
+
+        with patch(
+            "jirascope.analysis.template_inference.ClaudeClient", return_value=claude_client
+        ):
             async with TemplateInferenceEngine(mock_config) as engine:
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
-                
+
                 template = await engine.infer_templates_from_samples("Story", high_quality_stories)
-                
+
                 # Should use fallback template generation
                 assert template.issue_type == "Story"
                 assert "User Story: {feature_description}" in template.title_template
                 assert "## User Story" in template.description_template
                 assert template.confidence_score == 0.5  # Lower confidence for fallback
-    
+
     @pytest.mark.asyncio
-    async def test_infer_multiple_templates_success(self, mock_config, mock_claude_client, high_quality_stories, high_quality_tasks):
+    async def test_infer_multiple_templates_success(
+        self, mock_config, mock_claude_client, high_quality_stories, high_quality_tasks
+    ):
         """Test inference of multiple templates for different issue types."""
-        samples_by_type = {
-            "Story": high_quality_stories,
-            "Task": high_quality_tasks
-        }
-        
-        with patch('jirascope.analysis.template_inference.ClaudeClient', return_value=mock_claude_client):
+        samples_by_type = {"Story": high_quality_stories, "Task": high_quality_tasks}
+
+        with patch(
+            "jirascope.analysis.template_inference.ClaudeClient", return_value=mock_claude_client
+        ):
             async with TemplateInferenceEngine(mock_config) as engine:
                 mock_claude_client.__aenter__ = AsyncMock(return_value=mock_claude_client)
                 mock_claude_client.__aexit__ = AsyncMock()
-                
+
                 templates = await engine.infer_multiple_templates(samples_by_type)
-                
+
                 assert len(templates) == 2
                 assert "Story" in templates
                 assert "Task" in templates
-                
+
                 for issue_type, template in templates.items():
                     assert isinstance(template, TemplateInference)
                     assert template.issue_type == issue_type
-    
+
     @pytest.mark.asyncio
-    async def test_infer_multiple_templates_insufficient_samples(self, mock_config, mock_claude_client):
+    async def test_infer_multiple_templates_insufficient_samples(
+        self, mock_config, mock_claude_client
+    ):
         """Test multiple template inference with insufficient samples for some types."""
         samples_by_type = {
             "Story": AnalysisFixtures.create_sample_work_items()[:3],  # Sufficient
-            "Bug": AnalysisFixtures.create_sample_work_items()[:2],    # Insufficient
-            "Task": AnalysisFixtures.create_sample_work_items()[:4]    # Sufficient
+            "Bug": AnalysisFixtures.create_sample_work_items()[:2],  # Insufficient
+            "Task": AnalysisFixtures.create_sample_work_items()[:4],  # Sufficient
         }
-        
-        with patch('jirascope.analysis.template_inference.ClaudeClient', return_value=mock_claude_client):
+
+        with patch(
+            "jirascope.analysis.template_inference.ClaudeClient", return_value=mock_claude_client
+        ):
             async with TemplateInferenceEngine(mock_config) as engine:
                 mock_claude_client.__aenter__ = AsyncMock(return_value=mock_claude_client)
                 mock_claude_client.__aexit__ = AsyncMock()
-                
+
                 templates = await engine.infer_multiple_templates(samples_by_type)
-                
+
                 # Should only include types with sufficient samples
                 assert "Story" in templates
                 assert "Task" in templates
                 assert "Bug" not in templates  # Insufficient samples
-    
+
     @pytest.mark.asyncio
     async def test_fallback_template_generation(self, mock_config, high_quality_stories):
         """Test the fallback template generation for different issue types."""
-        with patch('jirascope.analysis.template_inference.ClaudeClient') as mock_claude:
+        with patch(
+            "jirascope.analysis.template_inference.ClaudeClient"
+        ) as mock_claude:  # noqa: F841
             engine = TemplateInferenceEngine(mock_config)
-            
+
             # Test fallback for different issue types
             test_cases = [
                 ("Story", "User Story: {feature_description}"),
                 ("Task", "Task: {task_description}"),
                 ("Bug", "Bug: {issue_description}"),
                 ("Epic", "Epic: {epic_theme}"),
-                ("Improvement", "Improvement: {enhancement_description}")
+                ("Improvement", "Improvement: {enhancement_description}"),
             ]
-            
+
             for issue_type, expected_title in test_cases:
                 fallback = engine._parse_fallback_template_response(
                     "Malformed content", issue_type, high_quality_stories
                 )
-                
+
                 assert fallback["title_template"] == expected_title
                 # Check that the fallback template contains appropriate headers for the issue type
                 if issue_type == "Bug":
@@ -333,44 +349,46 @@ Optimize the frontend build process to reduce build times and improve developer 
                 else:
                     assert "## Description" in fallback["description_template"]
                 assert fallback["confidence_score"] == 0.5
-    
+
     @pytest.mark.asyncio
     async def test_context_manager_initialization(self, mock_config):
         """Test that async context manager properly initializes Claude client."""
-        with patch('jirascope.analysis.template_inference.ClaudeClient') as mock_claude:
+        with patch("jirascope.analysis.template_inference.ClaudeClient") as mock_claude:
             mock_claude_instance = AsyncMock()
             mock_claude.return_value = mock_claude_instance
-            
+
             async with TemplateInferenceEngine(mock_config) as engine:
                 assert engine.claude_client is not None
                 mock_claude_instance.__aenter__.assert_called_once()
-    
+
     @pytest.mark.asyncio
     async def test_context_manager_cleanup(self, mock_config):
         """Test that async context manager properly cleans up Claude client."""
-        with patch('jirascope.analysis.template_inference.ClaudeClient') as mock_claude:
+        with patch("jirascope.analysis.template_inference.ClaudeClient") as mock_claude:
             mock_claude_instance = AsyncMock()
             mock_claude.return_value = mock_claude_instance
-            
-            async with TemplateInferenceEngine(mock_config) as engine:
+
+            async with TemplateInferenceEngine(mock_config) as engine:  # noqa: F841
                 pass
-            
+
             mock_claude_instance.__aexit__.assert_called_once()
-    
+
     @pytest.mark.asyncio
     async def test_error_handling_claude_failure(self, mock_config, high_quality_stories):
         """Test error handling when Claude API fails."""
         claude_client = AsyncMock()
         claude_client.analyze.side_effect = Exception("Claude API error")
-        
-        with patch('jirascope.analysis.template_inference.ClaudeClient', return_value=claude_client):
+
+        with patch(
+            "jirascope.analysis.template_inference.ClaudeClient", return_value=claude_client
+        ):
             async with TemplateInferenceEngine(mock_config) as engine:
                 claude_client.__aenter__ = AsyncMock(return_value=claude_client)
                 claude_client.__aexit__ = AsyncMock()
-                
+
                 with pytest.raises(Exception, match="Claude API error"):
                     await engine.infer_templates_from_samples("Story", high_quality_stories)
-    
+
     def test_validate_template_quality_valid(self):
         """Test template quality validation for a valid template."""
         template = TemplateInference(
@@ -390,19 +408,19 @@ As a {user_type}, I want {functionality} so that {benefit}.
             common_labels=["user-story", "feature"],
             confidence_score=0.85,
             sample_count=3,
-            generation_cost=0.04
+            generation_cost=0.04,
         )
-        
+
         engine = TemplateInferenceEngine(mock_config := MagicMock(spec=Config))
         mock_config.claude_model = "claude-3-5-sonnet-20241022"
         validation = {"is_valid": True, "issues": [], "suggestions": []}
         engine.validate_template_quality = MagicMock(return_value=validation)
-        
+
         result = engine.validate_template_quality(template)
-        
+
         assert result["is_valid"] is True
         assert len(result["issues"]) == 0
-    
+
     def test_validate_template_quality_invalid(self):
         """Test template quality validation for an invalid template."""
         template = TemplateInference(
@@ -414,32 +432,32 @@ As a {user_type}, I want {functionality} so that {benefit}.
             common_labels=[],
             confidence_score=0.3,  # Low confidence
             sample_count=3,
-            generation_cost=0.02
+            generation_cost=0.02,
         )
-        
+
         engine = TemplateInferenceEngine(mock_config := MagicMock(spec=Config))
         mock_config.claude_model = "claude-3-5-sonnet-20241022"
         validation = {
-            "is_valid": False, 
-            "issues": ["Title template missing placeholders", "Description template is empty"], 
-            "suggestions": ["Low confidence score", "Add placeholders to title template"]
+            "is_valid": False,
+            "issues": ["Title template missing placeholders", "Description template is empty"],
+            "suggestions": ["Low confidence score", "Add placeholders to title template"],
         }
         engine.validate_template_quality = MagicMock(return_value=validation)
-        
+
         result = engine.validate_template_quality(template)
-        
+
         assert result["is_valid"] is False
         assert len(result["issues"]) > 0
         assert len(result["suggestions"]) > 0
-        
+
         # Check specific validation issues
         issues = " ".join(result["issues"])
         suggestions = " ".join(result["suggestions"])
-        
+
         assert "Title template missing placeholders" in issues
         assert "Description template is empty" in issues
         assert "Low confidence score" in suggestions
-    
+
     def test_template_inference_model_creation(self):
         """Test TemplateInference model creation and validation."""
         template = TemplateInference(
@@ -451,9 +469,9 @@ As a {user_type}, I want {functionality} so that {benefit}.
             common_labels=["story", "feature"],
             confidence_score=0.75,
             sample_count=5,
-            generation_cost=0.06
+            generation_cost=0.06,
         )
-        
+
         assert template.issue_type == "Story"
         assert "{feature_description}" in template.title_template
         assert "## User Story" in template.description_template
@@ -463,19 +481,19 @@ As a {user_type}, I want {functionality} so that {benefit}.
         assert template.confidence_score == 0.75
         assert template.sample_count == 5
         assert template.generation_cost == 0.06
-    
+
     def test_prompt_construction_with_samples(self, high_quality_stories):
         """Test that the prompt is correctly constructed with sample data."""
         mock_config = MagicMock(spec=Config)
         mock_config.claude_model = "claude-3-5-sonnet-20241022"
-        engine = TemplateInferenceEngine(mock_config)
-        
+        engine = TemplateInferenceEngine(mock_config)  # noqa: F841
+
         # This would normally be done inside infer_templates_from_samples
         # but we're testing the logic here
         sample_texts = []
         all_components = set()
         all_labels = set()
-        
+
         for i, item in enumerate(high_quality_stories, 1):
             sample_text = f"""
 Example {i}:
@@ -488,13 +506,13 @@ Status: {item.status}
             sample_texts.append(sample_text)
             all_components.update(item.components)
             all_labels.update(item.labels)
-        
+
         # Verify sample data is correctly extracted
         assert len(sample_texts) == len(high_quality_stories)
         assert "frontend" in all_components
         assert "backend" in all_components
         assert "high-quality" in all_labels
-        
+
         # Verify all samples contain expected content
         combined_text = "".join(sample_texts)
         assert "User Profile Management Dashboard" in combined_text
