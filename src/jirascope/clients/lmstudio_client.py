@@ -2,57 +2,58 @@
 
 import logging
 from typing import List, Optional
+
 import httpx
 import numpy as np
-from ..core.config import Config, EMBEDDING_CONFIG
 
+from ..core.config import EMBEDDING_CONFIG, Config
 
 logger = logging.getLogger(__name__)
 
 
 class LMStudioClient:
     """Client for generating embeddings via LMStudio."""
-    
+
     def __init__(self, config: Config):
         self.config = config
         self.endpoint = config.lmstudio_endpoint
         self.session: Optional[httpx.AsyncClient] = None
-        
+
     async def __aenter__(self):
         """Async context manager entry."""
         self.session = httpx.AsyncClient(
             timeout=httpx.Timeout(EMBEDDING_CONFIG["timeout"]),
-            limits=httpx.Limits(max_connections=5)
+            limits=httpx.Limits(max_connections=5),
         )
         return self
-        
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         if self.session:
             await self.session.aclose()
-    
+
     async def generate_embeddings(
-        self, 
-        texts: List[str],
-        batch_size: Optional[int] = None
+        self, texts: List[str], batch_size: Optional[int] = None
     ) -> List[List[float]]:
         """Generate embeddings for a list of texts."""
         if not self.session:
             raise RuntimeError("LMStudio client not initialized. Use async context manager.")
-        
+
         batch_size = batch_size or self.config.embedding_batch_size
         all_embeddings = []
-        
+
         for i in range(0, len(texts), batch_size):
-            batch = texts[i:i + batch_size]
+            batch = texts[i : i + batch_size]
             batch_embeddings = await self._generate_batch_embeddings(batch)
             all_embeddings.extend(batch_embeddings)
-            
-            logger.debug(f"Generated embeddings for batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size}")
-        
+
+            logger.debug(
+                f"Generated embeddings for batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size}"
+            )
+
         logger.info(f"Generated {len(all_embeddings)} embeddings")
         return all_embeddings
-    
+
     async def _generate_batch_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for a batch of texts."""
         try:
@@ -61,62 +62,55 @@ class LMStudioClient:
                 f"{EMBEDDING_CONFIG['instruction_prefix']}{text[:EMBEDDING_CONFIG['max_tokens']]}"
                 for text in texts
             ]
-            
+
             response = await self.session.post(
                 f"{self.endpoint}/embeddings",
-                json={
-                    "model": EMBEDDING_CONFIG["model"],
-                    "input": prepared_texts
-                }
+                json={"model": EMBEDDING_CONFIG["model"], "input": prepared_texts},
             )
             response.raise_for_status()
-            
+
             data = response.json()
             embeddings = [item["embedding"] for item in data["data"]]
-            
+
             return embeddings
-            
+
         except httpx.HTTPError as e:
             logger.error(f"Failed to generate embeddings: {e}")
             raise
-    
+
     async def health_check(self) -> bool:
         """Check if LMStudio is running and responsive."""
         if not self.session:
             raise RuntimeError("LMStudio client not initialized. Use async context manager.")
-        
+
         try:
             response = await self.session.get(f"{self.endpoint}/models")
             response.raise_for_status()
-            
+
             models = response.json()
             available_models = [model["id"] for model in models.get("data", [])]
-            
+
             if EMBEDDING_CONFIG["model"] in available_models:
                 logger.info("LMStudio health check passed")
                 return True
             else:
                 logger.warning(f"Embedding model {EMBEDDING_CONFIG['model']} not available")
                 return False
-                
+
         except httpx.HTTPError as e:
             logger.error(f"LMStudio health check failed: {e}")
             return False
-    
-    def calculate_similarity(
-        self, 
-        embedding1: List[float], 
-        embedding2: List[float]
-    ) -> float:
+
+    def calculate_similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
         """Calculate cosine similarity between two embeddings."""
         vec1 = np.array(embedding1)
         vec2 = np.array(embedding2)
-        
+
         dot_product = np.dot(vec1, vec2)
         norm1 = np.linalg.norm(vec1)
         norm2 = np.linalg.norm(vec2)
-        
+
         if norm1 == 0 or norm2 == 0:
             return 0.0
-        
+
         return float(dot_product / (norm1 * norm2))
