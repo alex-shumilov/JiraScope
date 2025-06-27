@@ -1,14 +1,15 @@
 """Pytest configuration and fixtures."""
 
-import pytest
 import asyncio
-from datetime import datetime
 from unittest.mock import AsyncMock, Mock
+
+import pytest
+
 from src.jirascope.core.config import Config
-from src.jirascope.models import WorkItem, AnalysisResult
+from src.jirascope.models import AnalysisResult
 
 # Import analysis fixtures to make them available
-from .fixtures.analysis_fixtures import *
+from .fixtures.analysis_fixtures import *  # noqa: F403
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ def mock_config():
         similarity_threshold=0.8,
         report_retention_days=30,
         cost_tracking=True,
-        jira_dry_run=True
+        jira_dry_run=True,
     )
 
 
@@ -46,7 +47,7 @@ def sample_embeddings():
     return [
         [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8] * 128,
         [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] * 128,
-        [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] * 128
+        [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] * 128,
     ]
 
 
@@ -80,12 +81,14 @@ def mock_qdrant_client():
     mock.get_work_item_by_key = AsyncMock()
     mock.delete_work_item = AsyncMock(return_value=True)
     mock.health_check = AsyncMock(return_value=True)
-    mock.get_collection_stats = AsyncMock(return_value={
-        "points_count": 100,
-        "segments_count": 1,
-        "disk_data_size": 1024,
-        "ram_data_size": 512
-    })
+    mock.get_collection_stats = AsyncMock(
+        return_value={
+            "points_count": 100,
+            "segments_count": 1,
+            "disk_data_size": 1024,
+            "ram_data_size": 512,
+        }
+    )
     return mock
 
 
@@ -115,9 +118,9 @@ def sample_analysis_result():
             "risk_level": "medium",
             "dependencies": ["authentication", "database"],
             "effort_estimate": "5-8 days",
-            "reasoning": "Complex authentication logic with database dependencies"
+            "reasoning": "Complex authentication logic with database dependencies",
         },
-        cost=0.0015
+        cost=0.0015,
     )
 
 
@@ -139,19 +142,11 @@ def mock_httpx_responses():
                         "reporter": {"displayName": "Test User"},
                         "assignee": {"displayName": "Test Assignee"},
                         "components": [{"name": "Backend"}],
-                        "labels": ["test"]
-                    }
+                        "labels": ["test"],
+                    },
                 }
             ]
         },
-        "lmstudio_embeddings": {
-            "data": [
-                {"embedding": [0.1, 0.2, 0.3] * 341}  # 1023 dimensions
-            ]
-        },
-        "lmstudio_models": {
-            "data": [
-                {"id": "BAAI/bge-large-en-v1.5"}
-            ]
-        }
+        "lmstudio_embeddings": {"data": [{"embedding": [0.1, 0.2, 0.3] * 341}]},  # 1023 dimensions
+        "lmstudio_models": {"data": [{"id": "BAAI/bge-large-en-v1.5"}]},
     }
