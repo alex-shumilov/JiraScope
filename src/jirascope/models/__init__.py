@@ -1,47 +1,45 @@
 """Pydantic models for JiraScope."""
 
+from .analysis import (
+    BatchAnalysisResult,
+    CoherenceAnalysis,
+    CrossEpicReport,
+    DuplicateCandidate,
+    DuplicateReport,
+    EvolutionReport,
+    LabelingAnalysis,
+    MisplacedWorkItem,
+    QualityAnalysis,
+    ScopeDriftAnalysis,
+    ScopeDriftEvent,
+    SplitAnalysis,
+    SplitSuggestion,
+    TechDebtCluster,
+    TechDebtReport,
+    TemplateInference,
+)
 from .work_item import (
-    WorkItem, 
-    EpicHierarchy, 
+    AnalysisResult,
+    EpicHierarchy,
     EpicTree,
     ExtractionCost,
     ProcessingResult,
     QualityReport,
-    AnalysisResult
-)
-
-from .analysis import (
-    DuplicateCandidate,
-    DuplicateReport,
-    MisplacedWorkItem,
-    CrossEpicReport,
-    CoherenceAnalysis,
-    QualityAnalysis,
-    SplitAnalysis,
-    SplitSuggestion,
-    TemplateInference,
-    ScopeDriftEvent,
-    ScopeDriftAnalysis,
-    TechDebtCluster,
-    TechDebtReport,
-    LabelingAnalysis,
-    BatchAnalysisResult,
-    EvolutionReport
+    WorkItem,
 )
 
 __all__ = [
     # Work item models
-    "WorkItem", 
-    "EpicHierarchy", 
+    "WorkItem",
+    "EpicHierarchy",
     "EpicTree",
     "ExtractionCost",
-    "ProcessingResult", 
+    "ProcessingResult",
     "QualityReport",
     "AnalysisResult",
-    
     # Analysis models
     "DuplicateCandidate",
-    "DuplicateReport", 
+    "DuplicateReport",
     "MisplacedWorkItem",
     "CrossEpicReport",
     "CoherenceAnalysis",
@@ -55,5 +53,5 @@ __all__ = [
     "TechDebtReport",
     "LabelingAnalysis",
     "BatchAnalysisResult",
-    "EvolutionReport"
+    "EvolutionReport",
 ]
