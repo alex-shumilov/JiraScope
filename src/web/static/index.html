@@ -8,13 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f7fa;
             color: #2c3e50;
         }
-        
+
         .header {
             background: #2c3e50;
             color: white;
@@ -24,25 +24,25 @@
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
         .header h1 {
             font-size: 1.5rem;
             font-weight: 600;
         }
-        
+
         .cost-display {
             background: rgba(255,255,255,0.1);
             padding: 0.5rem 1rem;
             border-radius: 4px;
             font-weight: 500;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
-        
+
         .analysis-section {
             background: white;
             border-radius: 8px;
@@ -50,24 +50,24 @@
             margin-bottom: 2rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        
+
         .section-title {
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 1rem;
             color: #2c3e50;
         }
-        
+
         .form-group {
             margin-bottom: 1rem;
         }
-        
+
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
-        
+
         .form-group input, .form-group select {
             width: 100%;
             padding: 0.75rem;
@@ -75,13 +75,13 @@
             border-radius: 4px;
             font-size: 1rem;
         }
-        
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
         }
-        
+
         .btn {
             background: #3498db;
             color: white;
@@ -93,16 +93,16 @@
             font-weight: 500;
             transition: background 0.2s;
         }
-        
+
         .btn:hover { background: #2980b9; }
         .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
-        
+
         .btn-success { background: #27ae60; }
         .btn-success:hover { background: #229954; }
-        
+
         .btn-warning { background: #f39c12; }
         .btn-warning:hover { background: #e67e22; }
-        
+
         .progress-bar {
             width: 100%;
             height: 8px;
@@ -111,52 +111,52 @@
             overflow: hidden;
             margin: 1rem 0;
         }
-        
+
         .progress-fill {
             height: 100%;
             background: #3498db;
             transition: width 0.3s ease;
         }
-        
+
         .results-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
         }
-        
+
         .results-table th,
         .results-table td {
             padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid #ecf0f1;
         }
-        
+
         .results-table th {
             background: #f8f9fa;
             font-weight: 600;
         }
-        
+
         .badge {
             padding: 0.25rem 0.5rem;
             border-radius: 12px;
             font-size: 0.75rem;
             font-weight: 500;
         }
-        
+
         .badge-high { background: #fee; color: #c0392b; }
         .badge-medium { background: #fef5e7; color: #d68910; }
         .badge-low { background: #eaf4f4; color: #148f77; }
-        
+
         .status-processing { color: #f39c12; }
         .status-completed { color: #27ae60; }
         .status-failed { color: #e74c3c; }
-        
+
         .chart-container {
             position: relative;
             height: 300px;
             margin-top: 1rem;
         }
-        
+
         @media (max-width: 768px) {
             .form-row { grid-template-columns: 1fr; }
             .container { padding: 1rem; }
@@ -171,7 +171,7 @@
                 Session Cost: ${{ sessionCost.toFixed(4) }}
             </div>
         </div>
-        
+
         <div class="container">
             <!-- Duplicate Analysis Section -->
             <div class="analysis-section">
@@ -189,11 +189,11 @@
                 <button class="btn" @click="runDuplicateAnalysis" :disabled="duplicateTask.running">
                     {{ duplicateTask.running ? 'Analyzing...' : 'Find Duplicates' }}
                 </button>
-                
+
                 <div v-if="duplicateTask.running" class="progress-bar">
                     <div class="progress-fill" :style="{width: duplicateTask.progress + '%'}"></div>
                 </div>
-                
+
                 <div v-if="duplicateTask.results">
                     <h3>Results ({{ duplicateTask.results.total_candidates }} candidates found)</h3>
                     <table class="results-table">
@@ -220,7 +220,7 @@
                     </table>
                 </div>
             </div>
-            
+
             <!-- Quality Analysis Section -->
             <div class="analysis-section">
                 <h2 class="section-title">Quality Analysis</h2>
@@ -240,19 +240,19 @@
                 <button class="btn" @click="runQualityAnalysis" :disabled="qualityTask.running">
                     {{ qualityTask.running ? 'Analyzing...' : 'Analyze Quality' }}
                 </button>
-                
+
                 <div v-if="qualityTask.running" class="progress-bar">
                     <div class="progress-fill" :style="{width: qualityTask.progress + '%'}"></div>
                 </div>
-                
+
                 <div v-if="qualityTask.results">
                     <h3>Results ({{ qualityTask.results.total_analyzed }} items analyzed)</h3>
                     <p><strong>Average Score:</strong> {{ qualityTask.results.average_score.toFixed(1) }}/5.0</p>
-                    
+
                     <div class="chart-container">
                         <canvas ref="qualityChart"></canvas>
                     </div>
-                    
+
                     <table class="results-table">
                         <thead>
                             <tr>
@@ -273,7 +273,7 @@
                     </table>
                 </div>
             </div>
-            
+
             <!-- Epic Analysis Section -->
             <div class="analysis-section">
                 <h2 class="section-title">Epic Analysis</h2>
@@ -293,11 +293,11 @@
                 <button class="btn" @click="runEpicAnalysis" :disabled="epicTask.running">
                     {{ epicTask.running ? 'Analyzing...' : 'Analyze Epic' }}
                 </button>
-                
+
                 <div v-if="epicTask.running" class="progress-bar">
                     <div class="progress-fill" :style="{width: epicTask.progress + '%'}"></div>
                 </div>
-                
+
                 <div v-if="epicTask.results">
                     <h3>Epic Analysis Results</h3>
                     <div class="form-row">
@@ -317,12 +317,12 @@
 
     <script>
         const { createApp } = Vue;
-        
+
         createApp({
             data() {
                 return {
                     sessionCost: 0.0,
-                    
+
                     duplicateForm: {
                         threshold: 0.8,
                         projectKeys: ''
@@ -333,7 +333,7 @@
                         results: null,
                         taskId: null
                     },
-                    
+
                     qualityForm: {
                         projectKey: '',
                         useClaude: false,
@@ -345,7 +345,7 @@
                         results: null,
                         taskId: null
                     },
-                    
+
                     epicForm: {
                         epicKey: '',
                         depth: 'basic'
@@ -358,12 +358,12 @@
                     }
                 }
             },
-            
+
             mounted() {
                 this.loadCostSummary();
                 setInterval(this.loadCostSummary, 5000); // Update costs every 5 seconds
             },
-            
+
             methods: {
                 async loadCostSummary() {
                     try {
@@ -374,17 +374,17 @@
                         console.error('Error loading cost summary:', error);
                     }
                 },
-                
+
                 async runDuplicateAnalysis() {
                     try {
                         this.duplicateTask.running = true;
                         this.duplicateTask.progress = 0;
                         this.duplicateTask.results = null;
-                        
-                        const projectKeys = this.duplicateForm.projectKeys 
+
+                        const projectKeys = this.duplicateForm.projectKeys
                             ? this.duplicateForm.projectKeys.split(',').map(k => k.trim())
                             : null;
-                        
+
                         const response = await fetch('/api/analysis/duplicates', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -393,24 +393,24 @@
                                 project_keys: projectKeys
                             })
                         });
-                        
+
                         const task = await response.json();
                         this.duplicateTask.taskId = task.task_id;
-                        
+
                         this.watchTask(task.task_id, this.duplicateTask);
-                        
+
                     } catch (error) {
                         console.error('Error running duplicate analysis:', error);
                         this.duplicateTask.running = false;
                     }
                 },
-                
+
                 async runQualityAnalysis() {
                     try {
                         this.qualityTask.running = true;
                         this.qualityTask.progress = 0;
                         this.qualityTask.results = null;
-                        
+
                         const response = await fetch('/api/analysis/quality', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -421,24 +421,24 @@
                                 limit: 10
                             })
                         });
-                        
+
                         const task = await response.json();
                         this.qualityTask.taskId = task.task_id;
-                        
+
                         this.watchTask(task.task_id, this.qualityTask);
-                        
+
                     } catch (error) {
                         console.error('Error running quality analysis:', error);
                         this.qualityTask.running = false;
                     }
                 },
-                
+
                 async runEpicAnalysis() {
                     try {
                         this.epicTask.running = true;
                         this.epicTask.progress = 0;
                         this.epicTask.results = null;
-                        
+
                         const response = await fetch(`/api/analysis/epic/${this.epicForm.epicKey}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -447,30 +447,30 @@
                                 use_claude: this.epicForm.depth === 'full'
                             })
                         });
-                        
+
                         const task = await response.json();
                         this.epicTask.taskId = task.task_id;
-                        
+
                         this.watchTask(task.task_id, this.epicTask);
-                        
+
                     } catch (error) {
                         console.error('Error running epic analysis:', error);
                         this.epicTask.running = false;
                     }
                 },
-                
+
                 async watchTask(taskId, taskObj) {
                     const pollTask = async () => {
                         try {
                             const response = await fetch(`/api/tasks/${taskId}`);
                             const status = await response.json();
-                            
+
                             taskObj.progress = status.progress;
-                            
+
                             if (status.status === 'completed') {
                                 taskObj.results = status.results;
                                 taskObj.running = false;
-                                
+
                                 // Update quality chart if this was a quality analysis
                                 if (taskObj === this.qualityTask && status.results?.analyses) {
                                     this.$nextTick(() => this.updateQualityChart());
@@ -486,19 +486,19 @@
                             taskObj.running = false;
                         }
                     };
-                    
+
                     pollTask();
                 },
-                
+
                 updateQualityChart() {
                     const canvas = this.$refs.qualityChart;
                     if (!canvas || !this.qualityTask.results?.analyses) return;
-                    
+
                     const ctx = canvas.getContext('2d');
-                    
+
                     const labels = this.qualityTask.results.analyses.map(a => a.work_item_key);
                     const scores = this.qualityTask.results.analyses.map(a => a.overall_score);
-                    
+
                     new Chart(ctx, {
                         type: 'bar',
                         data: {
