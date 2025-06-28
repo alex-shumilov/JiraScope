@@ -56,20 +56,38 @@ class CostTracker:
         return summary
 
 
+class JiraScopeLogger(logging.Logger):
+    """Custom logger class with cost tracking capabilities."""
+
+    cost_tracker: Optional[CostTracker] = None
+
+    def log_cost(
+        self, service: str, operation: str, cost: float, details: Optional[Dict[str, Any]] = None
+    ):
+        """Log a cost entry if cost tracking is enabled."""
+        if self.cost_tracker:
+            self.cost_tracker.add_cost(service, operation, cost, details)
+            self.info(f"{service}.{operation}", extra={"cost": cost})
+
+
+logging.setLoggerClass(JiraScopeLogger)
+setattr(logging.LogRecord, "cost", 0.0)
+
+
 class CostTrackingFormatter(logging.Formatter):
     """Custom formatter that includes cost information."""
 
     def format(self, record):
         # Add cost information if available
         if hasattr(record, "cost"):
-            record.msg = f"[COST: ${record.cost:.4f}] {record.msg}"
+            record.msg = f"[COST: ${record.cost:.4f}] {record.msg}"  # type: ignore[attr-defined]
 
         return super().format(record)
 
 
 def setup_logging(
     log_level: str = "INFO", log_file: Optional[Path] = None, enable_cost_tracking: bool = True
-) -> CostTracker:
+) -> Optional[CostTracker]:
     """Setup structured logging with optional cost tracking."""
 
     log_level = getattr(logging, log_level.upper())
@@ -110,21 +128,10 @@ def setup_logging(
     # Initialize cost tracker
     cost_tracker = CostTracker() if enable_cost_tracking else None
 
-    # Add cost tracking to logger
-    logger = logging.getLogger("jirascope.costs")
-    if cost_tracker:
-        logger.cost_tracker = cost_tracker
-
-        def log_cost(
-            service: str, operation: str, cost: float, details: Optional[Dict[str, Any]] = None
-        ):
-            cost_tracker.add_cost(service, operation, cost, details)
-            logger.info(f"{service}.{operation}", extra={"cost": cost})
-
-        logger.log_cost = log_cost
-    else:
-        logger.cost_tracker = None
-        logger.log_cost = lambda *args, **kwargs: None
+    # Get the cost logger and assign the tracker
+    cost_logger = logging.getLogger("jirascope.costs")
+    if isinstance(cost_logger, JiraScopeLogger):
+        cost_logger.cost_tracker = cost_tracker
 
     return cost_tracker
 
@@ -133,8 +140,8 @@ class StructuredLogger:
     """Structured logger for consistent logging across the application."""
 
     def __init__(self, name: str):
-        self.logger = logging.getLogger(name)
-        self.cost_tracker = getattr(logging.getLogger("jirascope.costs"), "cost_tracker", None)
+        self.logger: JiraScopeLogger = logging.getLogger(name)  # type: ignore
+        self.cost_tracker = self.logger.cost_tracker
 
     def info(self, message: str, **kwargs):
         """Log info message with structured data."""
@@ -172,9 +179,7 @@ class StructuredLogger:
         self, service: str, operation: str, cost: float, details: Optional[Dict[str, Any]] = None
     ):
         """Log cost information."""
-        if self.cost_tracker:
-            self.cost_tracker.add_cost(service, operation, cost, details)
-
+        self.logger.log_cost(service, operation, cost, details)
         self.logger.info(
             f"Cost: {service}.{operation} = ${cost:.4f}",
             extra={"cost": cost, "service": service, "operation": operation},
