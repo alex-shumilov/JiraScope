@@ -3,31 +3,31 @@ description:
 globs:
 alwaysApply: false
 ---
-# JiraScope Project Overview
+# Project Overview
 
-JiraScope is an AI-powered Jira work item analysis and management tool that provides semantic analysis of work items to improve quality, identify duplicates, and analyze scope drift over time.
+This project, `JiraScope`, is a Python application for analyzing Jira data. It has both a Command Line Interface (CLI) and a web interface.
 
-## Architecture Overview
+## Key Directories
 
-The project follows a modular architecture with clear separation of concerns:
+*   `src/jirascope`: Contains the core Python source code for the application.
+    *   `analysis`: Modules for analyzing Jira data.
+    *   `cli`: The command-line interface. The main entry point is `[src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py)`.
+    *   `clients`: Clients for interacting with external services like Jira, Claude, etc.
+    *   `core`: Core components like configuration management (`[src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)`).
+    *   `extractors`: Code for extracting data from sources like Jira (`[src/jirascope/extractors/jira_extractor.py](mdc:src/jirascope/extractors/jira_extractor.py)`).
+    *   `pipeline`: Data processing pipelines.
+*   `src/web`: Contains the source code for the web interface. The main entry point is `[src/web/main.py](mdc:src/web/main.py)`.
+*   `tests`: Contains all tests for the project.
+*   `config`: Directory for configuration files.
+*   `data`: Directory for data files.
 
-- **CLI Interface**: Main entry point at [src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py)
-- **Web Interface**: FastAPI-based web service at [src/web/main.py](mdc:src/web/main.py)
-- **Configuration**: Centralized config management at [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
-- **Analysis Modules**: Various analyzers in [src/jirascope/analysis/](mdc:src/jirascope/analysis)
-- **External Clients**: Service integrations in [src/jirascope/clients/](mdc:src/jirascope/clients)
-- **Data Processing**: Pipeline components in [src/jirascope/pipeline/](mdc:src/jirascope/pipeline)
+## Dependencies
 
-## Key Dependencies
+Python dependencies are managed in `[pyproject.toml](mdc:pyproject.toml)`.
 
-- **qdrant-client**: Vector database for semantic search
-- **anthropic**: Claude AI integration for analysis
-- **click**: CLI framework
-- **fastapi**: Web API framework
-- **scikit-learn**: Machine learning utilities
-- **pandas/numpy**: Data processing
+## Containerization
 
-## Project Configuration
+The project can be run using Docker. See `[Dockerfile](mdc:Dockerfile)` and `[docker-compose.yml](mdc:docker-compose.yml)`.
 
 - **Package Configuration**: [pyproject.toml](mdc:pyproject.toml) defines dependencies and CLI entry points
 - **Docker**: [docker-compose.yml](mdc:docker-compose.yml) and [Dockerfile](mdc:Dockerfile) for containerized deployment

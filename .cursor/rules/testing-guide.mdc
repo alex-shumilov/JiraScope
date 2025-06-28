@@ -1,0 +1,19 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Testing Guide
+
+Tests for the `JiraScope` project are located in the `[tests/](mdc:tests)` directory.
+
+## Structure
+
+*   `tests/integration`: Integration tests.
+*   `tests/unit`: Unit tests.
+*   `tests/fixtures`: Test fixtures, see `[tests/fixtures/analysis_fixtures.py](mdc:tests/fixtures/analysis_fixtures.py)`.
+*   `[tests/conftest.py](mdc:tests/conftest.py)` contains shared pytest fixtures.
+
+## Running Tests
+
+Tests are likely run using `pytest`. Look for test configurations in `[pyproject.toml](mdc:pyproject.toml)`.

@@ -1,0 +1,22 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# How to Run JiraScope
+
+There are multiple ways to run the `JiraScope` application.
+
+## CLI
+
+The Command Line Interface is defined in `[src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py)`. For detailed instructions on usage, please refer to `[CLI_USAGE.md](mdc:CLI_USAGE.md)`.
+
+## Web App
+
+The web application is defined in `[src/web/main.py](mdc:src/web/main.py)`. For detailed instructions on usage, please refer to `[WEB_USAGE.md](mdc:WEB_USAGE.md)`.
+
+## Docker
+
+The application can be containerized using Docker. You can build and run the application using `[Dockerfile](mdc:Dockerfile)` and `[docker-compose.yml](mdc:docker-compose.yml)`.
+
+Refer to the `[Makefile](mdc:Makefile)` for common commands.
