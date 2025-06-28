@@ -18,6 +18,7 @@ from .analysis import (
     TechDebtReport,
     TemplateInference,
 )
+from .metadata_schema import ChunkMetadata, JiraItemMetadata
 from .work_item import (
     AnalysisResult,
     EpicHierarchy,
@@ -37,6 +38,9 @@ __all__ = [
     "ProcessingResult",
     "QualityReport",
     "AnalysisResult",
+    # Metadata models
+    "JiraItemMetadata",
+    "ChunkMetadata",
     # Analysis models
     "DuplicateCandidate",
     "DuplicateReport",

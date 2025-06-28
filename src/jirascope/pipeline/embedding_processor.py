@@ -10,6 +10,7 @@ from ..clients.lmstudio_client import LMStudioClient
 from ..clients.qdrant_client import QdrantVectorClient
 from ..core.config import EMBEDDING_CONFIG, Config
 from ..models import ProcessingResult, WorkItem
+from ..pipeline.smart_chunker import SmartChunker
 from ..utils.logging import StructuredLogger
 
 logger = StructuredLogger(__name__)
@@ -74,6 +75,7 @@ class EmbeddingProcessor:
     def __init__(self, config: Config):
         self.config = config
         self.batcher = AdaptiveBatcher(config.embedding_batch_size)
+        self.chunker = SmartChunker(max_chunk_size=500)
         self.cache_dir = Path.home() / ".jirascope" / "cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -151,6 +153,106 @@ class EmbeddingProcessor:
         except Exception as e:
             logger.error("Failed to process work items", error=str(e))
             result.errors.append(f"Processing failed: {str(e)}")
+            result.processing_time = time.time() - start_time
+            return result
+
+    async def process_work_items_with_chunking(self, items: List[WorkItem]) -> ProcessingResult:
+        """Process work items using smart chunking strategy."""
+        logger.info(f"Starting chunked processing of {len(items)} work items")
+        start_time = time.time()
+
+        result = ProcessingResult()
+
+        try:
+            async with LMStudioClient(self.config) as lm_client:
+                async with QdrantVectorClient(self.config) as qdrant_client:
+
+                    # Filter unchanged items
+                    items_to_process = self._filter_unchanged_items(items)
+                    result.skipped_items = len(items) - len(items_to_process)
+
+                    if not items_to_process:
+                        logger.info("No items need processing")
+                        return result
+
+                    # Generate chunks for all items
+                    all_chunks = []
+                    for item in items_to_process:
+                        chunks = self.chunker.chunk_work_item(item)
+                        all_chunks.extend(chunks)
+
+                    logger.info(
+                        f"Generated {len(all_chunks)} chunks from {len(items_to_process)} items"
+                    )
+
+                    # Process chunks in batches
+                    batch_size = self.batcher.calculate_optimal_batch_size(items_to_process)
+
+                    for i in range(0, len(all_chunks), batch_size):
+                        batch_start = time.time()
+                        chunk_batch = all_chunks[i : i + batch_size]
+
+                        try:
+                            # Extract text from chunks
+                            texts = [chunk.text for chunk in chunk_batch]
+
+                            # Generate embeddings
+                            embeddings = await lm_client.generate_embeddings(texts)
+
+                            if len(embeddings) != len(chunk_batch):
+                                raise ValueError(
+                                    f"Embedding count mismatch: {len(embeddings)} != {len(chunk_batch)}"
+                                )
+
+                            # Store chunks in Qdrant
+                            await qdrant_client.store_chunks(chunk_batch, embeddings)
+
+                            result.processed_items += len(chunk_batch)
+                            result.total_cost += len(chunk_batch) * 0.0001
+
+                            # Record performance
+                            batch_time = time.time() - batch_start
+                            self.batcher.record_performance(
+                                len(chunk_batch), batch_time, len(chunk_batch)
+                            )
+
+                            batch_num = i // batch_size + 1
+                            result.batch_stats[f"batch_{batch_num}_time"] = batch_time
+                            result.batch_stats[f"batch_{batch_num}_chunks"] = len(chunk_batch)
+
+                            logger.debug(
+                                f"Processed chunk batch {batch_num}: {len(chunk_batch)} chunks in {batch_time:.2f}s"
+                            )
+
+                        except Exception as e:
+                            logger.error(
+                                f"Failed to process chunk batch {i//batch_size + 1}", error=str(e)
+                            )
+                            result.failed_items += len(chunk_batch)
+                            result.errors.append(f"Chunk batch {i//batch_size + 1}: {str(e)}")
+                            continue
+
+                    # Update cache hashes for processed items
+                    for item in items_to_process:
+                        self._update_cache_hash(item)
+
+            result.processing_time = time.time() - start_time
+
+            logger.log_operation(
+                "process_work_items_with_chunking",
+                result.processing_time,
+                success=result.failed_items == 0,
+                processed=result.processed_items,
+                failed=result.failed_items,
+                skipped=result.skipped_items,
+                success_rate=result.success_rate,
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error("Failed to process work items with chunking", error=str(e))
+            result.errors.append(f"Chunked processing failed: {str(e)}")
             result.processing_time = time.time() - start_time
             return result
 
