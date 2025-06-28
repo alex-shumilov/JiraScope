@@ -320,7 +320,7 @@ class TestStructuralAnalyzer:
             mock_qdrant.return_value = mock_qdrant_instance
             mock_claude.return_value = mock_claude_instance
 
-            async with StructuralAnalyzer(mock_config) as analyzer:
+            async with StructuralAnalyzer(mock_config) as _:
                 pass
 
             # Verify __aexit__ was called
@@ -446,7 +446,12 @@ class TestStructuralAnalyzer:
             )
         ]
 
-        report = TechDebtReport(total_tech_debt_items=5, clusters=clusters, processing_cost=0.15)
+        report = TechDebtReport(
+            total_tech_debt_items=5,
+            clusters=clusters,
+            processing_cost=0.15,
+            clustering_algorithm="DBSCAN",
+        )
 
         assert report.total_tech_debt_items == 5
         assert len(report.clusters) == 1

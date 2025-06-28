@@ -203,6 +203,10 @@ class TestContentAnalyzer:
             created=datetime.now(),
             updated=datetime.now(),
             reporter="test",
+            parent_key=None,
+            epic_key=None,
+            assignee=None,
+            embedding=None,
         )
 
         medium_item = WorkItem(
@@ -214,6 +218,10 @@ class TestContentAnalyzer:
             created=datetime.now(),
             updated=datetime.now(),
             reporter="test",
+            parent_key=None,
+            epic_key=None,
+            assignee=None,
+            embedding=None,
         )
 
         long_item = WorkItem(
@@ -225,6 +233,10 @@ class TestContentAnalyzer:
             created=datetime.now(),
             updated=datetime.now(),
             reporter="test",
+            parent_key=None,
+            epic_key=None,
+            assignee=None,
+            embedding=None,
         )
 
         with patch(
@@ -415,7 +427,7 @@ class TestBatchContentAnalyzer:
 
             async with BatchContentAnalyzer(mock_config) as batch_analyzer:
                 work_items = sample_work_items[:2]
-                result = await batch_analyzer._process_batch(  # noqa: F841
+                _ = await batch_analyzer._process_batch(
                     work_items, ["split"]
                 )  # Non-quality analysis
 

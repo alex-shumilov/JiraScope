@@ -224,7 +224,7 @@ class TestSimilarityAnalyzer:
             mock_lm.return_value = mock_lm_instance
             mock_qdrant.return_value = mock_qdrant_instance
 
-            async with SimilarityAnalyzer(mock_config) as analyzer:
+            async with SimilarityAnalyzer(mock_config) as _:
                 pass
 
             # Verify __aexit__ was called
@@ -289,7 +289,10 @@ class TestSimilarityAnalyzer:
         ]
 
         report = DuplicateReport(
-            total_candidates=1, candidates_by_level={"high": candidates}, processing_cost=0.05
+            total_candidates=1,
+            candidates_by_level={"high": candidates},
+            processing_cost=0.05,
+            items_analyzed=10,
         )
 
         assert report.total_candidates == 1

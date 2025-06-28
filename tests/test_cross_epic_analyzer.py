@@ -266,7 +266,7 @@ class TestCrossEpicAnalyzer:
             mock_lm.return_value = mock_lm_instance
             mock_claude.return_value = mock_claude_instance
 
-            async with CrossEpicAnalyzer(mock_config) as analyzer:
+            async with CrossEpicAnalyzer(mock_config) as _:
                 pass
 
             # Verify __aexit__ was called on all clients

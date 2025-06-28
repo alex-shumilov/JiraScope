@@ -61,6 +61,10 @@ As a registered user, I want to manage my profile information so that I can keep
                 reporter="product.manager",
                 components=["frontend", "backend"],
                 labels=["user-management", "profile", "high-quality"],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
             ),
             WorkItem(
                 key="PROJ-2",
@@ -86,6 +90,10 @@ As a customer, I want to add items to my shopping cart so that I can purchase mu
                 reporter="product.manager",
                 components=["frontend", "backend"],
                 labels=["ecommerce", "cart", "high-quality"],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
             ),
             WorkItem(
                 key="PROJ-3",
@@ -111,6 +119,10 @@ As a user, I want to receive email notifications for important account activitie
                 reporter="product.manager",
                 components=["backend", "email"],
                 labels=["notifications", "communication", "high-quality"],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
             ),
         ]
 
@@ -144,6 +156,10 @@ Migrate the user_profiles table to include new fields for enhanced profile manag
                 reporter="tech.lead",
                 components=["backend", "database"],
                 labels=["migration", "database", "high-quality"],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
             ),
             WorkItem(
                 key="TASK-2",
@@ -169,6 +185,10 @@ Implement rate limiting for public API endpoints to prevent abuse and ensure fai
                 reporter="tech.lead",
                 components=["backend", "api"],
                 labels=["security", "performance", "high-quality"],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
             ),
             WorkItem(
                 key="TASK-3",
@@ -194,6 +214,10 @@ Optimize the frontend build process to reduce build times and improve developer 
                 reporter="tech.lead",
                 components=["frontend", "devops"],
                 labels=["optimization", "build", "high-quality"],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
             ),
         ]
 
