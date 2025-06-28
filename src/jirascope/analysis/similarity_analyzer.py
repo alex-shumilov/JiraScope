@@ -3,6 +3,8 @@
 import time
 from typing import Dict, List, Optional
 
+from qdrant_client.http import models
+
 from ..clients.lmstudio_client import LMStudioClient
 from ..clients.qdrant_client import QdrantVectorClient
 from ..core.config import Config
@@ -294,7 +296,13 @@ class SimilarityAnalyzer:
             # Note: This assumes epic_key is stored in payload during embedding storage
             scroll_result = self.qdrant_client.client.scroll(
                 collection_name="jirascope_work_items",
-                scroll_filter={"must": [{"key": "epic_key", "match": {"value": epic_key}}]},
+                scroll_filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="epic_key", match=models.MatchValue(value=epic_key)
+                        )
+                    ]
+                ),
                 limit=1000,
             )
 
@@ -377,9 +385,7 @@ class SimilarityAnalyzer:
                 recommendations.append("Epic shows good coherence and theme consistency")
 
             processing_time = time.time() - start_time
-            estimated_cost = (
-                len(embeddings) * 0.0001
-            )  # noqa: F841 Cost for similarity calculations (reserved for future use)
+            estimated_cost = len(embeddings) * 0.0001  # noqa: F841
 
             logger.log_operation(
                 "hierarchical_coherence",
