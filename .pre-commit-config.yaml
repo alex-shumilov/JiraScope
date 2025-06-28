@@ -65,9 +65,8 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: pytest
         language: system
+        entry: poetry run pytest -v --tb=short --ignore=tests/integration --ignore=tests/unit/test_config.py
         types: [python]
         pass_filenames: false
         always_run: true
-        args: ["-v", "--tb=short", "--ignore=tests/integration", "--ignore=tests/unit/test_config.py"]

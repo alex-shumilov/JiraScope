@@ -66,4 +66,4 @@ All notable changes to this project will be documented in this file.
 - (setup): optimize containerization setup (085239a)
 
 ### Tests
-- (coverage): enhance test suite coverage and reliability (3a907e3) 
+- (coverage): enhance test suite coverage and reliability (3a907e3)

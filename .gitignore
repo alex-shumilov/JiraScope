@@ -69,6 +69,7 @@ models/
 # IDE
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
@@ -101,3 +102,6 @@ analysis_output/
 # Config backups
 *.bak
 *.backup
+
+# Project Management
+MVP.md

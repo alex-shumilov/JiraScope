@@ -382,7 +382,7 @@ class TestBatchContentAnalyzer:
                 work_items = sample_work_items[:5]
                 batch_size = 2
 
-                result = await batch_analyzer.analyze_multiple_items(
+                _ = await batch_analyzer.analyze_multiple_items(
                     work_items=work_items, analysis_types=["quality"], batch_size=batch_size
                 )
 
