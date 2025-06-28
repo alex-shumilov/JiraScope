@@ -36,4 +36,4 @@ binary-optimized: install-pyinstaller
 		--specpath . \
 		src/jirascope/cli/main.py
 	@echo "✅ Optimized binary built successfully!"
-	@echo "📦 Binary location: ./dist/jirascope" 
+	@echo "📦 Binary location: ./dist/jirascope"
