@@ -148,5 +148,5 @@ def mock_httpx_responses():
             ]
         },
         "lmstudio_embeddings": {"data": [{"embedding": [0.1, 0.2, 0.3] * 341}]},  # 1023 dimensions
-        "lmstudio_models": {"data": [{"id": "BAAI/bge-large-en-v1.5"}]},
+        "lmstudio_models": {"data": [{"id": "text-embedding-bge-large-en-v1.5"}]},
     }

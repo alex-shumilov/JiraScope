@@ -2,6 +2,7 @@
 
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import yaml
 
@@ -14,13 +15,17 @@ def test_config_from_env(monkeypatch):
     monkeypatch.setenv("CLAUDE_API_KEY", "test-key-123")
     monkeypatch.setenv("EMBEDDING_BATCH_SIZE", "16")
     monkeypatch.setenv("JIRA_DRY_RUN", "false")
+    monkeypatch.setenv("CLAUDE_MODEL", "test-model")
 
-    config = Config.from_env()
+    with patch("pathlib.Path.exists") as mock_exists:
+        mock_exists.return_value = False
+        config = Config.from_env()
 
     assert config.jira_mcp_endpoint == "http://test:8080/mcp"
     assert config.claude_api_key == "test-key-123"
     assert config.embedding_batch_size == 16
     assert config.jira_dry_run is False
+    assert config.claude_model == "test-model"
 
 
 def test_config_from_file():
@@ -67,20 +72,34 @@ def test_config_load_priority(monkeypatch):
         assert config.claude_api_key == "file-key"
 
         # Test env fallback when no file
-        config = Config.load(Path("nonexistent.yaml"))
-        assert config.jira_mcp_endpoint == "http://env:8080/mcp"
-        assert config.claude_api_key == "env-key"
+        with patch("pathlib.Path.exists") as mock_exists:
+            mock_exists.return_value = False
+            config = Config.load(Path("nonexistent.yaml"))
+            assert config.jira_mcp_endpoint == "http://env:8080/mcp"
+            assert config.claude_api_key == "env-key"
     finally:
         config_path.unlink()
 
 
-def test_config_defaults():
+def test_config_defaults(monkeypatch):
     """Test default configuration values."""
-    config = Config(jira_mcp_endpoint="http://test:8080")
+    # Ensure no env vars or files are loaded
+    for var in [
+        "JIRA_MCP_ENDPOINT",
+        "LMSTUDIO_ENDPOINT",
+        "QDRANT_URL",
+        "CLAUDE_MODEL",
+        "EMBEDDING_BATCH_SIZE",
+    ]:
+        monkeypatch.delenv(var, raising=False)
+
+    with patch("pathlib.Path.exists") as mock_exists:
+        mock_exists.return_value = False
+        config = Config(jira_mcp_endpoint="http://default-mcp")
 
     assert config.lmstudio_endpoint == "http://localhost:1234/v1"
     assert config.qdrant_url == "http://localhost:6333"
-    assert config.claude_model == "claude-3-5-sonnet-20241022"
+    assert config.claude_model == "claude-3-5-sonnet-latest"
     assert config.embedding_batch_size == 32
     assert config.jira_batch_size == 100
     assert config.similarity_threshold == 0.8

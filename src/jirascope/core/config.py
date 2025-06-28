@@ -65,7 +65,7 @@ class Config:
             lmstudio_endpoint=os.getenv("LMSTUDIO_ENDPOINT", "http://localhost:1234/v1"),
             qdrant_url=os.getenv("QDRANT_URL", "http://localhost:6333"),
             claude_api_key=os.getenv("CLAUDE_API_KEY", ""),
-            claude_model=os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
+            claude_model=os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-latest"),
             embedding_batch_size=int(os.getenv("EMBEDDING_BATCH_SIZE", "32")),
             jira_batch_size=int(os.getenv("JIRA_BATCH_SIZE", "100")),
             similarity_threshold=float(os.getenv("SIMILARITY_THRESHOLD", "0.8")),
