@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: false
 ---
 # Analysis Modules Guide
@@ -12,13 +12,13 @@ The analysis modules in [src/jirascope/analysis/](mdc:src/jirascope/analysis) pr
 ### Similarity Analyzer
 **File**: [src/jirascope/analysis/similarity_analyzer.py](mdc:src/jirascope/analysis/similarity_analyzer.py)
 - **Purpose**: Detects duplicate or highly similar work items
-- **Features**: 
+- **Features**:
   - Cosine similarity calculation between embeddings
   - Configurable similarity thresholds
   - Batch processing capabilities
 - **Usage**: `jirascope analyze duplicates`
 
-### Cross-Epic Analyzer  
+### Cross-Epic Analyzer
 **File**: [src/jirascope/analysis/cross_epic_analyzer.py](mdc:src/jirascope/analysis/cross_epic_analyzer.py)
 - **Purpose**: Identifies work items that might belong to different epics
 - **Features**:

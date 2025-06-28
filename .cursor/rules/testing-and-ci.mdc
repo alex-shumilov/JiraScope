@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: false
 ---
 # Testing and CI Workflow
@@ -13,7 +13,7 @@ This guide covers testing strategies, pre-commit hooks, and continuous integrati
 The test suite is organized into three levels in [tests/](mdc:tests):
 
 - **Unit Tests**: [tests/unit/](mdc:tests/unit) - Fast, isolated tests for individual components
-- **Integration Tests**: [tests/integration/](mdc:tests/integration) - Tests external service integrations  
+- **Integration Tests**: [tests/integration/](mdc:tests/integration) - Tests external service integrations
 - **Component Tests**: Root-level tests - Full pipeline and cross-module testing
 
 ### Test Configuration
@@ -101,7 +101,7 @@ For CI environments that cannot run full integration tests:
 All commits should pass:
 - Code formatting (Black, isort)
 - Linting (Ruff)
-- Type checking (MyPy) 
+- Type checking (MyPy)
 - Security scanning (Bandit)
 - Core unit tests (non-integration)
 

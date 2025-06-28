@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: false
 ---
 # CLI Commands Reference
@@ -35,7 +35,7 @@ jirascope search --query "search terms" --limit 10
 ### Authentication Management
 ```bash
 jirascope auth        # Interactive auth setup
-jirascope auth-status # Check current auth status  
+jirascope auth-status # Check current auth status
 jirascope auth-clear  # Clear stored credentials
 ```
 
