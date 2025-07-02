@@ -1,9 +1,13 @@
 """Main CLI entry point for JiraScope."""
 
 import asyncio
+import os
+import sys
 from pathlib import Path
+from typing import Optional
 
 import click
+from rich.console import Console
 
 from ..analysis.content_analyzer import ContentAnalyzer
 from ..analysis.cross_epic_analyzer import CrossEpicAnalyzer
@@ -17,7 +21,11 @@ from ..extractors.jira_extractor import JiraExtractor
 from ..pipeline.embedding_processor import EmbeddingProcessor
 from ..pipeline.incremental_processor import IncrementalProcessor
 from ..pipeline.quality_validator import EmbeddingQualityValidator
-from ..utils.logging import setup_logging
+from ..rag.pipeline import JiraRAGPipeline
+from ..utils.logging import StructuredLogger, setup_logging
+
+console = Console()
+logger = StructuredLogger(__name__)
 
 
 @click.group()
@@ -630,6 +638,191 @@ def auth_clear(ctx):
 def run_async(coro):
     """Helper to run async coroutines in CLI commands."""
     return asyncio.run(coro)
+
+
+@cli.command()
+@click.option(
+    "--config-file", "-c", type=click.Path(exists=True), help="Path to configuration file"
+)
+@click.option("--output-dir", "-o", type=click.Path(), help="Output directory for extracted data")
+@click.pass_context
+def extract(ctx, config_file: Optional[str], output_dir: Optional[str]):
+    """Extract data from Jira and store in vector database."""
+    try:
+        config = Config.from_env(config_file)
+
+        if output_dir:
+            config.data_dir = Path(output_dir)
+
+        console.print("[bold green]Starting Jira extraction...[/bold green]")
+        console.print(f"Jira URL: {config.jira_url}")
+        console.print(f"Output directory: {config.data_dir}")
+
+        extractor = JiraExtractor(config)
+        asyncio.run(extractor.extract_all())
+
+        console.print("[bold green]✓ Extraction completed successfully![/bold green]")
+
+    except Exception as e:
+        logger.error(f"Extraction failed: {e}")
+        console.print(f"[bold red]✗ Extraction failed: {e}[/bold red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--config-file", "-c", type=click.Path(exists=True), help="Path to configuration file"
+)
+@click.option("--batch-size", "-b", type=int, help="Batch size for processing")
+@click.option("--force-reprocess", "-f", is_flag=True, help="Force reprocessing of all data")
+@click.pass_context
+def process(ctx, config_file: Optional[str], batch_size: Optional[int], force_reprocess: bool):
+    """Process extracted data and generate embeddings."""
+    try:
+        config = Config.from_env(config_file)
+
+        if batch_size:
+            config.embedding_batch_size = batch_size
+
+        console.print("[bold green]Starting embedding processing...[/bold green]")
+        console.print(f"Batch size: {config.embedding_batch_size}")
+        console.print(f"Force reprocess: {force_reprocess}")
+
+        processor = EmbeddingProcessor(config)
+        asyncio.run(processor.process_all(force_reprocess=force_reprocess))
+
+        console.print("[bold green]✓ Processing completed successfully![/bold green]")
+
+    except Exception as e:
+        logger.error(f"Processing failed: {e}")
+        console.print(f"[bold red]✗ Processing failed: {e}[/bold red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--config-file", "-c", type=click.Path(exists=True), help="Path to configuration file"
+)
+@click.option("--query", "-q", type=str, help="Query to execute")
+@click.option("--interactive", "-i", is_flag=True, help="Run in interactive mode")
+@click.pass_context
+def query(ctx, config_file: Optional[str], query: Optional[str], interactive: bool):
+    """Query the processed data using natural language."""
+    try:
+        config = Config.from_env(config_file)
+
+        console.print("[bold green]Initializing RAG pipeline...[/bold green]")
+
+        # Initialize RAG pipeline
+        from ..clients.lmstudio_client import LMStudioClient
+        from ..clients.qdrant_client import QdrantVectorClient
+
+        async def run_query():
+            async with QdrantVectorClient(config) as qdrant_client:
+                async with LMStudioClient(config) as lm_client:
+                    rag_pipeline = JiraRAGPipeline(qdrant_client, lm_client)
+
+                    if interactive:
+                        console.print(
+                            "[bold blue]Interactive mode - type 'exit' to quit[/bold blue]"
+                        )
+                        while True:
+                            user_query = console.input("[bold yellow]Query: [/bold yellow]")
+                            if user_query.lower() in ["exit", "quit", "q"]:
+                                break
+
+                            result = await rag_pipeline.process_query(user_query)
+                            console.print("[bold green]Result:[/bold green]")
+                            console.print(result.get("formatted_context", "No results found"))
+                            console.print()
+
+                    elif query:
+                        result = await rag_pipeline.process_query(query)
+                        console.print("[bold green]Result:[/bold green]")
+                        console.print(result.get("formatted_context", "No results found"))
+
+                    else:
+                        console.print(
+                            "[bold red]Please provide a query with -q or use -i for interactive mode[/bold red]"
+                        )
+                        sys.exit(1)
+
+        asyncio.run(run_query())
+
+    except Exception as e:
+        logger.error(f"Query failed: {e}")
+        console.print(f"[bold red]✗ Query failed: {e}[/bold red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--config-file", "-c", type=click.Path(exists=True), help="Path to configuration file"
+)
+@click.option(
+    "--transport",
+    "-t",
+    type=click.Choice(["stdio", "sse", "streamable-http"]),
+    default="stdio",
+    help="Transport method for MCP server",
+)
+@click.option("--port", "-p", type=int, default=8000, help="Port for HTTP transports")
+@click.pass_context
+def mcp_server(ctx, config_file: Optional[str], transport: str, port: int):
+    """Run the MCP server to expose JiraScope capabilities."""
+    try:
+        console.print("[bold green]Starting JiraScope MCP Server...[/bold green]")
+        console.print(f"Transport: {transport}")
+        if transport in ["sse", "streamable-http"]:
+            console.print(f"Port: {port}")
+
+        # Import and run the MCP server
+        from ..mcp_server.server import main
+
+        # Set environment variables for the server
+        if config_file:
+            os.environ["JIRASCOPE_CONFIG_FILE"] = config_file
+        if transport in ["sse", "streamable-http"]:
+            os.environ["JIRASCOPE_MCP_PORT"] = str(port)
+            os.environ["JIRASCOPE_MCP_TRANSPORT"] = transport
+
+        # Run the MCP server
+        asyncio.run(main())
+
+    except KeyboardInterrupt:
+        console.print("\n[bold yellow]MCP Server stopped by user[/bold yellow]")
+    except Exception as e:
+        logger.error(f"MCP Server failed: {e}")
+        console.print(f"[bold red]✗ MCP Server failed: {e}[/bold red]")
+        sys.exit(1)
+
+
+@cli.command()
+@click.pass_context
+def status(ctx):
+    """Check the status of JiraScope components."""
+    try:
+        config = Config.from_env()
+
+        console.print("[bold blue]JiraScope Status[/bold blue]")
+        console.print(f"Configuration file: {config.config_file or 'Environment variables'}")
+        console.print(f"Data directory: {config.data_dir}")
+        console.print(f"Qdrant URL: {config.qdrant_url}")
+        console.print(f"LM Studio endpoint: {config.lmstudio_endpoint}")
+
+        # Check if data directory exists and has content
+        if config.data_dir.exists():
+            file_count = len(list(config.data_dir.glob("*.json")))
+            console.print(f"Data files: {file_count}")
+        else:
+            console.print("[bold yellow]Data directory does not exist[/bold yellow]")
+
+        # TODO: Add checks for Qdrant connection, LM Studio availability, etc.
+
+    except Exception as e:
+        logger.error(f"Status check failed: {e}")
+        console.print(f"[bold red]✗ Status check failed: {e}[/bold red]")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

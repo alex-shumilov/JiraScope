@@ -9,7 +9,9 @@ from pydantic import BaseModel, Field
 from ..clients.claude_client import ClaudeClient
 from ..clients.lmstudio_client import LMStudioClient
 from ..clients.mcp_client import MCPClient
-from ..clients.qdrant_client import QdrantVectorClient
+
+# Import moved to function level to avoid circular import
+# from ..clients.qdrant_client import QdrantVectorClient
 from ..core.config import Config
 from ..models.work_item import WorkItem
 from ..utils.logging import StructuredLogger
@@ -188,6 +190,9 @@ class RAGQualityTester:
         total_cost = 0.0
 
         try:
+            # Import here to avoid circular import
+            from ..clients.qdrant_client import QdrantVectorClient
+
             async with LMStudioClient(self.config) as lm_client:
                 async with QdrantVectorClient(self.config) as qdrant_client:
                     for test_query in self.test_queries:
