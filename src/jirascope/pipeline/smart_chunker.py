@@ -96,8 +96,13 @@ class SmartChunker:
 
         # Always include summary as first chunk
         if work_item.summary:
+            # Create item-type-specific summary chunk type
+            summary_chunk_type = f"{work_item.issue_type.lower()}_summary"
             summary_chunk = self._create_chunk(
-                text=work_item.summary, work_item=work_item, chunk_type="summary", chunk_index=0
+                text=work_item.summary,
+                work_item=work_item,
+                chunk_type=summary_chunk_type,
+                chunk_index=0,
             )
             chunks.append(summary_chunk)
 

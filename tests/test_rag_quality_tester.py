@@ -105,7 +105,7 @@ async def test_run_quality_tests_success(mock_config, sample_test_queries):
         "jirascope.pipeline.rag_quality_tester.LMStudioClient", return_value=mock_lm_context
     ):
         with patch(
-            "jirascope.pipeline.rag_quality_tester.QdrantVectorClient",
+            "jirascope.clients.qdrant_client.QdrantVectorClient",
             return_value=mock_qdrant_context,
         ):
             report = await tester.run_quality_tests()

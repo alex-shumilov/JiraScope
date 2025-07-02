@@ -1,7 +1,7 @@
 """Qdrant client for vector storage and retrieval."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
@@ -9,7 +9,9 @@ from qdrant_client.http.models import Distance, PointStruct, VectorParams
 
 from ..core.config import EMBEDDING_CONFIG, Config
 from ..models import WorkItem
-from ..pipeline.smart_chunker import Chunk
+
+if TYPE_CHECKING:
+    from ..pipeline.smart_chunker import Chunk
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +114,7 @@ class QdrantVectorClient:
             logger.error(f"Failed to store work items: {e}")
             raise
 
-    async def store_chunks(self, chunks: List[Chunk], embeddings: List[List[float]]):
+    async def store_chunks(self, chunks: List["Chunk"], embeddings: List[List[float]]):
         """Store text chunks with their embeddings and enhanced metadata."""
         if len(chunks) != len(embeddings):
             raise ValueError("Number of chunks must match number of embeddings")
