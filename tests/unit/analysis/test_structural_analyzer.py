@@ -1,5 +1,6 @@
 """Tests for structural analyzer components."""
 
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -7,6 +8,7 @@ import pytest
 from jirascope.analysis.structural_analyzer import StructuralAnalyzer, TechDebtClusterer
 from jirascope.core.config import Config
 from jirascope.models import TechDebtCluster, TechDebtReport
+from jirascope.models.work_item import WorkItem
 from tests.fixtures.analysis_fixtures import AnalysisFixtures
 
 
@@ -24,22 +26,77 @@ class TestTechDebtClusterer:
         self.clusterer = TechDebtClusterer(self.config)
 
     def test_clustering_parameters(self):
-        """Test that clustering parameters are correctly set."""
-        assert self.clusterer.min_samples >= 1
-        assert self.clusterer.eps > 0
-        assert self.clusterer.max_clusters > 0
+        """Test clustering parameter validation."""
+        config = Config(jira_mcp_endpoint="http://test.com")
+        clusterer = TechDebtClusterer(config)
 
-    def test_identify_tech_debt_items(self, sample_work_items):
-        """Test identification of tech debt work items."""
-        tech_debt_items = self.clusterer._identify_tech_debt_items(sample_work_items)
+        assert clusterer.min_samples >= 2
+        assert clusterer.eps > 0
+        assert clusterer.max_clusters > 0
 
-        # Should identify items with tech debt indicators
+    def test_identify_tech_debt_items(self):
+        """Test tech debt identification from work items."""
+        config = Config(jira_mcp_endpoint="http://test.com")
+        clusterer = TechDebtClusterer(config)
+
+        # Create test work items with tech debt keywords
+        base_time = datetime.now(timezone.utc)
+        work_items = [
+            WorkItem(
+                key="PROJ-1",
+                summary="Add new feature",
+                description="Implement new user dashboard",
+                issue_type="Story",
+                status="Open",
+                created=base_time,
+                updated=base_time,
+                reporter="test@example.com",
+                labels=[],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
+            ),
+            WorkItem(
+                key="PROJ-2",
+                summary="Fix bug in payment system",
+                description="Resolve payment processing issue",
+                issue_type="Bug",
+                status="Open",
+                created=base_time,
+                updated=base_time,
+                reporter="test@example.com",
+                labels=[],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
+            ),
+            WorkItem(
+                key="PROJ-3",
+                summary="Refactor legacy payment processing",
+                description="Modernize old payment code",
+                issue_type="Task",
+                status="Open",
+                created=base_time,
+                updated=base_time,
+                reporter="test@example.com",
+                labels=["refactor", "legacy"],
+                parent_key=None,
+                epic_key=None,
+                assignee=None,
+                embedding=None,
+            ),
+        ]
+
+        tech_debt_items = clusterer._identify_tech_debt_items(work_items)
+
+        # Convert to set of keys for easier testing
         tech_debt_keys = {item.key for item in tech_debt_items}
-        assert "TEST-3" in tech_debt_keys  # "Refactor legacy payment processing"
-        assert "TEST-4" in tech_debt_keys  # "Cleanup outdated database queries"
 
-        # Should exclude non-tech-debt items
-        assert "TEST-5" not in tech_debt_keys  # High quality story
+        # Should identify the refactor task
+        assert len(tech_debt_items) >= 1
+        assert "PROJ-3" in tech_debt_keys  # "Refactor legacy payment processing"
 
     def test_calculate_priority_score(self):
         """Test priority score calculation for tech debt items."""

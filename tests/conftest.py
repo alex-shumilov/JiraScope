@@ -1,15 +1,17 @@
 """Global test configuration and utilities."""
 
+import json
 import random
-from datetime import datetime, timedelta
+import tempfile
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from src.jirascope.core.config import Config
-from src.jirascope.models import WorkItem
-from tests.fixtures.analysis_fixtures import AnalysisFixtures
+from src.jirascope.models import CrossEpicReport, QualityAnalysis, WorkItem
 
 
 class TestConfig:
@@ -276,96 +278,320 @@ def mock_helper():
 
 @pytest.fixture
 def mock_config():
-    """Provide mock config without hardcoded values."""
-    return Config(
-        jira_mcp_endpoint="http://localhost:8080/mcp",
-        lmstudio_endpoint="http://localhost:1234/v1",
-        qdrant_url="http://localhost:6333",
-        claude_api_key="test-key",
-        embedding_batch_size=32,
-        similarity_threshold=0.7,
-    )
+    """Create a mock configuration object."""
+    config = Mock(spec=Config)
+    config.jira_mcp_endpoint = "http://localhost:8000"
+    config.jira_url = "https://test.atlassian.net"
+    config.jira_username = "test@example.com"
+    config.jira_password = "test_password"
+    config.qdrant_url = "http://localhost:6333"
+    config.qdrant_collection = "test_collection"
+    config.lmstudio_url = "http://localhost:1234"
+    config.lmstudio_model = "test-model"
+    config.claude_model = "claude-3-5-sonnet-20241022"
+    config.logging_level = "INFO"
+    return config
 
 
 @pytest.fixture
-def simple_work_items(data_builder):
-    """Provide simple work items for basic testing."""
-    return (
-        data_builder.add_story("Simple login functionality")
-        .add_bug("UI rendering issue", severity="low")
-        .add_epic("User management system", scope="small")
-        .build()
-    )
+def temp_config_file():
+    """Create a temporary configuration file."""
+    config_content = """
+jira:
+  url: "https://test.atlassian.net"
+  username: "test@example.com"
+  password: "test_password"
 
+qdrant:
+  url: "http://localhost:6333"
+  collection: "test_collection"
 
-# Additional fixtures needed by existing tests
-@pytest.fixture
-def sample_work_items(data_builder):
-    """Provide sample work items matching test expectations."""
-    return (
-        data_builder.add_story("User authentication", complexity="simple", key="TEST-1")
-        .add_bug(summary="Login form validation", severity="medium", key="TEST-2")
-        .add_story("Database optimization", complexity="complex", key="TEST-3")
-        .add_bug(summary="Performance issues", severity="high", key="TEST-4")
-        .add_epic(summary="E-commerce Platform", scope="large", key="TEST-5")
-        .add_story("Complete system overhaul", complexity="complex", key="TEST-6")
-        .build()
-    )
+lmstudio:
+  url: "http://localhost:1234"
+  model: "test-model"
 
+claude:
+  model: "claude-3-5-sonnet-20241022"
 
-@pytest.fixture
-def high_quality_stories(data_builder):
-    """Provide high-quality story samples for template inference."""
-    return (
-        data_builder.add_story("User Profile Management", complexity="medium")
-        .add_story("Shopping Cart Functionality", complexity="medium")
-        .add_story("Payment Integration", complexity="complex")
-        .build()
-    )
+logging:
+  level: "INFO"
+    """
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        f.write(config_content.strip())
+        f.flush()
+        yield f.name
+
+    # Cleanup
+    Path(f.name).unlink(missing_ok=True)
 
 
 @pytest.fixture
-def high_quality_tasks(data_builder):
-    """Provide high-quality task samples for template inference."""
-    return (
-        data_builder.add_story("Update documentation", complexity="simple")
-        .add_story("Configure monitoring", complexity="medium")
-        .add_story("Setup CI/CD pipeline", complexity="complex")
-        .build()
-    )
+def base_time():
+    """Provide a consistent base time for test data."""
+    return datetime.now(timezone.utc)
 
 
 @pytest.fixture
-def sample_embeddings(test_config):
-    """Provide sample embeddings for testing."""
-    dimension = test_config.EMBEDDING_DIMS["medium"]
-    return [[random.uniform(-1, 1) for _ in range(dimension)] for _ in range(6)]
+def sample_work_items(base_time):
+    """Create a comprehensive set of sample work items for testing."""
+    return [
+        WorkItem(
+            key="PROJ-1",
+            summary="Simple bug fix",
+            issue_type="Bug",
+            status="Open",
+            created=base_time,
+            updated=base_time,
+            reporter="test@example.com",
+            description="Fix a simple bug in the login system",
+            assignee="dev@example.com",
+            parent_key=None,
+            epic_key=None,
+            embedding=[0.1, 0.2, 0.3] * 100,
+        ),
+        WorkItem(
+            key="PROJ-2",
+            summary="User authentication feature",
+            issue_type="Story",
+            status="In Progress",
+            created=base_time - timedelta(days=1),
+            updated=base_time,
+            reporter="pm@example.com",
+            description="Implement OAuth2 authentication for user login",
+            assignee="dev@example.com",
+            parent_key=None,
+            epic_key="PROJ-100",
+            embedding=[0.4, 0.5, 0.6] * 100,
+        ),
+        WorkItem(
+            key="PROJ-3",
+            summary="Database performance improvement",
+            issue_type="Task",
+            status="Done",
+            created=base_time - timedelta(days=2),
+            updated=base_time - timedelta(hours=1),
+            reporter="dba@example.com",
+            description="Optimize database queries for better performance",
+            assignee="dba@example.com",
+            parent_key=None,
+            epic_key=None,
+            embedding=[0.7, 0.8, 0.9] * 100,
+        ),
+        WorkItem(
+            key="PROJ-4",
+            summary="Epic: User Management System",
+            issue_type="Epic",
+            status="In Progress",
+            created=base_time - timedelta(days=30),
+            updated=base_time,
+            reporter="architect@example.com",
+            description="Complete user management system with roles and permissions",
+            assignee="lead@example.com",
+            parent_key=None,
+            epic_key=None,
+            embedding=[0.2, 0.3, 0.4] * 100,
+        ),
+        WorkItem(
+            key="PROJ-5",
+            summary="Frontend component library",
+            issue_type="Story",
+            status="Open",
+            created=base_time - timedelta(days=3),
+            updated=base_time,
+            reporter="designer@example.com",
+            description="Create reusable UI components for frontend",
+            assignee="frontend@example.com",
+            parent_key=None,
+            epic_key="PROJ-200",
+            embedding=[0.5, 0.6, 0.7] * 100,
+        ),
+        WorkItem(
+            key="PROJ-6",
+            summary="Complex platform overhaul",
+            issue_type="Story",
+            status="Open",
+            created=base_time - timedelta(days=5),
+            updated=base_time,
+            reporter="architect@example.com",
+            description="Complete overhaul of the e-commerce platform including payment processing, inventory management, user interface redesign, mobile app development, and third-party integrations",
+            assignee="team@example.com",
+            parent_key=None,
+            epic_key=None,
+            embedding=[0.8, 0.9, 0.1] * 100,
+        ),
+    ]
+
+
+@pytest.fixture
+def epic_work_items(base_time):
+    """Create work items specifically for epic-related testing."""
+    return {
+        "EPIC-1": [
+            {
+                "key": "PROJ-1",
+                "summary": "Authentication feature",
+                "description": "Implement user authentication",
+                "embedding": [0.1, 0.2, 0.3] * 100,
+                "epic_key": "EPIC-1",
+            },
+            {
+                "key": "PROJ-2",
+                "summary": "Login validation",
+                "description": "Add login form validation",
+                "embedding": [0.1, 0.2, 0.3] * 100,
+                "epic_key": "EPIC-1",
+            },
+        ],
+        "EPIC-2": [
+            {
+                "key": "PROJ-3",
+                "summary": "Database migration",
+                "description": "Migrate database to new schema",
+                "embedding": [0.8, 0.9, 0.7] * 100,
+                "epic_key": "EPIC-2",
+            },
+            {
+                "key": "PROJ-4",
+                "summary": "Data cleanup",
+                "description": "Clean up legacy data",
+                "embedding": [0.8, 0.9, 0.7] * 100,
+                "epic_key": "EPIC-2",
+            },
+        ],
+    }
+
+
+@pytest.fixture
+def mock_qdrant_client():
+    """Create a mock Qdrant client with common methods."""
+    client = AsyncMock()
+    client.health_check = AsyncMock(return_value=True)
+    client.store_work_items = AsyncMock(return_value=True)
+    client.search_similar_work_items = AsyncMock(return_value=[])
+    client.get_work_item_by_key = AsyncMock(return_value=None)
+    client.get_all_work_items = AsyncMock(return_value=[])
+    client.search_with_filters = AsyncMock(return_value=[])
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=None)
+    return client
+
+
+@pytest.fixture
+def mock_lmstudio_client():
+    """Create a mock LMStudio client with common methods."""
+    client = AsyncMock()
+    client.health_check = AsyncMock(return_value=True)
+    client.generate_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3] * 100])
+    client.calculate_similarity = AsyncMock(return_value=0.85)
+    client.analyze_text = AsyncMock(return_value={"analysis": "test"})
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=None)
+    return client
+
+
+@pytest.fixture
+def mock_claude_client():
+    """Create a mock Claude client with common methods."""
+    client = AsyncMock()
+    client.health_check = AsyncMock(return_value=True)
+    client.analyze_text = AsyncMock(return_value={"analysis": "test", "confidence": 0.85})
+    client.analyze = AsyncMock()
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=None)
+    return client
 
 
 @pytest.fixture
 def mock_claude_responses():
-    """Provide mock Claude API responses."""
+    """Provide mock Claude API responses for different analysis types."""
     return {
-        "quality_analysis": MockHelper.mock_claude_response("quality_analysis"),
-        "template_inference": MockHelper.mock_claude_response("template_inference"),
-        "complexity_analysis": {
-            "content": '{"complexity_score": 0.7, "factors": ["database", "ui"]}',
-            "cost": 0.03,
-        },
-        "split_analysis": {
-            "content": '{"should_split": true, "complexity_score": 0.8, "suggested_splits": [{"suggested_title": "UI Components", "suggested_description": "Frontend components implementation", "estimated_effort": "Medium", "dependencies": []}]}',
-            "cost": 0.04,
-        },
-        "scope_drift": {
-            "content": '{"has_drift": true, "drift_score": 0.6, "drift_events": []}',
+        "quality_analysis": {
+            "content": json.dumps(
+                {
+                    "clarity_score": 4,
+                    "completeness_score": 3,
+                    "actionability_score": 4,
+                    "testability_score": 3,
+                    "overall_score": 3.5,
+                    "risk_level": "Medium",
+                    "improvement_suggestions": [
+                        "Add more specific acceptance criteria",
+                        "Include technical implementation details",
+                    ],
+                }
+            ),
             "cost": 0.02,
         },
+        "split_analysis": {
+            "content": json.dumps(
+                {
+                    "should_split": True,
+                    "complexity_score": 0.8,
+                    "reasoning": "Work item is too complex and contains multiple features",
+                    "suggested_splits": [
+                        {
+                            "suggested_title": "Payment Processing Module",
+                            "suggested_description": "Implement core payment processing functionality",
+                            "estimated_story_points": 8,
+                        },
+                        {
+                            "suggested_title": "User Interface Updates",
+                            "suggested_description": "Update UI components for new payment flow",
+                            "estimated_story_points": 5,
+                        },
+                    ],
+                }
+            ),
+            "cost": 0.03,
+        },
         "tech_debt_cluster_analysis": {
-            "content": '{"theme": "Database Performance", "priority_score": 0.8, "estimated_effort": "Medium", "dependencies": []}',
+            "content": json.dumps(
+                {
+                    "theme": "Database Performance",
+                    "priority_score": 0.8,
+                    "estimated_effort": "Medium",
+                    "dependencies": [],
+                    "impact_assessment": "Performance impact on user experience",
+                    "recommended_approach": "Optimize queries and add indexes",
+                }
+            ),
             "cost": 0.05,
         },
+        "template_inference": {
+            "content": json.dumps(
+                {
+                    "issue_type": "Story",
+                    "title_template": "As a {user_type}, I want {functionality} so that {benefit}",
+                    "description_template": "**Background:** {context}\n**Requirements:** {requirements}\n**Acceptance Criteria:** {criteria}",
+                    "required_fields": ["summary", "description", "acceptance_criteria"],
+                    "common_components": ["frontend", "backend"],
+                    "common_labels": ["user-story", "feature"],
+                    "confidence_score": 0.85,
+                    "sample_count": 15,
+                }
+            ),
+            "cost": 0.04,
+        },
         "scope_change_analysis": {
-            "content": '{"has_drift": true, "drift_score": 0.7, "drift_events": [{"type": "scope_expansion", "confidence": 0.8}]}',
+            "content": json.dumps(
+                {
+                    "has_drift": True,
+                    "drift_score": 0.7,
+                    "drift_events": [
+                        {
+                            "type": "scope_expansion",
+                            "confidence": 0.8,
+                            "description": "Additional requirements added",
+                            "impact_level": "moderate",
+                        }
+                    ],
+                }
+            ),
+            "cost": 0.03,
+        },
+        "complexity_analysis": {
+            "content": json.dumps({"complexity_score": 0.7, "factors": ["database", "ui"]}),
             "cost": 0.03,
         },
     }
@@ -401,117 +627,97 @@ def mock_httpx_responses():
     }
 
 
-# Mock client fixtures for different analyzers
 @pytest.fixture
-def mock_claude_client(mock_claude_responses):
-    """Provide mock Claude client."""
-    client = AsyncMock()
-    client.analyze.return_value = AsyncMock(
-        content=mock_claude_responses["quality_analysis"]["content"],
-        cost=mock_claude_responses["quality_analysis"]["cost"],
+def sample_embeddings():
+    """Provide sample embeddings for testing."""
+    return [
+        [0.1, 0.2, 0.3] * 100,  # 300-dimension embedding
+        [0.4, 0.5, 0.6] * 100,  # 300-dimension embedding
+        [0.7, 0.8, 0.9] * 100,  # 300-dimension embedding
+    ]
+
+
+@pytest.fixture
+def sample_quality_analysis():
+    """Create a sample quality analysis result."""
+    return QualityAnalysis(
+        work_item_key="PROJ-1",
+        clarity_score=4,
+        completeness_score=3,
+        actionability_score=4,
+        testability_score=3,
+        overall_score=3.5,
+        risk_level="Medium",
+        improvement_suggestions=[
+            "Add more specific acceptance criteria",
+            "Include technical implementation details",
+        ],
+        analysis_cost=0.02,
     )
-    return client
 
 
 @pytest.fixture
-def mock_qdrant_client():
-    """Provide mock Qdrant client."""
-    client = AsyncMock()
-    client.search_similar.return_value = MockHelper.mock_search_results()
-    client.scroll_work_items.return_value = ([], None)  # Empty results
-    return client
+def sample_cross_epic_report():
+    """Create a sample cross-epic analysis report."""
+    return CrossEpicReport(misplaced_items=[], epics_analyzed=2, processing_cost=0.15)
 
 
-@pytest.fixture
-def mock_lmstudio_client():
-    """Provide mock LMStudio client."""
-    client = AsyncMock()
-    client.generate_embeddings.return_value = [MockHelper.mock_embedding()]
-    client.health_check.return_value = True
-    return client
+def create_work_item(
+    key: str,
+    summary: str,
+    issue_type: str = "Story",
+    epic_key: Optional[str] = None,
+    parent_key: Optional[str] = None,
+    base_time: Optional[datetime] = None,
+) -> WorkItem:
+    """Create a test work item with sensible defaults."""
+    if base_time is None:
+        base_time = datetime.now(timezone.utc)
+
+    return WorkItem(
+        key=key,
+        summary=summary,
+        issue_type=issue_type,
+        status="Open",
+        created=base_time,
+        updated=base_time,
+        reporter="test@example.com",
+        description=f"Description for {key}",
+        parent_key=parent_key,
+        epic_key=epic_key,
+        assignee="test@example.com",
+        embedding=[0.1, 0.2, 0.3] * 100,
+    )
 
 
-@pytest.fixture
-def mock_mcp_client(sample_work_items):
-    """Provide mock MCP client."""
-    client = AsyncMock()
-    client.get_work_items.return_value = sample_work_items
-    client.get_work_item.return_value = sample_work_items[0] if sample_work_items else None
-    return client
+def create_mock_scroll_result(work_items_data: List[Dict[str, Any]]):
+    """Create a mock Qdrant scroll result from work items data."""
+    mock_points = []
+    for item_data in work_items_data:
+        mock_point = Mock()
+        mock_point.payload = item_data
+        mock_point.vector = item_data.get("embedding", [0.1, 0.2, 0.3] * 100)
+        mock_points.append(mock_point)
+
+    return mock_points, None  # (points, next_page_offset)
 
 
-# Composite fixtures for different analyzer combinations
-@pytest.fixture
-def mock_clients(request):
-    """Dynamic mock_clients based on test class context."""
-    # Default to similarity analyzer clients for compatibility
-    from unittest.mock import AsyncMock, MagicMock
+def create_mock_search_result(work_items_data: List[Dict[str, Any]], scores: List[float]):
+    """Create a mock Qdrant search result from work items data and scores."""
+    mock_results = []
+    for item_data, score in zip(work_items_data, scores):
+        mock_result = Mock()
+        mock_result.payload = item_data
+        mock_result.score = score
+        mock_results.append(mock_result)
 
-    # Look at the test class to determine which clients to return
-    test_class = request.node.cls.__name__ if request.node.cls else ""
+    return mock_results
 
-    if "StructuralAnalyzer" in test_class:
-        # Structural analyzer needs (qdrant_client, claude_client)
-        qdrant_client = AsyncMock()
-        claude_client = AsyncMock()
 
-        # Mock Qdrant search for tech debt items
-        tech_debt_items = AnalysisFixtures.create_sample_work_items()[2:4]
-        mock_points = []
-
-        for item in tech_debt_items:
-            point = MagicMock()
-            point.payload = item.model_dump()
-            point.payload["embedding"] = AnalysisFixtures.create_mock_embeddings()[0]
-            mock_points.append(point)
-
-        def mock_scroll(*args, **kwargs):
-            return [mock_points], None
-
-        qdrant_client.client.scroll.side_effect = mock_scroll
-
-        # Mock Claude analysis
-        claude_client.analyze.return_value = AsyncMock(
-            content='{"theme": "Database Performance", "priority_score": 0.8, "estimated_effort": "Medium", "dependencies": []}',
-            cost=0.05,
-        )
-
-        return qdrant_client, claude_client
-
-    elif "TemporalAnalyzer" in test_class:
-        # Temporal analyzer needs (jira_client, lm_client, claude_client)
-        jira_client = AsyncMock()
-        lm_client = AsyncMock()
-        claude_client = AsyncMock()
-
-        # Mock change history
-        scope_drift_history = AnalysisFixtures.create_scope_drift_history()
-        jira_client.get_work_item.return_value = (
-            scope_drift_history[0] if scope_drift_history else None
-        )
-
-        # Mock embedding generation
-        mock_embeddings = AnalysisFixtures.create_mock_embeddings()
-        lm_client.generate_embeddings.return_value = mock_embeddings[:3]
-        lm_client.calculate_similarity.return_value = 0.25
-        lm_client._generate_batch_embeddings = AsyncMock(return_value=mock_embeddings[:3])
-
-        # Mock Claude analysis
-        claude_client.analyze.return_value = AsyncMock(
-            content='{"has_drift": true, "drift_score": 0.7, "drift_events": [{"type": "scope_expansion", "confidence": 0.8}]}',
-            cost=0.03,
-        )
-
-        return jira_client, lm_client, claude_client
-
-    else:
-        # Default: similarity analyzer (qdrant + lmstudio)
-        qdrant_client = AsyncMock()
-        lmstudio_client = AsyncMock()
-
-        qdrant_client.search_similar.return_value = MockHelper.mock_search_results()
-        qdrant_client.scroll_work_items.return_value = ([], None)
-        lmstudio_client.generate_embeddings.return_value = [MockHelper.mock_embedding()]
-        lmstudio_client.health_check.return_value = True
-
-        return qdrant_client, lmstudio_client
+def pytest_configure(config):
+    """Configure custom pytest markers."""
+    config.addinivalue_line("markers", "unit: mark test as a unit test")
+    config.addinivalue_line("markers", "integration: mark test as an integration test")
+    config.addinivalue_line("markers", "functional: mark test as a functional test")
+    config.addinivalue_line("markers", "performance: mark test as a performance test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")

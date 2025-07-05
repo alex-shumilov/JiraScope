@@ -1,0 +1,48 @@
+# JiraScope Configuration for LMStudio Integration
+# Copy this file and customize for your environment
+
+# Jira Configuration
+jira:
+  mcp_endpoint: "${JIRA_MCP_ENDPOINT}"  # Required: Your Jira MCP endpoint
+  sse_client_id: "${JIRA_SSE_CLIENT_ID:-jirascope-cli}"
+  sse_client_secret: "${JIRA_SSE_CLIENT_SECRET:-}"
+  sse_redirect_port: "${JIRA_SSE_REDIRECT_PORT:-0}"
+  sse_scope: "${JIRA_SSE_SCOPE:-read:jira-work read:jira-user write:jira-work}"
+  batch_size: "${JIRA_BATCH_SIZE:-100}"
+  dry_run: "${JIRA_DRY_RUN:-true}"
+
+# LMStudio Configuration
+lmstudio:
+  endpoint: "${LMSTUDIO_ENDPOINT:-http://localhost:1234/v1}"
+
+# Qdrant Vector Database
+qdrant:
+  url: "${QDRANT_URL:-http://localhost:6333}"
+
+# Claude API (optional, for advanced analysis)
+claude:
+  api_key: "${CLAUDE_API_KEY:-}"
+  model: "${CLAUDE_MODEL:-claude-3-5-sonnet-latest}"
+
+# Processing Configuration
+processing:
+  embedding_batch_size: "${EMBEDDING_BATCH_SIZE:-32}"
+  similarity_threshold: "${SIMILARITY_THRESHOLD:-0.8}"
+
+# Cost Management
+cost:
+  tracking: "${COST_TRACKING:-true}"
+  daily_budget: "${DAILY_BUDGET:-50.0}"
+  monthly_budget: "${MONTHLY_BUDGET:-1000.0}"
+
+# Monitoring
+monitoring:
+  report_retention_days: "${REPORT_RETENTION_DAYS:-30}"
+  sentry_dsn: "${SENTRY_DSN:-}"
+
+# RAG Testing Queries (for quality validation)
+rag_test_queries:
+  - "high priority bugs in frontend components"
+  - "technical debt in authentication system"
+  - "scope changes in Epic ABC-123"
+  - "blocked dependencies for mobile team"
