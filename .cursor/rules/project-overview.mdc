@@ -3,39 +3,108 @@ description:
 globs:
 alwaysApply: false
 ---
-# Project Overview
+# JiraScope Project Overview
 
-This project, `JiraScope`, is a Python application for analyzing Jira data. It has both a Command Line Interface (CLI) and a web interface.
+JiraScope is an AI-powered Jira work item analysis and management tool with RAG capabilities, MCP (Model Context Protocol) integration, and LMStudio support for local AI processing.
 
-## Key Directories
+## 🎯 Core Purpose
+- **Semantic Search**: Natural language queries across Jira issues
+- **Technical Debt Analysis**: Automated identification and prioritization
+- **Scope Drift Detection**: Epic requirement change tracking
+- **Dependency Mapping**: Cross-team blocker visualization
+- **LMStudio Integration**: Local AI-powered analysis through MCP protocol
 
-*   `src/jirascope`: Contains the core Python source code for the application.
-    *   `analysis`: Modules for analyzing Jira data.
-    *   `cli`: The command-line interface. The main entry point is `[src/jirascope/cli/main.py](mdc:src/jirascope/cli/main.py)`.
-    *   `clients`: Clients for interacting with external services like Jira, Claude, etc.
-    *   `core`: Core components like configuration management (`[src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)`).
-    *   `extractors`: Code for extracting data from sources like Jira (`[src/jirascope/extractors/jira_extractor.py](mdc:src/jirascope/extractors/jira_extractor.py)`).
-    *   `pipeline`: Data processing pipelines.
-*   `src/web`: Contains the source code for the web interface. The main entry point is `[src/web/main.py](mdc:src/web/main.py)`.
-*   `tests`: Contains all tests for the project.
-*   `config`: Directory for configuration files.
-*   `data`: Directory for data files.
+## 🏗️ Architecture Overview
+- **MCP Server**: Standalone server for LMStudio integration (`mcp_server.py`)
+- **RAG Pipeline**: Vector-based retrieval and generation system
+- **CLI Interface**: Command-line tool for direct usage
+- **Vector Database**: Qdrant for semantic search and storage
+- **Local AI**: LMStudio for privacy-first processing
 
-## Dependencies
+## 📁 Project Structure
 
-Python dependencies are managed in `[pyproject.toml](mdc:pyproject.toml)`.
+### Core Source Code (`src/jirascope/`)
+- **`analysis/`**: AI-powered analysis modules
+  - `similarity_analyzer.py`: Duplicate detection
+  - `structural_analyzer.py`: Technical debt clustering
+  - `content_analyzer.py`: Content quality analysis
+  - `cross_epic_analyzer.py`: Epic boundary analysis
+  - `template_inference.py`: Template generation
+  - `temporal_analyzer.py`: Time-based analysis
 
-## Containerization
+- **`rag/`**: RAG (Retrieval-Augmented Generation) system
+  - `pipeline.py`: Main RAG pipeline orchestration
+  - `query_processor.py`: Query parsing and enhancement
+  - `context_assembler.py`: Context building for AI models
+  - `retrieval_engine.py`: Vector similarity search
 
-The project can be run using Docker. See `[Dockerfile](mdc:Dockerfile)` and `[docker-compose.yml](mdc:docker-compose.yml)`.
+- **`mcp_server/`**: MCP protocol implementation
+  - `server.py`: FastMCP server implementation
+  - `tools.py`: MCP tool definitions
 
-- **Package Configuration**: [pyproject.toml](mdc:pyproject.toml) defines dependencies and CLI entry points
-- **Docker**: [docker-compose.yml](mdc:docker-compose.yml) and [Dockerfile](mdc:Dockerfile) for containerized deployment
-- **Environment**: Sample configuration in [config/env.example](mdc:config/env.example)
+- **`clients/`**: External service integrations
+  - `qdrant_client.py`: Vector database client
+  - `lmstudio_client.py`: Local AI model client
+  - `claude_client.py`: Anthropic Claude integration
+  - `mcp_client.py`: MCP protocol client
+  - `auth.py`: Authentication management
 
-## Testing Strategy
+- **`pipeline/`**: Data processing pipeline
+  - `embedding_processor.py`: Text to vector conversion
+  - `smart_chunker.py`: Intelligent text chunking
+  - `incremental_processor.py`: Change detection
+  - `quality_validator.py`: Data quality assurance
+  - `rag_quality_tester.py`: RAG system testing
+  - `comprehensive_quality_tester.py`: End-to-end testing
 
-Comprehensive test suite with three levels:
-- **Unit Tests**: [tests/unit/](mdc:tests/unit) for isolated component testing
-- **Integration Tests**: [tests/integration/](mdc:tests/integration) for external service integration
-- **Component Tests**: Root-level tests for full pipeline testing
+- **`extractors/`**: Data extraction from external sources
+  - `jira_extractor.py`: Jira API integration
+
+- **`cli/`**: Command-line interface
+  - `main.py`: CLI entry point with comprehensive commands
+
+- **`core/`**: Core configuration and shared components
+  - `config.py`: Configuration management
+
+- **`utils/`**: Utility functions and helpers
+  - `cost_reporter.py`: API cost tracking
+  - `cost_optimizer.py`: Cost optimization strategies
+  - `logging.py`: Structured logging
+
+- **`models/`**: Data models and schemas
+
+### Configuration and Scripts
+- **`config/`**: Configuration files
+  - `jirascope.yaml`: Main configuration template
+- **`scripts/`**: Setup and utility scripts
+- **`tests/`**: Comprehensive test suite
+- **`mcp_server.py`**: **ROOT-LEVEL MCP SERVER** - Main entry point for LMStudio integration
+
+## 🔧 Key Technologies
+- **Python 3.13+**: Core language with modern features
+- **FastMCP**: MCP protocol implementation
+- **Qdrant**: Vector database for semantic search
+- **LMStudio**: Local AI model serving
+- **Anthropic Claude**: Cloud AI for advanced analysis
+- **Pydantic**: Data validation and serialization
+- **Poetry**: Dependency management
+- **Docker**: Containerization support
+
+## 📊 Development Workflow
+1. **Local Development**: Poetry for dependency management
+2. **Testing**: pytest with comprehensive coverage
+3. **Linting**: Ruff for code quality
+4. **Pre-commit**: Automated quality checks
+5. **MCP Integration**: Direct LMStudio integration
+
+## 🚀 Entry Points
+- **MCP Server**: `python mcp_server.py` (primary for LMStudio)
+- **CLI**: `jirascope [command]` (direct usage)
+- **Package**: `pip install -e .` (development mode)
+
+## 🔍 Current Focus Areas
+- Enhanced RAG pipeline performance
+- Cost optimization for AI services
+- Comprehensive quality testing
+- MCP protocol compliance
+- Local-first privacy approach

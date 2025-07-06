@@ -3,105 +3,369 @@ description:
 globs:
 alwaysApply: false
 ---
-# Web Interface Guide
+# Interface Guide
 
-The web interface provides a REST API and web UI for JiraScope functionality, implemented in [src/web/](mdc:src/web).
+JiraScope provides multiple interfaces for different use cases: CLI for direct usage, MCP server for LMStudio integration, and programmatic APIs for custom integrations.
 
-## Web Application Structure
+## 🚀 Available Interfaces
 
-### Main Application
-**File**: [src/web/main.py](mdc:src/web/main.py)
-- **Framework**: FastAPI with async support
-- **Purpose**: REST API endpoints for JiraScope operations
+### 1. CLI Interface
+**File**: `src/jirascope/cli/main.py`
+- **Purpose**: Direct command-line usage
 - **Features**:
-  - Async request handling
-  - WebSocket support for real-time updates
-  - CORS configuration for web UI
-  - Health check endpoints
+  - Natural language search
+  - Analysis commands
+  - Data management
+  - Configuration management
+  - Health checking
 
-### Data Models
-**File**: [src/web/models.py](mdc:src/web/models.py)
-- **Purpose**: Pydantic models for API request/response
+### 2. MCP Server Interface
+**File**: `mcp_server.py` (root level)
+- **Purpose**: LMStudio integration via Model Context Protocol
 - **Features**:
-  - Input validation
-  - Serialization/deserialization
-  - API documentation generation
-  - Type safety
+  - FastMCP server implementation
+  - Natural language tools
+  - Real-time processing
+  - Structured responses
 
-### Business Logic
-**File**: [src/web/services.py](mdc:src/web/services.py)
-- **Purpose**: Service layer connecting web API to core functionality
+### 3. Programmatic Interface
+**Files**: Python modules in `src/jirascope/`
+- **Purpose**: Direct integration with other Python applications
 - **Features**:
-  - Orchestrates CLI operations through web interface
-  - Handles async operations
-  - Manages configuration and dependencies
-  - Error handling and response formatting
+  - RAG pipeline access
+  - Analysis modules
+  - Client libraries
+  - Configuration management
 
-### Frontend Interface
-**File**: [src/web/static/index.html](mdc:src/web/static/index.html)
-- **Purpose**: Web UI for JiraScope operations
-- **Features**:
-  - Interactive interface for analysis commands
-  - Real-time updates via WebSocket
-  - Result visualization
-  - Modern responsive design
+## 🔧 CLI Interface
 
-## API Endpoints
-
-The web API provides endpoints corresponding to CLI functionality:
-
-### Health and Status
-- `GET /health` - Service health check
-- `GET /status` - Application status and configuration
-
-### Data Operations
-- `POST /fetch` - Trigger data extraction (equivalent to `jirascope fetch`)
-- `GET /search` - Semantic search (equivalent to `jirascope search`)
-
-### Analysis Endpoints
-- `POST /analyze/duplicates` - Duplicate detection
-- `POST /analyze/cross-epic` - Cross-epic analysis
-- `POST /analyze/quality` - Quality analysis
-- `POST /analyze/template` - Template inference
-- `POST /analyze/tech-debt` - Technical debt analysis
-
-### Utility Endpoints
-- `POST /validate` - Run validation
-- `GET /cost` - Cost reporting
-- `POST /cleanup` - Cache cleanup
-
-## WebSocket Integration
-
-Real-time updates for long-running operations:
-- Connection endpoint: `/ws`
-- Progress updates for analysis operations
-- Real-time cost tracking
-- Status notifications
-
-## Running the Web Interface
-
-### Development Server
+### Core Commands
 ```bash
-# Start with uvicorn directly
-uvicorn src.web.main:app --reload --host 0.0.0.0 --port 8000
+# Search and analysis
+jirascope search "high priority bugs in frontend"
+jirascope analyze-debt --team frontend --time-range "last month"
+jirascope analyze-template --project PROJ
 
-# Or through the CLI (if implemented)
-jirascope web --port 8000
+# Data management
+jirascope extract --jql "project = PROJ AND updated >= -7d"
+jirascope process --incremental
+jirascope validate --test-queries
+
+# System management
+jirascope health
+jirascope cost
+jirascope config
 ```
 
-### Docker Deployment
-```bash
-docker-compose up web
+### CLI Architecture
+```python
+# src/jirascope/cli/main.py
+@click.group()
+@click.pass_context
+def cli(ctx):
+    """Main CLI entry point."""
+    ctx.ensure_object(dict)
+    ctx.obj['config'] = Config.from_env()
+
+@cli.command()
+@click.argument('query')
+@click.pass_context
+async def search(ctx, query: str):
+    """Search Jira issues with natural language."""
+    config = ctx.obj['config']
+    # Implementation uses RAG pipeline
 ```
 
-## Integration with Core
+### CLI Usage Examples
+```bash
+# Natural language search
+jirascope search "bugs in authentication system"
 
-The web interface reuses all core functionality:
-- Same configuration system via [src/jirascope/core/config.py](mdc:src/jirascope/core/config.py)
-- Same client integrations from [src/jirascope/clients/](mdc:src/jirascope/clients)
-- Same analysis modules from [src/jirascope/analysis/](mdc:src/jirascope/analysis)
-- Same pipeline components from [src/jirascope/pipeline/](mdc:src/jirascope/pipeline)
+# Technical debt analysis
+jirascope analyze-debt --component frontend
 
-## Usage Documentation
+# Template inference
+jirascope analyze-template --project MOBILE
 
-Detailed web interface usage is documented in [WEB_USAGE.md](mdc:WEB_USAGE.md).
+# System health check
+jirascope health
+
+# Cost monitoring
+jirascope cost --detailed
+```
+
+## 🤖 MCP Server Interface
+
+### MCP Tools
+The MCP server exposes several tools for LMStudio integration:
+
+#### 1. Search Tool
+```python
+@mcp.tool()
+async def search_jira_issues(query: str, limit: int = 10) -> dict
+```
+- **Purpose**: Natural language search across Jira issues
+- **Usage**: "Find high priority bugs in frontend"
+
+#### 2. Technical Debt Analysis
+```python
+@mcp.tool()
+async def analyze_technical_debt(component: str = None, time_range: str = None) -> dict
+```
+- **Purpose**: Identify and prioritize technical debt
+- **Usage**: "Analyze technical debt in authentication system"
+
+#### 3. Scope Drift Detection
+```python
+@mcp.tool()
+async def detect_scope_drift(epic_key: str) -> dict
+```
+- **Purpose**: Analyze scope changes for specific Epics
+- **Usage**: "Check scope drift for Epic PROJ-123"
+
+#### 4. Dependency Mapping
+```python
+@mcp.tool()
+async def map_dependencies(epic_key: str = None, team: str = None) -> dict
+```
+- **Purpose**: Identify blockers and dependencies
+- **Usage**: "Map dependencies for mobile team"
+
+### MCP Server Usage
+```bash
+# Start MCP server
+python mcp_server.py
+
+# With specific transport
+python mcp_server.py --transport sse --port 8000
+
+# Configure in LMStudio
+# Add MCP server with command: python mcp_server.py
+```
+
+## 🔌 Programmatic Interface
+
+### RAG Pipeline Integration
+```python
+from jirascope.rag.pipeline import JiraRAGPipeline
+from jirascope.clients.qdrant_client import QdrantVectorClient
+from jirascope.clients.lmstudio_client import LMStudioClient
+from jirascope.core.config import Config
+
+# Initialize components
+config = Config.from_env()
+qdrant_client = QdrantVectorClient(config)
+lm_client = LMStudioClient(config)
+
+# Create RAG pipeline
+async with qdrant_client, lm_client:
+    rag_pipeline = JiraRAGPipeline(qdrant_client, lm_client)
+    
+    # Process natural language query
+    result = await rag_pipeline.process_query(
+        user_query="high priority bugs in authentication",
+        include_hierarchy=True
+    )
+```
+
+### Analysis Module Integration
+```python
+from jirascope.analysis.similarity_analyzer import SimilarityAnalyzer
+from jirascope.analysis.structural_analyzer import StructuralAnalyzer
+
+# Initialize analyzers
+similarity_analyzer = SimilarityAnalyzer(config)
+structural_analyzer = StructuralAnalyzer(config)
+
+# Run analysis
+duplicates = await similarity_analyzer.find_duplicates(threshold=0.9)
+tech_debt = await structural_analyzer.analyze_technical_debt(team="frontend")
+```
+
+### Client Library Integration
+```python
+from jirascope.clients.qdrant_client import QdrantVectorClient
+from jirascope.clients.claude_client import ClaudeClient
+
+# Direct client usage
+async with QdrantVectorClient(config) as qdrant:
+    # Search for similar issues
+    results = await qdrant.search_similar(
+        query="authentication bug",
+        collection_name="jira_issues",
+        limit=10
+    )
+
+async with ClaudeClient(config) as claude:
+    # Analyze content quality
+    analysis = await claude.analyze_content(issue_text)
+```
+
+## 📊 Response Formats
+
+### CLI Responses
+```bash
+# Search results
+jirascope search "bugs in frontend"
+```
+```
+Found 5 relevant issues:
+
+PROJ-123: Login form validation bug [HIGH]
+- Component: frontend
+- Status: In Progress
+- Priority: High
+
+PROJ-124: CSS styling issue in header [MEDIUM]
+- Component: frontend
+- Status: To Do
+- Priority: Medium
+
+...
+```
+
+### MCP Tool Responses
+```json
+{
+  "status": "success",
+  "query": "high priority bugs in frontend",
+  "results": "Found 5 relevant issues...",
+  "metadata": {
+    "total_items": 5,
+    "processing_time": 0.85,
+    "query_analysis": {
+      "intent": "search",
+      "filters_applied": {
+        "priority": "high",
+        "component": "frontend",
+        "issue_type": "bug"
+      }
+    }
+  },
+  "jira_keys": ["PROJ-123", "PROJ-124", "PROJ-125"]
+}
+```
+
+### Programmatic Responses
+```python
+# RAG pipeline response
+{
+    "formatted_context": "Comprehensive issue context...",
+    "results_count": 5,
+    "jira_keys": ["PROJ-123", "PROJ-124"],
+    "intent": "search",
+    "filters_applied": {"priority": "high", "component": "frontend"},
+    "processing_time": 0.85
+}
+```
+
+## 🔧 Configuration
+
+### Interface-Specific Settings
+```python
+# CLI configuration
+class Config:
+    cli_output_format: str = "table"  # table, json, yaml
+    cli_max_results: int = 20
+    cli_verbose: bool = False
+
+# MCP server configuration
+class Config:
+    mcp_transport: str = "stdio"  # stdio, sse, ws
+    mcp_port: int = 8000
+    mcp_timeout: float = 30.0
+```
+
+### Environment Variables
+```bash
+# CLI settings
+CLI_OUTPUT_FORMAT=table
+CLI_MAX_RESULTS=20
+CLI_VERBOSE=false
+
+# MCP server settings
+MCP_TRANSPORT=stdio
+MCP_PORT=8000
+MCP_TIMEOUT=30.0
+```
+
+## 🧪 Testing Interfaces
+
+### CLI Testing
+```bash
+# Run CLI tests
+pytest tests/cli/
+
+# Test specific commands
+pytest tests/cli/test_search.py
+pytest tests/cli/test_analyze.py
+```
+
+### MCP Server Testing
+```bash
+# Test MCP server
+python -m pytest tests/mcp/
+
+# Test MCP tools
+mcp-client connect stdio "python mcp_server.py"
+```
+
+### Integration Testing
+```python
+# Test programmatic interface
+from jirascope.rag.pipeline import JiraRAGPipeline
+
+async def test_rag_integration():
+    pipeline = JiraRAGPipeline(qdrant_client, lm_client)
+    result = await pipeline.process_query("test query")
+    assert result["status"] == "success"
+```
+
+## 🔍 Interface Selection Guide
+
+### Use CLI When:
+- **Direct Usage**: Running analyses from command line
+- **Scripting**: Automating JiraScope operations
+- **Development**: Testing and debugging
+- **System Administration**: Health checks and monitoring
+
+### Use MCP Server When:
+- **LMStudio Integration**: Natural language interaction
+- **AI Chat**: Conversational analysis
+- **Real-time Processing**: Interactive queries
+- **User-Friendly Interface**: Non-technical users
+
+### Use Programmatic Interface When:
+- **Custom Integration**: Building on top of JiraScope
+- **Batch Processing**: Large-scale analysis
+- **Advanced Configuration**: Custom workflows
+- **Performance Critical**: Direct API access
+
+## 🛠️ Development Patterns
+
+### Error Handling
+```python
+# Consistent error handling across interfaces
+try:
+    result = await operation()
+    return {"status": "success", "data": result}
+except Exception as e:
+    logger.error(f"Operation failed: {e}")
+    return {"status": "error", "error": str(e)}
+```
+
+### Async Processing
+```python
+# All interfaces support async operations
+async def interface_method():
+    async with client:
+        result = await client.process()
+        return result
+```
+
+### Configuration Integration
+```python
+# Consistent configuration across interfaces
+config = Config.from_env()
+interface = Interface(config)
+```
