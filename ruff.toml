@@ -2,7 +2,7 @@
 # This file allows ruff to work without pyproject.toml in IDEs
 
 line-length = 100
-target-version = "py312"
+target-version = "py313"
 src = ["src", "tests"]
 
 exclude = [

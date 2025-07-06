@@ -18,11 +18,11 @@ from typing import Any
 from mcp.server.fastmcp import FastMCP
 
 # Import JiraScope components
-from src.jirascope.clients.lmstudio_client import LMStudioClient
-from src.jirascope.clients.qdrant_client import QdrantVectorClient
-from src.jirascope.core.config import Config
-from src.jirascope.rag.pipeline import JiraRAGPipeline
-from src.jirascope.utils.logging import StructuredLogger
+from jirascope.clients.lmstudio_client import LMStudioClient
+from jirascope.clients.qdrant_client import QdrantVectorClient
+from jirascope.core.config import Config
+from jirascope.rag.pipeline import JiraRAGPipeline
+from jirascope.utils.logging import StructuredLogger
 
 logger = StructuredLogger(__name__)
 
