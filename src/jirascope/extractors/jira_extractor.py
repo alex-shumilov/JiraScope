@@ -1,7 +1,6 @@
 """Jira data extraction with hierarchical Epic->Story->Task structure."""
 
 import time
-from typing import List, Set
 
 from ..clients.mcp_client import MCPClient
 from ..core.config import Config
@@ -42,7 +41,7 @@ class JiraExtractor:
         self.config = config
         self.cost_tracker = ExtractionCost()
 
-    async def extract_active_hierarchies(self, project_key: str) -> List[EpicHierarchy]:
+    async def extract_active_hierarchies(self, project_key: str) -> list[EpicHierarchy]:
         """Extract all Epics that have active children (any status)."""
         logger.info(f"Starting extraction of active hierarchies for project {project_key}")
         start_time = time.time()
@@ -135,8 +134,8 @@ class JiraExtractor:
             raise
 
     async def get_incremental_updates(
-        self, project_key: str, last_sync: str, tracked_epics: Set[str], tracked_items: Set[str]
-    ) -> List[WorkItem]:
+        self, project_key: str, last_sync: str, tracked_epics: set[str], tracked_items: set[str]
+    ) -> list[WorkItem]:
         """Get work items updated since last sync."""
         logger.info(f"Getting incremental updates since {last_sync}")
         start_time = time.time()
@@ -197,14 +196,14 @@ class JiraExtractor:
         logger.debug(f"Extracted hierarchy for {epic.key}: {hierarchy.total_items} items")
         return hierarchy
 
-    async def _get_direct_children(self, client: MCPClient, parent_key: str) -> List[WorkItem]:
+    async def _get_direct_children(self, client: MCPClient, parent_key: str) -> list[WorkItem]:
         """Get direct children of a work item."""
         children_jql = f'parent = {parent_key} OR "Epic Link" = {parent_key}'
         children = await client.get_work_items(children_jql)
         self.cost_tracker.add_call(items_count=len(children))
         return children
 
-    async def _get_all_descendants(self, client: MCPClient, root_key: str) -> List[WorkItem]:
+    async def _get_all_descendants(self, client: MCPClient, root_key: str) -> list[WorkItem]:
         """Get all descendant work items recursively."""
         all_descendants = []
         visited = set()
@@ -224,7 +223,7 @@ class JiraExtractor:
         await collect_descendants(root_key)
         return all_descendants
 
-    def _calculate_hierarchy_depth(self, items: List[WorkItem]) -> int:
+    def _calculate_hierarchy_depth(self, items: list[WorkItem]) -> int:
         """Calculate the maximum depth of the hierarchy."""
         # Simple heuristic: count parent relationships
         depth_map = {}
@@ -237,7 +236,7 @@ class JiraExtractor:
 
         return max(depth_map.values()) if depth_map else 1
 
-    def _calculate_completion_percentage(self, items: List[WorkItem]) -> float:
+    def _calculate_completion_percentage(self, items: list[WorkItem]) -> float:
         """Calculate completion percentage based on status."""
         if not items:
             return 0.0

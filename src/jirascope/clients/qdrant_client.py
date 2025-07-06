@@ -1,7 +1,7 @@
 """Qdrant client for vector storage and retrieval."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
@@ -55,7 +55,6 @@ class QdrantVectorClient:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
-        pass
 
     async def initialize_collection(self):
         """Initialize the Qdrant collection if it doesn't exist."""
@@ -78,13 +77,13 @@ class QdrantVectorClient:
             logger.error(f"Failed to initialize collection: {e}")
             raise
 
-    async def store_work_items(self, work_items: List[WorkItem], embeddings: List[List[float]]):
+    async def store_work_items(self, work_items: list[WorkItem], embeddings: list[list[float]]):
         """Store work items with their embeddings in Qdrant."""
         if len(work_items) != len(embeddings):
             raise ValueError("Number of work items must match number of embeddings")
 
         points = []
-        for work_item, embedding in zip(work_items, embeddings):
+        for work_item, embedding in zip(work_items, embeddings, strict=False):
             point = PointStruct(
                 id=abs(hash(work_item.key)),  # Use absolute hash of key as ID
                 vector=embedding,
@@ -114,13 +113,13 @@ class QdrantVectorClient:
             logger.error(f"Failed to store work items: {e}")
             raise
 
-    async def store_chunks(self, chunks: List["Chunk"], embeddings: List[List[float]]):
+    async def store_chunks(self, chunks: list["Chunk"], embeddings: list[list[float]]):
         """Store text chunks with their embeddings and enhanced metadata."""
         if len(chunks) != len(embeddings):
             raise ValueError("Number of chunks must match number of embeddings")
 
         points = []
-        for chunk, embedding in zip(chunks, embeddings):
+        for chunk, embedding in zip(chunks, embeddings, strict=False):
             # Use chunk metadata for payload
             payload = chunk.metadata.to_qdrant_payload()
             payload["text"] = chunk.text  # Include the actual text
@@ -139,8 +138,8 @@ class QdrantVectorClient:
             raise
 
     async def search_similar_work_items(
-        self, query_embedding: List[float], limit: int = 10, score_threshold: Optional[float] = None
-    ) -> List[Dict[str, Any]]:
+        self, query_embedding: list[float], limit: int = 10, score_threshold: float | None = None
+    ) -> list[dict[str, Any]]:
         """Search for similar work items using vector similarity."""
         try:
             score_threshold = score_threshold or self.config.similarity_threshold
@@ -166,11 +165,11 @@ class QdrantVectorClient:
 
     async def search_with_filters(
         self,
-        query_embedding: List[float],
-        filters: Optional[Dict[str, Any]] = None,
+        query_embedding: list[float],
+        filters: dict[str, Any] | None = None,
         limit: int = 10,
-        score_threshold: Optional[float] = None,
-    ) -> List[Dict[str, Any]]:
+        score_threshold: float | None = None,
+    ) -> list[dict[str, Any]]:
         """Enhanced search with metadata filtering."""
         try:
             score_threshold = score_threshold or self.config.similarity_threshold
@@ -216,20 +215,20 @@ class QdrantVectorClient:
             raise
 
     async def search_by_epic(
-        self, query_embedding: List[float], epic_key: str, limit: int = 10
-    ) -> List[Dict[str, Any]]:
+        self, query_embedding: list[float], epic_key: str, limit: int = 10
+    ) -> list[dict[str, Any]]:
         """Search within a specific Epic hierarchy."""
         filters = {"epic_key": epic_key}
         return await self.search_with_filters(query_embedding, filters, limit)
 
     async def search_by_item_type(
-        self, query_embedding: List[float], item_types: List[str], limit: int = 10
-    ) -> List[Dict[str, Any]]:
+        self, query_embedding: list[float], item_types: list[str], limit: int = 10
+    ) -> list[dict[str, Any]]:
         """Search for specific item types (Story, Task, Bug, etc.)."""
         filters = {"item_type": item_types}
         return await self.search_with_filters(query_embedding, filters, limit)
 
-    async def get_work_item_by_key(self, key: str) -> Optional[Dict[str, Any]]:
+    async def get_work_item_by_key(self, key: str) -> dict[str, Any] | None:
         """Retrieve a work item by its key."""
         try:
             search_result = self.client.scroll(
@@ -275,7 +274,7 @@ class QdrantVectorClient:
             logger.error(f"Qdrant health check failed: {e}")
             return False
 
-    async def get_collection_stats(self) -> Dict[str, Any]:
+    async def get_collection_stats(self) -> dict[str, Any]:
         """Get statistics about the collection."""
         try:
             info = self.client.get_collection(self.collection_name)

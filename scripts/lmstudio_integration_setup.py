@@ -130,7 +130,7 @@ class LMStudioIntegrator:
 
         if env_file.exists():
             console.print(f"📁 Found existing .env file: {env_file}")
-            with open(env_file, "r") as f:
+            with open(env_file) as f:
                 for line in f:
                     if "=" in line and not line.startswith("#"):
                         key, value = line.strip().split("=", 1)
@@ -234,7 +234,7 @@ class LMStudioIntegrator:
         console.print(instructions)
 
         # Show the configuration to copy
-        with open(self.lmstudio_config_file, "r") as f:
+        with open(self.lmstudio_config_file) as f:
             config_content = f.read()
 
         console.print("\n[bold]Configuration to copy into LMStudio's mcp.json:[/bold]")

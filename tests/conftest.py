@@ -3,9 +3,9 @@
 import json
 import random
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -49,7 +49,7 @@ class TestConfig:
         return random.uniform(min_val, max_val)
 
     @classmethod
-    def random_key(cls, prefix: Optional[str] = None) -> str:
+    def random_key(cls, prefix: str | None = None) -> str:
         """Generate random but consistent test key."""
         if not prefix:
             prefix = random.choice(cls.KEY_PREFIXES)
@@ -74,7 +74,7 @@ class TestDataBuilder:
         return self
 
     def add_story(
-        self, summary: Optional[str] = None, complexity: str = "simple", **kwargs
+        self, summary: str | None = None, complexity: str = "simple", **kwargs
     ) -> "TestDataBuilder":
         """Add a story with configurable complexity."""
         key = kwargs.get("key", TestConfig.random_key("STORY"))
@@ -171,7 +171,7 @@ class TestDataBuilder:
         self._counter += 1
         return self
 
-    def build(self) -> List[WorkItem]:
+    def build(self) -> list[WorkItem]:
         """Return built work items."""
         return self._work_items.copy()
 
@@ -214,14 +214,14 @@ class MockHelper:
     """Helper for creating consistent mocks without hardcoding."""
 
     @staticmethod
-    def mock_embedding(dimension: str = "medium") -> List[float]:
+    def mock_embedding(dimension: str = "medium") -> list[float]:
         """Create consistent mock embedding."""
         dim = TestConfig.EMBEDDING_DIMS[dimension]
         random.seed(42)  # Consistent for tests
         return [random.uniform(-1, 1) for _ in range(dim)]
 
     @staticmethod
-    def mock_search_results(count: int = 3, score_range: tuple = (0.7, 0.9)) -> List[Dict]:
+    def mock_search_results(count: int = 3, score_range: tuple = (0.7, 0.9)) -> list[dict]:
         """Create mock search results with realistic scores."""
         results = []
         for i in range(count):
@@ -239,7 +239,7 @@ class MockHelper:
         return results
 
     @staticmethod
-    def mock_claude_response(response_type: str, **kwargs) -> Dict[str, Any]:
+    def mock_claude_response(response_type: str, **kwargs) -> dict[str, Any]:
         """Create mock Claude responses based on type."""
         responses = {
             "quality_analysis": {
@@ -329,7 +329,7 @@ logging:
 @pytest.fixture
 def base_time():
     """Provide a consistent base time for test data."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @pytest.fixture
@@ -666,13 +666,13 @@ def create_work_item(
     key: str,
     summary: str,
     issue_type: str = "Story",
-    epic_key: Optional[str] = None,
-    parent_key: Optional[str] = None,
-    base_time: Optional[datetime] = None,
+    epic_key: str | None = None,
+    parent_key: str | None = None,
+    base_time: datetime | None = None,
 ) -> WorkItem:
     """Create a test work item with sensible defaults."""
     if base_time is None:
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
 
     return WorkItem(
         key=key,
@@ -690,7 +690,7 @@ def create_work_item(
     )
 
 
-def create_mock_scroll_result(work_items_data: List[Dict[str, Any]]):
+def create_mock_scroll_result(work_items_data: list[dict[str, Any]]):
     """Create a mock Qdrant scroll result from work items data."""
     mock_points = []
     for item_data in work_items_data:
@@ -702,10 +702,10 @@ def create_mock_scroll_result(work_items_data: List[Dict[str, Any]]):
     return mock_points, None  # (points, next_page_offset)
 
 
-def create_mock_search_result(work_items_data: List[Dict[str, Any]], scores: List[float]):
+def create_mock_search_result(work_items_data: list[dict[str, Any]], scores: list[float]):
     """Create a mock Qdrant search result from work items data and scores."""
     mock_results = []
-    for item_data, score in zip(work_items_data, scores):
+    for item_data, score in zip(work_items_data, scores, strict=False):
         mock_result = Mock()
         mock_result.payload = item_data
         mock_result.score = score

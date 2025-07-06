@@ -5,7 +5,7 @@ through the MCP server. These tools provide access to JiraScope's RAG capabiliti
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..rag.pipeline import JiraRAGPipeline
 
@@ -15,9 +15,9 @@ class ToolResult:
     """Standard result format for MCP tools."""
 
     status: str
-    data: Dict[str, Any]
-    metadata: Dict[str, Any]
-    error: Optional[str] = None
+    data: dict[str, Any]
+    metadata: dict[str, Any]
+    error: str | None = None
 
 
 class JiraScopeMCPTools:
@@ -27,7 +27,7 @@ class JiraScopeMCPTools:
         self.rag_pipeline = rag_pipeline
 
     async def search_jira_issues(
-        self, query: str, filters: Optional[Dict[str, Any]] = None, limit: int = 10
+        self, query: str, filters: dict[str, Any] | None = None, limit: int = 10
     ) -> ToolResult:
         """Search Jira issues using natural language query."""
         try:
@@ -53,7 +53,7 @@ class JiraScopeMCPTools:
         except Exception as e:
             return ToolResult(status="error", data={}, metadata={}, error=str(e))
 
-    async def analyze_technical_debt(self, component: Optional[str] = None) -> ToolResult:
+    async def analyze_technical_debt(self, component: str | None = None) -> ToolResult:
         """Analyze technical debt patterns."""
         try:
             result = await self.rag_pipeline.analyze_technical_debt(team=component)
@@ -94,7 +94,7 @@ class JiraScopeMCPTools:
             return ToolResult(status="error", data={}, metadata={}, error=str(e))
 
     async def map_dependencies(
-        self, epic_key: Optional[str] = None, team: Optional[str] = None
+        self, epic_key: str | None = None, team: str | None = None
     ) -> ToolResult:
         """Map dependencies and blockers."""
         try:

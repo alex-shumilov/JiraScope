@@ -1,7 +1,7 @@
 """Pydantic models for Jira work items."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -11,18 +11,18 @@ class WorkItem(BaseModel):
 
     key: str = Field(..., description="Jira issue key (e.g., PROJ-123)")
     summary: str = Field(..., description="Issue summary/title")
-    description: Optional[str] = Field(None, description="Issue description")
+    description: str | None = Field(None, description="Issue description")
     issue_type: str = Field(..., description="Type of issue (Story, Task, Bug, etc.)")
     status: str = Field(..., description="Current status")
-    parent_key: Optional[str] = Field(None, description="Parent issue key if this is a subtask")
-    epic_key: Optional[str] = Field(None, description="Epic key this issue belongs to")
+    parent_key: str | None = Field(None, description="Parent issue key if this is a subtask")
+    epic_key: str | None = Field(None, description="Epic key this issue belongs to")
     created: datetime = Field(..., description="Creation timestamp")
     updated: datetime = Field(..., description="Last update timestamp")
-    assignee: Optional[str] = Field(None, description="Assigned user")
+    assignee: str | None = Field(None, description="Assigned user")
     reporter: str = Field(..., description="Reporter/creator")
-    components: List[str] = Field(default_factory=list, description="Project components")
-    labels: List[str] = Field(default_factory=list, description="Issue labels")
-    embedding: Optional[List[float]] = Field(
+    components: list[str] = Field(default_factory=list, description="Project components")
+    labels: list[str] = Field(default_factory=list, description="Issue labels")
+    embedding: list[float] | None = Field(
         None, description="Vector embedding for similarity analysis"
     )
 
@@ -68,9 +68,9 @@ class EpicHierarchy(BaseModel):
     """Represents an epic with its child work items."""
 
     epic: WorkItem = Field(..., description="The epic work item")
-    stories: List[WorkItem] = Field(default_factory=list, description="Stories under this epic")
-    tasks: List[WorkItem] = Field(default_factory=list, description="Tasks under this epic")
-    subtasks: List[WorkItem] = Field(default_factory=list, description="Subtasks under this epic")
+    stories: list[WorkItem] = Field(default_factory=list, description="Stories under this epic")
+    tasks: list[WorkItem] = Field(default_factory=list, description="Tasks under this epic")
+    subtasks: list[WorkItem] = Field(default_factory=list, description="Subtasks under this epic")
 
     @property
     def total_items(self) -> int:
@@ -78,7 +78,7 @@ class EpicHierarchy(BaseModel):
         return len(self.stories) + len(self.tasks) + len(self.subtasks)
 
     @property
-    def all_items(self) -> List[WorkItem]:
+    def all_items(self) -> list[WorkItem]:
         """All work items in this hierarchy including the epic."""
         return [self.epic] + self.stories + self.tasks + self.subtasks
 
@@ -87,14 +87,14 @@ class EpicTree(BaseModel):
     """Complete Epic hierarchy with all descendants."""
 
     epic: WorkItem = Field(..., description="The epic work item")
-    direct_children: List[WorkItem] = Field(
+    direct_children: list[WorkItem] = Field(
         default_factory=list, description="Direct children of the epic"
     )
-    all_descendants: List[WorkItem] = Field(
+    all_descendants: list[WorkItem] = Field(
         default_factory=list, description="All descendant work items"
     )
     hierarchy_depth: int = Field(..., description="Maximum depth of the hierarchy")
-    total_story_points: Optional[int] = Field(None, description="Total story points for all items")
+    total_story_points: int | None = Field(None, description="Total story points for all items")
     completion_percentage: float = Field(0.0, ge=0.0, le=100.0, description="Completion percentage")
 
     @property
@@ -129,10 +129,10 @@ class ProcessingResult(BaseModel):
     failed_items: int = Field(0, description="Number of items that failed processing")
     total_cost: float = Field(0.0, description="Total monetary cost")
     processing_time: float = Field(0.0, description="Total processing time in seconds")
-    batch_stats: Dict[str, float] = Field(
+    batch_stats: dict[str, float] = Field(
         default_factory=dict, description="Batch processing statistics"
     )
-    errors: List[str] = Field(default_factory=list, description="Error messages")
+    errors: list[str] = Field(default_factory=list, description="Error messages")
 
     @property
     def success_rate(self) -> float:
@@ -149,8 +149,8 @@ class QualityReport(BaseModel):
     total_tests: int = Field(..., description="Total number of test queries")
     passed_tests: int = Field(..., description="Number of tests that passed")
     overall_score: float = Field(..., ge=0.0, le=100.0, description="Overall quality score")
-    results: List[Dict[str, Any]] = Field(default_factory=list, description="Detailed test results")
-    recommendations: List[str] = Field(
+    results: list[dict[str, Any]] = Field(default_factory=list, description="Detailed test results")
+    recommendations: list[str] = Field(
         default_factory=list, description="Improvement recommendations"
     )
 
@@ -168,10 +168,10 @@ class AnalysisResult(BaseModel):
     work_item_key: str = Field(..., description="Key of the analyzed work item")
     analysis_type: str = Field(..., description="Type of analysis performed")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
-    insights: Dict[str, Any] = Field(
+    insights: dict[str, Any] = Field(
         default_factory=dict, description="Analysis insights and results"
     )
-    cost: Optional[float] = Field(None, description="API cost for this analysis")
+    cost: float | None = Field(None, description="API cost for this analysis")
     timestamp: datetime = Field(default_factory=datetime.now, description="Analysis timestamp")
 
     model_config = {

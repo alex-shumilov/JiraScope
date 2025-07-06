@@ -3,7 +3,6 @@
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -26,7 +25,7 @@ class Config:
     embedding_batch_size: int = 32
     jira_batch_size: int = 100
 
-    rag_test_queries: List[str] = field(default_factory=list)
+    rag_test_queries: list[str] = field(default_factory=list)
     similarity_threshold: float = 0.8
 
     report_retention_days: int = 30
@@ -36,7 +35,7 @@ class Config:
     monthly_budget: float = 1000.0
 
     jira_dry_run: bool = True
-    sentry_dsn: Optional[str] = None
+    sentry_dsn: str | None = None
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -80,13 +79,13 @@ class Config:
     @classmethod
     def from_file(cls, config_path: Path) -> "Config":
         """Load configuration from YAML file."""
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             data = yaml.safe_load(f)
 
         return cls(**data)
 
     @classmethod
-    def load(cls, config_path: Optional[Path] = None) -> "Config":
+    def load(cls, config_path: Path | None = None) -> "Config":
         """Load configuration with fallback priority: file -> env -> defaults."""
         if config_path and config_path.exists():
             return cls.from_file(config_path)

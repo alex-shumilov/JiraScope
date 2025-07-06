@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -18,8 +18,8 @@ logger = StructuredLogger(__name__)
 mcp = FastMCP("JiraScope", dependencies=["qdrant-client", "httpx", "pydantic"])
 
 # Global variables for components (initialized in main)
-rag_pipeline: Optional[JiraRAGPipeline] = None
-config: Optional[Config] = None
+rag_pipeline: JiraRAGPipeline | None = None
+config: Config | None = None
 
 
 async def init_components():
@@ -51,7 +51,7 @@ async def init_components():
 
 
 @mcp.tool()
-async def search_jira_issues(query: str, limit: Optional[int] = 10) -> Dict[str, Any]:
+async def search_jira_issues(query: str, limit: int | None = 10) -> dict[str, Any]:
     """Search Jira issues using natural language query.
 
     Args:
@@ -91,8 +91,8 @@ async def search_jira_issues(query: str, limit: Optional[int] = 10) -> Dict[str,
 
 @mcp.tool()
 async def analyze_technical_debt(
-    component: Optional[str] = None, time_range: Optional[str] = None
-) -> Dict[str, Any]:
+    component: str | None = None, time_range: str | None = None
+) -> dict[str, Any]:
     """Analyze technical debt patterns across Jira issues.
 
     Args:
@@ -126,7 +126,7 @@ async def analyze_technical_debt(
 
 
 @mcp.tool()
-async def detect_scope_drift(epic_key: str) -> Dict[str, Any]:
+async def detect_scope_drift(epic_key: str) -> dict[str, Any]:
     """Detect and analyze scope drift for a specific Epic.
 
     Args:
@@ -160,8 +160,8 @@ async def detect_scope_drift(epic_key: str) -> Dict[str, Any]:
 
 @mcp.tool()
 async def map_dependencies(
-    epic_key: Optional[str] = None, team: Optional[str] = None
-) -> Dict[str, Any]:
+    epic_key: str | None = None, team: str | None = None
+) -> dict[str, Any]:
     """Map dependencies and blockers across teams and Epics.
 
     Args:
@@ -218,7 +218,7 @@ def get_config() -> str:
 
 
 @mcp.prompt()
-def jira_analysis_prompt(analysis_type: str, focus_area: Optional[str] = None) -> str:
+def jira_analysis_prompt(analysis_type: str, focus_area: str | None = None) -> str:
     """Generate prompts for different types of Jira analysis.
 
     Args:
@@ -234,7 +234,7 @@ def jira_analysis_prompt(analysis_type: str, focus_area: Optional[str] = None) -
 
 
 @mcp.prompt()
-def sprint_planning_prompt(team: str, sprint_goal: Optional[str] = None) -> str:
+def sprint_planning_prompt(team: str, sprint_goal: str | None = None) -> str:
     """Generate sprint planning analysis prompt.
 
     Args:

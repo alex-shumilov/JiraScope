@@ -12,7 +12,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
@@ -79,7 +79,7 @@ class IntegrationTester:
         # Return overall success
         return all(r["success"] for r in self.results.values())
 
-    async def _test_config_files(self) -> Dict[str, Any]:
+    async def _test_config_files(self) -> dict[str, Any]:
         """Test that configuration files exist and are valid."""
         try:
             # Check for LMStudio config
@@ -91,7 +91,7 @@ class IntegrationTester:
                 }
 
             # Validate JSON
-            with open(lmstudio_config, "r") as f:
+            with open(lmstudio_config) as f:
                 config = json.load(f)
 
             if "mcpServers" not in config:
@@ -110,7 +110,7 @@ class IntegrationTester:
         except Exception as e:
             return {"success": False, "message": f"Config validation failed: {e}"}
 
-    async def _test_environment(self) -> Dict[str, Any]:
+    async def _test_environment(self) -> dict[str, Any]:
         """Test environment variable configuration."""
         try:
             # Check for required variables
@@ -133,7 +133,7 @@ class IntegrationTester:
         except Exception as e:
             return {"success": False, "message": f"Environment check failed: {e}"}
 
-    async def _test_dependencies(self) -> Dict[str, Any]:
+    async def _test_dependencies(self) -> dict[str, Any]:
         """Test that required Python packages are available."""
         try:
             required_packages = [
@@ -161,7 +161,7 @@ class IntegrationTester:
         except Exception as e:
             return {"success": False, "message": f"Dependency check failed: {e}"}
 
-    async def _test_mcp_import(self) -> Dict[str, Any]:
+    async def _test_mcp_import(self) -> dict[str, Any]:
         """Test that the MCP server can be imported."""
         try:
             # Try importing the MCP server module
@@ -177,7 +177,7 @@ class IntegrationTester:
         except Exception as e:
             return {"success": False, "message": f"MCP server test failed: {e}"}
 
-    async def _test_server_startup(self) -> Dict[str, Any]:
+    async def _test_server_startup(self) -> dict[str, Any]:
         """Test that the server can start (briefly)."""
         try:
             # Import server components

@@ -3,7 +3,6 @@
 import asyncio
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List
 
 import sentry_sdk
 from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -65,7 +64,7 @@ task_manager = TaskManager()
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the main web UI"""
-    with open("src/web/static/index.html", "r") as f:
+    with open("src/web/static/index.html") as f:
         return HTMLResponse(content=f.read())
 
 
@@ -78,7 +77,7 @@ async def health_check():
 
 # Analysis endpoints
 @app.get("/api/projects")
-async def get_projects() -> List[str]:
+async def get_projects() -> list[str]:
     """Get list of available projects"""
     try:
         return await analysis_service.get_available_projects()
@@ -186,7 +185,7 @@ async def get_cost_summary(period: str = "session") -> CostSummary:
 # WebSocket for real-time updates
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
+        self.active_connections: dict[str, WebSocket] = {}
 
     async def connect(self, task_id: str, websocket: WebSocket):
         await websocket.accept()
@@ -232,7 +231,7 @@ async def websocket_task_updates(websocket: WebSocket, task_id: str):
 
 # Export endpoints
 @app.get("/api/export/{task_id}")
-async def export_results(task_id: str, format: str = "json") -> Dict:
+async def export_results(task_id: str, format: str = "json") -> dict:
     """Export analysis results"""
 
     task_status = task_manager.get_task_status(task_id)

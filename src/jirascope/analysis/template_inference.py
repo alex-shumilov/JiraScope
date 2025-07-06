@@ -2,7 +2,6 @@
 
 import json
 import time
-from typing import Dict, List, Optional
 
 from ..clients.claude_client import ClaudeClient
 from ..core.config import Config
@@ -17,7 +16,7 @@ class TemplateInferenceEngine:
 
     def __init__(self, config: Config):
         self.config = config
-        self.claude_client: Optional[ClaudeClient] = None
+        self.claude_client: ClaudeClient | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -31,7 +30,7 @@ class TemplateInferenceEngine:
             await self.claude_client.__aexit__(exc_type, exc_val, exc_tb)
 
     async def infer_templates_from_samples(
-        self, issue_type: str, high_quality_samples: List[WorkItem]
+        self, issue_type: str, high_quality_samples: list[WorkItem]
     ) -> TemplateInference:
         """Generate templates from high-quality work item examples."""
         logger.info(f"Inferring template for {issue_type} from {len(high_quality_samples)} samples")
@@ -142,8 +141,8 @@ Respond in JSON format:
             raise
 
     async def infer_multiple_templates(
-        self, samples_by_type: Dict[str, List[WorkItem]]
-    ) -> Dict[str, TemplateInference]:
+        self, samples_by_type: dict[str, list[WorkItem]]
+    ) -> dict[str, TemplateInference]:
         """Infer templates for multiple issue types."""
         logger.info(f"Inferring templates for {len(samples_by_type)} issue types")
 
@@ -155,7 +154,7 @@ Respond in JSON format:
                     template = await self.infer_templates_from_samples(issue_type, samples)
                     templates[issue_type] = template
                 except Exception as e:
-                    logger.warning(f"Failed to infer template for {issue_type}: {str(e)}")
+                    logger.warning(f"Failed to infer template for {issue_type}: {e!s}")
             else:
                 logger.warning(
                     f"Insufficient samples for {issue_type}: {len(samples)} (need at least 3)"
@@ -164,8 +163,8 @@ Respond in JSON format:
         return templates
 
     def _parse_fallback_template_response(
-        self, content: str, issue_type: str, samples: List[WorkItem]
-    ) -> Dict[str, any]:
+        self, content: str, issue_type: str, samples: list[WorkItem]
+    ) -> dict[str, any]:
         """Fallback parser when JSON parsing fails."""
         logger.warning("Template inference JSON parsing failed, using fallback")
 
@@ -262,7 +261,7 @@ As a {user_type}, I want {functionality} so that {benefit}.
             "template_notes": "Generated using fallback method due to parsing error",
         }
 
-    def validate_template_quality(self, template: TemplateInference) -> Dict[str, any]:
+    def validate_template_quality(self, template: TemplateInference) -> dict[str, any]:
         """Validate the quality of an inferred template."""
         validation_results = {"is_valid": True, "issues": [], "suggestions": []}
 

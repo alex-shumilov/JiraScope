@@ -1,7 +1,6 @@
 """LMStudio client for embeddings generation."""
 
 import logging
-from typing import List, Optional
 
 import httpx
 import numpy as np
@@ -17,7 +16,7 @@ class LMStudioClient:
     def __init__(self, config: Config):
         self.config = config
         self.endpoint = config.lmstudio_endpoint
-        self.session: Optional[httpx.AsyncClient] = None
+        self.session: httpx.AsyncClient | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -33,8 +32,8 @@ class LMStudioClient:
             await self.session.aclose()
 
     async def generate_embeddings(
-        self, texts: List[str], batch_size: Optional[int] = None
-    ) -> List[List[float]]:
+        self, texts: list[str], batch_size: int | None = None
+    ) -> list[list[float]]:
         """Generate embeddings for a list of texts."""
         if not self.session:
             raise RuntimeError("LMStudio client not initialized. Use async context manager.")
@@ -54,7 +53,7 @@ class LMStudioClient:
         logger.info(f"Generated {len(all_embeddings)} embeddings")
         return all_embeddings
 
-    async def _generate_batch_embeddings(self, texts: List[str]) -> List[List[float]]:
+    async def _generate_batch_embeddings(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings for a batch of texts."""
         try:
             # Prepare texts with instruction prefix
@@ -101,7 +100,7 @@ class LMStudioClient:
             logger.error(f"LMStudio health check failed: {e}")
             return False
 
-    def calculate_similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
+    def calculate_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
         """Calculate cosine similarity between two embeddings."""
         vec1 = np.array(embedding1)
         vec2 = np.array(embedding2)

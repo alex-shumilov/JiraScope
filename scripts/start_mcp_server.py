@@ -14,7 +14,6 @@ import os
 import signal
 import sys
 from pathlib import Path
-from typing import Optional
 
 import httpx
 import yaml
@@ -36,9 +35,9 @@ logger = StructuredLogger(__name__)
 class MCPServerManager:
     """Manages the lifecycle of the JiraScope MCP server."""
 
-    def __init__(self, config_file: Optional[str] = None):
+    def __init__(self, config_file: str | None = None):
         self.config_file = config_file
-        self.config: Optional[Config] = None
+        self.config: Config | None = None
         self.server_process = None
         self.shutdown_requested = False
 
@@ -104,14 +103,12 @@ class MCPServerManager:
         try:
             if self.config_file and Path(self.config_file).exists():
                 # Load from file
-                with open(self.config_file, "r") as f:
+                with open(self.config_file) as f:
                     yaml.safe_load(f)
                 console.print(f"📁 Using config file: {self.config_file}")
-            else:
-                # Check environment variables
-                if not os.getenv("JIRA_MCP_ENDPOINT"):
-                    console.print("❌ JIRA_MCP_ENDPOINT environment variable required")
-                    return False
+            elif not os.getenv("JIRA_MCP_ENDPOINT"):
+                console.print("❌ JIRA_MCP_ENDPOINT environment variable required")
+                return False
 
             # Try to load config
             self.config = Config.from_env()

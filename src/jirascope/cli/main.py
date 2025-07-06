@@ -4,7 +4,6 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
@@ -307,7 +306,6 @@ def cleanup(ctx, days):
 @cli.group()
 def analyze():
     """Analysis commands for work items."""
-    pass
 
 
 @analyze.command("duplicates")
@@ -646,7 +644,7 @@ def run_async(coro):
 )
 @click.option("--output-dir", "-o", type=click.Path(), help="Output directory for extracted data")
 @click.pass_context
-def extract(ctx, config_file: Optional[str], output_dir: Optional[str]):
+def extract(ctx, config_file: str | None, output_dir: str | None):
     """Extract data from Jira and store in vector database."""
     try:
         config = Config.from_env(config_file)
@@ -676,7 +674,7 @@ def extract(ctx, config_file: Optional[str], output_dir: Optional[str]):
 @click.option("--batch-size", "-b", type=int, help="Batch size for processing")
 @click.option("--force-reprocess", "-f", is_flag=True, help="Force reprocessing of all data")
 @click.pass_context
-def process(ctx, config_file: Optional[str], batch_size: Optional[int], force_reprocess: bool):
+def process(ctx, config_file: str | None, batch_size: int | None, force_reprocess: bool):
     """Process extracted data and generate embeddings."""
     try:
         config = Config.from_env(config_file)
@@ -706,7 +704,7 @@ def process(ctx, config_file: Optional[str], batch_size: Optional[int], force_re
 @click.option("--query", "-q", type=str, help="Query to execute")
 @click.option("--interactive", "-i", is_flag=True, help="Run in interactive mode")
 @click.pass_context
-def query(ctx, config_file: Optional[str], query: Optional[str], interactive: bool):
+def query(ctx, config_file: str | None, query: str | None, interactive: bool):
     """Query the processed data using natural language."""
     try:
         config = Config.from_env(config_file)
@@ -768,7 +766,7 @@ def query(ctx, config_file: Optional[str], query: Optional[str], interactive: bo
 )
 @click.option("--port", "-p", type=int, default=8000, help="Port for HTTP transports")
 @click.pass_context
-def mcp_server(ctx, config_file: Optional[str], transport: str, port: int):
+def mcp_server(ctx, config_file: str | None, transport: str, port: int):
     """Run the MCP server to expose JiraScope capabilities."""
     try:
         console.print("[bold green]Starting JiraScope MCP Server...[/bold green]")

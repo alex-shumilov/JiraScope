@@ -1,7 +1,6 @@
 """Similarity analysis with multi-level duplicate detection."""
 
 import time
-from typing import Dict, List, Optional
 
 from qdrant_client.http import models
 
@@ -27,7 +26,7 @@ class MultiLevelSimilarityDetector:
             "low": 0.55,  # Somewhat related
         }
 
-    def classify_similarity(self, similarity_score: float) -> Optional[str]:
+    def classify_similarity(self, similarity_score: float) -> str | None:
         """Classify similarity score into confidence levels."""
         for level, threshold in sorted(
             self.similarity_thresholds.items(), key=lambda x: x[1], reverse=True
@@ -36,11 +35,11 @@ class MultiLevelSimilarityDetector:
                 return level
         return None
 
-    def _get_confidence_level(self, similarity_score: float) -> Optional[str]:
+    def _get_confidence_level(self, similarity_score: float) -> str | None:
         """Get confidence level based on similarity score."""
         return self.classify_similarity(similarity_score)
 
-    def _calculate_review_priority(self, original: WorkItem, similar_item: Dict) -> int:
+    def _calculate_review_priority(self, original: WorkItem, similar_item: dict) -> int:
         """Calculate review priority (1-5, higher is more urgent)."""
         priority = 1
 
@@ -84,8 +83,8 @@ class MultiLevelSimilarityDetector:
         )
 
     def _analyze_similarity_reasons(
-        self, original: WorkItem, similar_item: Dict, score: float
-    ) -> List[str]:
+        self, original: WorkItem, similar_item: dict, score: float
+    ) -> list[str]:
         """Analyze why items are similar."""
         reasons = []
 
@@ -120,8 +119,8 @@ class MultiLevelSimilarityDetector:
         return reasons or ["Semantic content similarity"]
 
     async def find_duplicates_by_level(
-        self, work_items: List[WorkItem], min_threshold: float = 0.55
-    ) -> Dict[str, List[DuplicateCandidate]]:
+        self, work_items: list[WorkItem], min_threshold: float = 0.55
+    ) -> dict[str, list[DuplicateCandidate]]:
         """Find duplicates at different confidence levels."""
         logger.info(f"Starting duplicate detection for {len(work_items)} work items")
         start_time = time.time()
@@ -211,7 +210,7 @@ class SimilarityAnalyzer:
 
     def __init__(self, config: Config):
         self.config = config
-        self.detector: Optional[MultiLevelSimilarityDetector] = None
+        self.detector: MultiLevelSimilarityDetector | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -232,7 +231,7 @@ class SimilarityAnalyzer:
             await self.lm_client.__aexit__(exc_type, exc_val, exc_tb)
 
     async def find_potential_duplicates(
-        self, work_items: List[WorkItem], threshold: float = 0.70
+        self, work_items: list[WorkItem], threshold: float = 0.70
     ) -> DuplicateReport:
         """Find duplicates with confidence scoring and human review flags."""
         logger.info(f"Starting comprehensive duplicate analysis for {len(work_items)} items")

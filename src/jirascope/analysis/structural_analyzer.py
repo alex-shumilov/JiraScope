@@ -2,7 +2,7 @@
 
 import time
 from collections import Counter, defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -22,15 +22,15 @@ class TechDebtClusterer:
 
     def __init__(self, config: Config):
         self.config = config
-        self.qdrant_client: Optional[QdrantVectorClient] = None
-        self.claude_client: Optional[ClaudeClient] = None
+        self.qdrant_client: QdrantVectorClient | None = None
+        self.claude_client: ClaudeClient | None = None
 
         # Clustering parameters
         self.min_samples = 2
         self.eps = 0.3  # Default eps value
         self.max_clusters = 10
 
-    def _identify_tech_debt_items(self, work_items: List[WorkItem]) -> List[WorkItem]:
+    def _identify_tech_debt_items(self, work_items: list[WorkItem]) -> list[WorkItem]:
         """Identify work items that represent technical debt."""
         tech_debt_items = []
 
@@ -67,7 +67,7 @@ class TechDebtClusterer:
 
         return tech_debt_items
 
-    def _calculate_priority_score(self, summary: str, description: str, labels: List[str]) -> float:
+    def _calculate_priority_score(self, summary: str, description: str, labels: list[str]) -> float:
         """Calculate priority score for a tech debt item."""
         score = 0.0
 
@@ -167,7 +167,7 @@ class TechDebtClusterer:
         if self.claude_client:
             await self.claude_client.__aexit__(exc_type, exc_val, exc_tb)
 
-    async def cluster_tech_debt_items(self, project_key: Optional[str] = None) -> TechDebtReport:
+    async def cluster_tech_debt_items(self, project_key: str | None = None) -> TechDebtReport:
         """Group technical debt items by similarity for better prioritization."""
         logger.info(f"Clustering tech debt items for project {project_key or 'all'}")
         start_time = time.time()
@@ -218,7 +218,7 @@ class TechDebtClusterer:
 
             # Group items by cluster
             clusters_dict = defaultdict(list)
-            for item, label in zip(valid_items, cluster_labels):
+            for item, label in zip(valid_items, cluster_labels, strict=False):
                 clusters_dict[label].append(item)
 
             # Analyze each cluster with Claude
@@ -275,8 +275,8 @@ class TechDebtClusterer:
             raise
 
     async def _find_tech_debt_items(
-        self, project_key: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        self, project_key: str | None = None
+    ) -> list[dict[str, Any]]:
         """Find all tech debt related items."""
         # Tech debt keywords to search for
         tech_debt_keywords = [
@@ -335,7 +335,7 @@ class TechDebtClusterer:
 
         return unique_items
 
-    def _is_tech_debt_item(self, work_item: Dict[str, Any]) -> bool:
+    def _is_tech_debt_item(self, work_item: dict[str, Any]) -> bool:
         """Determine if a work item represents technical debt."""
         summary = work_item.get("summary", "").lower()
         description = work_item.get("description", "").lower()
@@ -369,7 +369,7 @@ class TechDebtClusterer:
 
         return has_tech_debt_terms or (is_improvement_type and has_tech_debt_labels)
 
-    async def _get_embeddings_for_text(self, text: str) -> List[List[float]]:
+    async def _get_embeddings_for_text(self, text: str) -> list[list[float]]:
         """Get embeddings for text using LMStudio client."""
         try:
             from ..clients.lmstudio_client import LMStudioClient
@@ -377,12 +377,12 @@ class TechDebtClusterer:
             async with LMStudioClient(self.config) as lm_client:
                 return await lm_client.generate_embeddings([text])
         except Exception as e:
-            logger.warning(f"Failed to get embeddings for '{text}': {str(e)}")
+            logger.warning(f"Failed to get embeddings for '{text}': {e!s}")
             return []
 
     async def _analyze_tech_debt_cluster(
-        self, items: List[Dict], cluster_id: int
-    ) -> Dict[str, Any]:
+        self, items: list[dict], cluster_id: int
+    ) -> dict[str, Any]:
         """Analyze a cluster of tech debt items with Claude."""
         # Prepare cluster description for Claude
         items_text = ""
@@ -430,7 +430,7 @@ Respond in JSON format:
             return analysis
 
         except Exception as e:
-            logger.warning(f"Failed to analyze cluster {cluster_id}: {str(e)}")
+            logger.warning(f"Failed to analyze cluster {cluster_id}: {e!s}")
             return {
                 "theme": f"Technical Debt Cluster {cluster_id}",
                 "priority_score": 0.5,
@@ -447,7 +447,7 @@ class StructuralAnalyzer:
 
     def __init__(self, config: Config):
         self.config = config
-        self.qdrant_client: Optional[QdrantVectorClient] = None
+        self.qdrant_client: QdrantVectorClient | None = None
         self.tech_debt_clusterer = TechDebtClusterer(config)
 
     async def __aenter__(self):
@@ -462,7 +462,7 @@ class StructuralAnalyzer:
             await self.qdrant_client.__aexit__(exc_type, exc_val, exc_tb)
 
     async def analyze_labeling_patterns(
-        self, project_key: Optional[str] = None
+        self, project_key: str | None = None
     ) -> LabelingAnalysis:
         """Suggest improvements to label/component structure."""
         logger.info(f"Analyzing labeling patterns for project {project_key or 'all'}")
@@ -515,14 +515,14 @@ class StructuralAnalyzer:
             logger.error("Failed to analyze labeling patterns", error=str(e))
             raise
 
-    async def tech_debt_clustering(self, project_key: Optional[str] = None) -> TechDebtReport:
+    async def tech_debt_clustering(self, project_key: str | None = None) -> TechDebtReport:
         """Group technical debt items for better prioritization."""
         async with self.tech_debt_clusterer:
             return await self.tech_debt_clusterer.cluster_tech_debt_items(project_key)
 
     async def _cluster_similar_tech_debt_items(
-        self, tech_debt_items: List[WorkItem]
-    ) -> List[TechDebtCluster]:
+        self, tech_debt_items: list[WorkItem]
+    ) -> list[TechDebtCluster]:
         """Delegate to tech debt clusterer for clustering."""
         async with self.tech_debt_clusterer:
             # This method doesn't exist in TechDebtClusterer, simulate it
@@ -570,14 +570,14 @@ class StructuralAnalyzer:
 
             return clusters
 
-    async def _analyze_cluster_with_claude(self, tech_debt_items: List[WorkItem]) -> Dict[str, Any]:
+    async def _analyze_cluster_with_claude(self, tech_debt_items: list[WorkItem]) -> dict[str, Any]:
         """Delegate to tech debt clusterer for Claude analysis."""
         async with self.tech_debt_clusterer:
             # Convert WorkItem objects to Dict for the clusterer method
             items_dict = [item.model_dump() for item in tech_debt_items]
             return await self.tech_debt_clusterer._analyze_tech_debt_cluster(items_dict, 0)
 
-    async def _get_all_work_items(self, project_key: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def _get_all_work_items(self, project_key: str | None = None) -> list[dict[str, Any]]:
         """Get all work items for analysis."""
         scroll_filter = None
         if project_key:
@@ -591,7 +591,7 @@ class StructuralAnalyzer:
 
     def _generate_labeling_suggestions(
         self, label_counter: Counter, component_counter: Counter
-    ) -> Dict[str, List[str]]:
+    ) -> dict[str, list[str]]:
         """Generate suggestions for improving labeling structure."""
         suggestions = {
             "cleanup_labels": [],
@@ -653,7 +653,7 @@ class StructuralAnalyzer:
 
         return False
 
-    def _identify_tech_debt_items(self, work_items: List) -> List:
+    def _identify_tech_debt_items(self, work_items: list) -> list:
         """Identify tech debt items from a list of work items."""
         tech_debt_items = []
 
@@ -671,7 +671,7 @@ class StructuralAnalyzer:
 
         return tech_debt_items
 
-    def _calculate_priority_score(self, title: str, description: str, labels: List[str]) -> float:
+    def _calculate_priority_score(self, title: str, description: str, labels: list[str]) -> float:
         """Calculate priority score for tech debt item based on content."""
         score = 0.0
 

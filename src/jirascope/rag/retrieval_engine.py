@@ -1,7 +1,7 @@
 """Contextual retrieval engine for Jira semantic search."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .query_processor import ExpandedQuery, FilterSet
 
@@ -11,7 +11,7 @@ class RetrievalResult:
     """Result from semantic search with metadata."""
 
     score: float
-    content: Dict[str, Any]
+    content: dict[str, Any]
     chunk_id: str
     source_key: str
     item_type: str
@@ -26,10 +26,10 @@ class RetrievalResult:
 class ContextTree:
     """Hierarchical context for a Jira item."""
 
-    root_item: Dict[str, Any]
-    parent_context: Optional[Dict[str, Any]] = None
-    child_items: Optional[List[Dict[str, Any]]] = None
-    related_items: Optional[List[Dict[str, Any]]] = None
+    root_item: dict[str, Any]
+    parent_context: dict[str, Any] | None = None
+    child_items: list[dict[str, Any]] | None = None
+    related_items: list[dict[str, Any]] | None = None
 
     def __post_init__(self):
         """Initialize list fields if None."""
@@ -53,7 +53,7 @@ class ContextualRetriever:
 
     async def semantic_search(
         self, query: ExpandedQuery, filters: FilterSet, limit: int = 10
-    ) -> List[RetrievalResult]:
+    ) -> list[RetrievalResult]:
         """Multi-stage semantic retrieval with filtering and ranking."""
         # Generate embedding for the expanded query
         query_embedding = await self.embedder.generate_embeddings([query.full_query_text])
@@ -117,8 +117,8 @@ class ContextualRetriever:
         return context_tree
 
     async def search_by_epic(
-        self, query_embedding: List[float], epic_key: str, limit: int = 10
-    ) -> List[RetrievalResult]:
+        self, query_embedding: list[float], epic_key: str, limit: int = 10
+    ) -> list[RetrievalResult]:
         """Search within a specific Epic hierarchy."""
         search_results = await self.qdrant.search_with_filters(
             query_embedding=query_embedding, filters={"epic_key": [epic_key]}, limit=limit
@@ -138,8 +138,8 @@ class ContextualRetriever:
         return results
 
     def _rerank_results(
-        self, results: List[RetrievalResult], query: ExpandedQuery, filters: FilterSet
-    ) -> List[RetrievalResult]:
+        self, results: list[RetrievalResult], query: ExpandedQuery, filters: FilterSet
+    ) -> list[RetrievalResult]:
         """Re-rank results based on additional relevance factors."""
         for result in results:
             # Start with semantic similarity score

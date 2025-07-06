@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -22,13 +22,13 @@ class TestCategory(BaseModel):
     name: str = Field(..., description="Category name")
     description: str = Field(..., description="Category description")
     min_coverage: int = Field(3, description="Minimum number of tests required in this category")
-    tests: List[RagTestQuery] = Field(default_factory=list, description="Tests in this category")
+    tests: list[RagTestQuery] = Field(default_factory=list, description="Tests in this category")
 
 
 class TestQueryCollection(BaseModel):
     """Collection of test queries organized by category."""
 
-    categories: Dict[str, TestCategory] = Field(default_factory=dict)
+    categories: dict[str, TestCategory] = Field(default_factory=dict)
     total_tests: int = 0
 
     def add_test(self, test: RagTestQuery):
@@ -41,20 +41,20 @@ class TestQueryCollection(BaseModel):
         self.categories[test.category].tests.append(test)
         self.total_tests += 1
 
-    def get_tests_by_category(self, category: str) -> List[RagTestQuery]:
+    def get_tests_by_category(self, category: str) -> list[RagTestQuery]:
         """Get all tests in a specific category."""
         return self.categories.get(
             category, TestCategory(name=category, description="", tests=[])
         ).tests
 
-    def get_all_tests(self) -> List[RagTestQuery]:
+    def get_all_tests(self) -> list[RagTestQuery]:
         """Get all tests across all categories."""
         all_tests = []
         for category in self.categories.values():
             all_tests.extend(category.tests)
         return all_tests
 
-    def check_coverage(self) -> Dict[str, Any]:
+    def check_coverage(self) -> dict[str, Any]:
         """Check if all categories meet minimum coverage requirements."""
         coverage_issues = {}
 
@@ -192,7 +192,7 @@ class TestQueryManager:
             return False
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 data = json.load(f)
 
             # Reset collection
@@ -312,7 +312,7 @@ class TestQueryManager:
 
     async def generate_test_from_epic(
         self, epic_key: str, jira_client: MCPClient, claude_client: ClaudeClient
-    ) -> Optional[RagTestQuery]:
+    ) -> RagTestQuery | None:
         """Generate a test query from an Epic."""
         try:
             # Get Epic details
@@ -358,7 +358,7 @@ class TestQueryManager:
             logger.error(f"Failed to generate test from Epic {epic_key}", error=str(e))
             return None
 
-    def get_test_queries(self, category: Optional[str] = None) -> List[RagTestQuery]:
+    def get_test_queries(self, category: str | None = None) -> list[RagTestQuery]:
         """Get test queries, optionally filtered by category."""
         if category:
             return self.collection.get_tests_by_category(category)

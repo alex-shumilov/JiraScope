@@ -3,23 +3,23 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
 class FilterSet:
     """Structured filters extracted from natural language query."""
 
-    item_types: Optional[List[str]] = None
-    statuses: Optional[List[str]] = None
-    priorities: Optional[List[str]] = None
-    components: Optional[List[str]] = None
-    labels: Optional[List[str]] = None
-    teams: Optional[List[str]] = None
-    epic_keys: Optional[List[str]] = None
-    assignees: Optional[List[str]] = None
-    date_range: Optional[Dict[str, datetime]] = None
-    sprint_names: Optional[List[str]] = None
+    item_types: list[str] | None = None
+    statuses: list[str] | None = None
+    priorities: list[str] | None = None
+    components: list[str] | None = None
+    labels: list[str] | None = None
+    teams: list[str] | None = None
+    epic_keys: list[str] | None = None
+    assignees: list[str] | None = None
+    date_range: dict[str, datetime] | None = None
+    sprint_names: list[str] | None = None
 
     def __post_init__(self):
         """Initialize list fields if None."""
@@ -42,7 +42,7 @@ class FilterSet:
         if self.sprint_names is None:
             self.sprint_names = []
 
-    def to_qdrant_filter(self) -> Dict[str, Any]:
+    def to_qdrant_filter(self) -> dict[str, Any]:
         """Convert to Qdrant filter format."""
         filters = {}
 
@@ -73,9 +73,9 @@ class ExpandedQuery:
     """Query expanded with synonyms and related terms."""
 
     original_query: str
-    expanded_terms: List[str]
-    semantic_variants: List[str]
-    jira_synonyms: Dict[str, List[str]]
+    expanded_terms: list[str]
+    semantic_variants: list[str]
+    jira_synonyms: dict[str, list[str]]
 
     @property
     def full_query_text(self) -> str:
@@ -93,7 +93,7 @@ class QueryPlan:
     filters: FilterSet
     intent: str  # search, analysis, report, etc.
     expected_output: str  # list, summary, analysis, etc.
-    priority_boost: Optional[Dict[str, float]] = None
+    priority_boost: dict[str, float] | None = None
 
     def __post_init__(self):
         """Initialize optional fields."""
@@ -207,7 +207,7 @@ class JiraQueryProcessor:
 
         return filters
 
-    def _extract_item_types(self, query: str) -> List[str]:
+    def _extract_item_types(self, query: str) -> list[str]:
         """Extract Jira item types from query."""
         types = []
         type_patterns = {
@@ -223,7 +223,7 @@ class JiraQueryProcessor:
 
         return types
 
-    def _extract_statuses(self, query: str) -> List[str]:
+    def _extract_statuses(self, query: str) -> list[str]:
         """Extract status filters from query."""
         statuses = []
         status_patterns = {
@@ -239,7 +239,7 @@ class JiraQueryProcessor:
 
         return statuses
 
-    def _extract_priorities(self, query: str) -> List[str]:
+    def _extract_priorities(self, query: str) -> list[str]:
         """Extract priority filters from query."""
         priorities = []
         priority_patterns = {
@@ -254,7 +254,7 @@ class JiraQueryProcessor:
 
         return priorities
 
-    def _extract_components(self, query: str) -> List[str]:
+    def _extract_components(self, query: str) -> list[str]:
         """Extract component filters from query."""
         components = []
         component_map = {
@@ -272,7 +272,7 @@ class JiraQueryProcessor:
 
         return list(set(components))
 
-    def _extract_teams(self, query: str) -> List[str]:
+    def _extract_teams(self, query: str) -> list[str]:
         """Extract team filters from query."""
         teams = []
         team_map = {
@@ -290,7 +290,7 @@ class JiraQueryProcessor:
 
         return list(set(teams))
 
-    def _extract_date_range(self, query: str) -> Optional[Dict[str, datetime]]:
+    def _extract_date_range(self, query: str) -> dict[str, datetime] | None:
         """Extract date range from time references."""
         now = datetime.now()
 
@@ -301,7 +301,7 @@ class JiraQueryProcessor:
 
         return None
 
-    def _extract_sprints(self, query: str) -> List[str]:
+    def _extract_sprints(self, query: str) -> list[str]:
         """Extract sprint references from query."""
         sprints = []
 
@@ -322,7 +322,7 @@ class JiraQueryProcessor:
 
         return sprints
 
-    def _extract_assignees(self, query: str) -> List[str]:
+    def _extract_assignees(self, query: str) -> list[str]:
         """Extract assignee references from query."""
         assignees = []
 
@@ -336,7 +336,7 @@ class JiraQueryProcessor:
 
         return assignees
 
-    def _extract_epic_keys(self, query: str) -> List[str]:
+    def _extract_epic_keys(self, query: str) -> list[str]:
         """Extract Epic key references from query."""
         epic_keys = []
 
@@ -372,7 +372,7 @@ class JiraQueryProcessor:
         else:
             return "list"  # Default
 
-    def _calculate_priority_boost(self, query: str, filters: FilterSet) -> Dict[str, float]:
+    def _calculate_priority_boost(self, query: str, filters: FilterSet) -> dict[str, float]:
         """Calculate priority boosts based on query terms."""
         boosts = {}
 
@@ -386,7 +386,7 @@ class JiraQueryProcessor:
 
         return boosts
 
-    def _get_semantic_variants(self, query: str) -> List[str]:
+    def _get_semantic_variants(self, query: str) -> list[str]:
         """Get semantic variants for query terms."""
         variants = []
 
@@ -404,7 +404,7 @@ class JiraQueryProcessor:
 
         return variants
 
-    def _load_jira_synonyms(self) -> Dict[str, List[str]]:
+    def _load_jira_synonyms(self) -> dict[str, list[str]]:
         """Load Jira-specific terminology synonyms."""
         return {
             "story": ["user story", "feature", "requirement"],
@@ -418,7 +418,7 @@ class JiraQueryProcessor:
             "technical debt": ["refactoring", "cleanup", "maintenance"],
         }
 
-    def _load_time_patterns(self) -> Dict[str, int]:
+    def _load_time_patterns(self) -> dict[str, int]:
         """Load time reference patterns with days back."""
         return {
             r"\blast week\b": 7,

@@ -1,7 +1,7 @@
 """Analysis result models for JiraScope."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -15,7 +15,7 @@ class DuplicateCandidate(BaseModel):
     confidence_level: str = Field(..., description="Confidence level (exact, high, medium, low)")
     review_priority: int = Field(..., ge=1, le=5, description="Priority for manual review")
     suggested_action: str = Field(..., description="Suggested action to take")
-    similarity_reasons: List[str] = Field(
+    similarity_reasons: list[str] = Field(
         default_factory=list, description="Reasons for similarity"
     )
 
@@ -24,7 +24,7 @@ class DuplicateReport(BaseModel):
     """Report of duplicate analysis results."""
 
     total_candidates: int = Field(..., description="Total number of duplicate candidates")
-    candidates_by_level: Dict[str, List[DuplicateCandidate]] = Field(
+    candidates_by_level: dict[str, list[DuplicateCandidate]] = Field(
         default_factory=dict, description="Candidates grouped by confidence level"
     )
     analysis_timestamp: datetime = Field(default_factory=datetime.now)
@@ -46,7 +46,7 @@ class MisplacedWorkItem(BaseModel):
 class CrossEpicReport(BaseModel):
     """Report of cross-Epic analysis."""
 
-    misplaced_items: List[MisplacedWorkItem] = Field(default_factory=list)
+    misplaced_items: list[MisplacedWorkItem] = Field(default_factory=list)
     analysis_timestamp: datetime = Field(default_factory=datetime.now)
     epics_analyzed: int = Field(0, description="Number of Epics analyzed")
     processing_cost: float = Field(0.0, description="Cost of analysis")
@@ -58,11 +58,11 @@ class CoherenceAnalysis(BaseModel):
     epic_key: str = Field(..., description="Epic key")
     coherence_score: float = Field(..., ge=0.0, le=1.0, description="Overall coherence score")
     work_items_count: int = Field(..., description="Number of work items in Epic")
-    outlier_items: List[str] = Field(
+    outlier_items: list[str] = Field(
         default_factory=list, description="Work item keys that are outliers"
     )
     theme_consistency: float = Field(..., ge=0.0, le=1.0, description="Theme consistency score")
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list, description="Improvement recommendations"
     )
 
@@ -76,7 +76,7 @@ class QualityAnalysis(BaseModel):
     actionability_score: int = Field(..., ge=1, le=5, description="Actionability score (1-5)")
     testability_score: int = Field(..., ge=1, le=5, description="Testability score (1-5)")
     overall_score: float = Field(..., ge=1.0, le=5.0, description="Overall quality score")
-    improvement_suggestions: List[str] = Field(
+    improvement_suggestions: list[str] = Field(
         default_factory=list, description="Suggestions for improvement"
     )
     risk_level: str = Field(..., description="Risk level (Low, Medium, High)")
@@ -89,8 +89,8 @@ class SplitSuggestion(BaseModel):
 
     suggested_title: str = Field(..., description="Suggested title for split item")
     suggested_description: str = Field(..., description="Suggested description")
-    estimated_effort: Optional[str] = Field(None, description="Estimated effort")
-    dependencies: List[str] = Field(
+    estimated_effort: str | None = Field(None, description="Estimated effort")
+    dependencies: list[str] = Field(
         default_factory=list, description="Dependencies on other splits"
     )
 
@@ -101,7 +101,7 @@ class SplitAnalysis(BaseModel):
     work_item_key: str = Field(..., description="Work item key")
     should_split: bool = Field(..., description="Whether item should be split")
     complexity_score: float = Field(..., ge=0.0, le=1.0, description="Complexity score")
-    suggested_splits: List[SplitSuggestion] = Field(default_factory=list)
+    suggested_splits: list[SplitSuggestion] = Field(default_factory=list)
     reasoning: str = Field(..., description="Reasoning for split decision")
     analysis_cost: float = Field(0.0, description="Cost of analysis")
 
@@ -112,11 +112,11 @@ class TemplateInference(BaseModel):
     issue_type: str = Field(..., description="Issue type this template is for")
     title_template: str = Field(..., description="Title template with placeholders")
     description_template: str = Field(..., description="Description template")
-    required_fields: List[str] = Field(
+    required_fields: list[str] = Field(
         default_factory=list, description="Required fields checklist"
     )
-    common_components: List[str] = Field(default_factory=list, description="Common components")
-    common_labels: List[str] = Field(default_factory=list, description="Common labels")
+    common_components: list[str] = Field(default_factory=list, description="Common components")
+    common_labels: list[str] = Field(default_factory=list, description="Common labels")
     confidence_score: float = Field(
         ..., ge=0.0, le=1.0, description="Confidence in template quality"
     )
@@ -136,7 +136,7 @@ class ScopeDriftEvent(BaseModel):
     )
     impact_level: str = Field(..., description="Impact level (minor, moderate, major)")
     description: str = Field(..., description="Description of the change")
-    changed_by: Optional[str] = Field(None, description="User who made the change")
+    changed_by: str | None = Field(None, description="User who made the change")
 
 
 class ScopeDriftAnalysis(BaseModel):
@@ -144,7 +144,7 @@ class ScopeDriftAnalysis(BaseModel):
 
     work_item_key: str = Field(..., description="Work item key")
     has_drift: bool = Field(..., description="Whether scope drift was detected")
-    drift_events: List[ScopeDriftEvent] = Field(default_factory=list)
+    drift_events: list[ScopeDriftEvent] = Field(default_factory=list)
     overall_drift_score: float = Field(0.0, ge=0.0, le=1.0, description="Overall drift severity")
     analysis_timestamp: datetime = Field(default_factory=datetime.now)
     total_changes: int = Field(0, description="Total number of changes analyzed")
@@ -156,11 +156,11 @@ class TechDebtCluster(BaseModel):
     """Cluster of related technical debt items."""
 
     cluster_id: int = Field(..., description="Cluster identifier")
-    work_item_keys: List[str] = Field(..., description="Work item keys in this cluster")
+    work_item_keys: list[str] = Field(..., description="Work item keys in this cluster")
     theme: str = Field(..., description="Common theme of the cluster")
     priority_score: float = Field(..., ge=0.0, le=1.0, description="Priority score for addressing")
     estimated_effort: str = Field(..., description="Estimated effort to address cluster")
-    dependencies: List[str] = Field(default_factory=list, description="Dependencies between items")
+    dependencies: list[str] = Field(default_factory=list, description="Dependencies between items")
     impact_assessment: str = Field(..., description="Impact assessment if not addressed")
     recommended_approach: str = Field(..., description="Recommended approach to address")
 
@@ -168,7 +168,7 @@ class TechDebtCluster(BaseModel):
 class TechDebtReport(BaseModel):
     """Report of technical debt clustering analysis."""
 
-    clusters: List[TechDebtCluster] = Field(default_factory=list)
+    clusters: list[TechDebtCluster] = Field(default_factory=list)
     total_tech_debt_items: int = Field(0, description="Total tech debt items analyzed")
     clustering_algorithm: str = Field("DBSCAN", description="Algorithm used for clustering")
     analysis_timestamp: datetime = Field(default_factory=datetime.now)
@@ -178,22 +178,22 @@ class TechDebtReport(BaseModel):
 class LabelingAnalysis(BaseModel):
     """Analysis of labeling and component patterns."""
 
-    label_usage_stats: Dict[str, int] = Field(
+    label_usage_stats: dict[str, int] = Field(
         default_factory=dict, description="Label usage statistics"
     )
-    component_usage_stats: Dict[str, int] = Field(
+    component_usage_stats: dict[str, int] = Field(
         default_factory=dict, description="Component usage statistics"
     )
-    suggested_label_cleanup: List[str] = Field(
+    suggested_label_cleanup: list[str] = Field(
         default_factory=list, description="Labels to clean up"
     )
-    suggested_new_labels: List[str] = Field(
+    suggested_new_labels: list[str] = Field(
         default_factory=list, description="Suggested new labels"
     )
-    inconsistency_issues: List[str] = Field(
+    inconsistency_issues: list[str] = Field(
         default_factory=list, description="Inconsistency issues found"
     )
-    optimization_suggestions: List[str] = Field(
+    optimization_suggestions: list[str] = Field(
         default_factory=list, description="Optimization suggestions"
     )
 
@@ -206,10 +206,10 @@ class BatchAnalysisResult(BaseModel):
     failed_analyses: int = Field(..., description="Failed analyses")
     total_cost: float = Field(..., description="Total cost of batch analysis")
     processing_time: float = Field(..., description="Total processing time in seconds")
-    analysis_results: List[Dict[str, Any]] = Field(
+    analysis_results: list[dict[str, Any]] = Field(
         default_factory=list, description="Individual analysis results"
     )
-    errors: List[str] = Field(default_factory=list, description="Error messages")
+    errors: list[str] = Field(default_factory=list, description="Error messages")
     timestamp: datetime = Field(default_factory=datetime.now)
 
 
@@ -218,20 +218,20 @@ class EvolutionReport(BaseModel):
 
     epic_key: str = Field(..., description="Epic key")
     time_period_days: int = Field(..., description="Time period analyzed in days")
-    coherence_trend: List[float] = Field(
+    coherence_trend: list[float] = Field(
         default_factory=list, description="Coherence scores over time"
     )
-    work_items_added: List[str] = Field(
+    work_items_added: list[str] = Field(
         default_factory=list, description="Work items added during period"
     )
-    work_items_removed: List[str] = Field(
+    work_items_removed: list[str] = Field(
         default_factory=list, description="Work items removed during period"
     )
     theme_stability: float = Field(..., ge=0.0, le=1.0, description="Theme stability score")
-    major_changes: List[Dict[str, Any]] = Field(
+    major_changes: list[dict[str, Any]] = Field(
         default_factory=list, description="Major changes detected"
     )
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list, description="Recommendations for Epic management"
     )
     analysis_timestamp: datetime = Field(default_factory=datetime.now)

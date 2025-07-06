@@ -1,7 +1,7 @@
 """Embedding quality validation with predefined test queries."""
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..clients.lmstudio_client import LMStudioClient
 from ..clients.qdrant_client import QdrantVectorClient
@@ -28,7 +28,7 @@ class EmbeddingQualityValidator:
         "reporting and analytics",
     ]
 
-    def __init__(self, config: Config, test_queries: Optional[List[str]] = None):
+    def __init__(self, config: Config, test_queries: list[str] | None = None):
         self.config = config
         self.test_queries = test_queries or self.DEFAULT_TEST_QUERIES
 
@@ -109,7 +109,7 @@ class EmbeddingQualityValidator:
 
     async def _test_single_query(
         self, query: str, lm_client: LMStudioClient, qdrant_client: QdrantVectorClient
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Test a single query and return results."""
 
         # Generate embedding for the query
@@ -152,8 +152,8 @@ class EmbeddingQualityValidator:
         }
 
     def _generate_recommendations(
-        self, results: List[Dict[str, Any]], overall_score: float
-    ) -> List[str]:
+        self, results: list[dict[str, Any]], overall_score: float
+    ) -> list[str]:
         """Generate improvement recommendations based on test results."""
         recommendations = []
 
@@ -190,7 +190,7 @@ class EmbeddingQualityValidator:
 
         return recommendations
 
-    async def run_performance_test(self, num_queries: int = 10) -> Dict[str, float]:
+    async def run_performance_test(self, num_queries: int = 10) -> dict[str, float]:
         """Run performance test to measure search speed."""
         logger.info(f"Running performance test with {num_queries} queries")
 

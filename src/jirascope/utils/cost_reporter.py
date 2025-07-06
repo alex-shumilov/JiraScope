@@ -3,7 +3,7 @@
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +18,7 @@ class ServiceUsageTrend(BaseModel):
     """Usage trend for a service."""
 
     service: str = Field(..., description="Service name")
-    usage: List[float] = Field(default_factory=list, description="Usage values over time")
+    usage: list[float] = Field(default_factory=list, description="Usage values over time")
     trend_direction: str = Field(
         "stable", description="Trend direction (increasing, stable, decreasing)"
     )
@@ -28,19 +28,19 @@ class ServiceUsageTrend(BaseModel):
 class ApiUsageBreakdown(BaseModel):
     """Breakdown of API usage by service and operation."""
 
-    services: Dict[str, Dict[str, float]] = Field(default_factory=dict)
-    top_operations: Dict[str, float] = Field(default_factory=dict)
-    trends: Dict[str, ServiceUsageTrend] = Field(default_factory=dict)
+    services: dict[str, dict[str, float]] = Field(default_factory=dict)
+    top_operations: dict[str, float] = Field(default_factory=dict)
+    trends: dict[str, ServiceUsageTrend] = Field(default_factory=dict)
 
 
 class CostEfficiencyReport(BaseModel):
     """Report on cost efficiency and optimization opportunities."""
 
     efficiency_score: float = Field(0.0, description="Overall cost efficiency score (0-100)")
-    breakdown_by_service: Dict[str, float] = Field(default_factory=dict)
-    optimization_suggestions: List[Dict[str, Any]] = Field(default_factory=list)
+    breakdown_by_service: dict[str, float] = Field(default_factory=dict)
+    optimization_suggestions: list[dict[str, Any]] = Field(default_factory=list)
     potential_savings: float = Field(0.0, description="Potential monthly savings")
-    risk_assessment: Dict[str, Any] = Field(default_factory=dict)
+    risk_assessment: dict[str, Any] = Field(default_factory=dict)
 
 
 class AdvancedCostReport(BaseModel):
@@ -49,13 +49,13 @@ class AdvancedCostReport(BaseModel):
     report_period: str = Field(..., description="Report period")
     timestamp: datetime = Field(default_factory=datetime.now)
     total_cost: float = Field(0.0, description="Total cost for the period")
-    cost_by_service: Dict[str, float] = Field(default_factory=dict)
-    daily_costs: List[Dict[str, Any]] = Field(default_factory=list)
+    cost_by_service: dict[str, float] = Field(default_factory=dict)
+    daily_costs: list[dict[str, Any]] = Field(default_factory=list)
     usage_breakdown: ApiUsageBreakdown = Field(...)
     predictions: CostPredictions = Field(...)
     efficiency: CostEfficiencyReport = Field(...)
-    budget_status: Dict[str, Any] = Field(default_factory=dict)
-    execution_stats: Dict[str, Any] = Field(default_factory=dict)
+    budget_status: dict[str, Any] = Field(default_factory=dict)
+    execution_stats: dict[str, Any] = Field(default_factory=dict)
 
 
 class CostThreshold(BaseModel):
@@ -64,7 +64,7 @@ class CostThreshold(BaseModel):
     threshold: float = Field(..., description="Threshold value (e.g. 0.75 for 75%)")
     notification_type: str = Field("email", description="Notification type")
     message_template: str = Field(..., description="Message template")
-    recipients: List[str] = Field(default_factory=list, description="Notification recipients")
+    recipients: list[str] = Field(default_factory=list, description="Notification recipients")
     enabled: bool = Field(True, description="Whether this threshold is enabled")
 
 
@@ -73,7 +73,7 @@ class BudgetConfig(BaseModel):
 
     daily_budget: float = Field(0.0, description="Daily budget")
     monthly_budget: float = Field(0.0, description="Monthly budget")
-    thresholds: List[CostThreshold] = Field(default_factory=list, description="Budget thresholds")
+    thresholds: list[CostThreshold] = Field(default_factory=list, description="Budget thresholds")
     auto_pause: bool = Field(False, description="Whether to auto-pause on budget reached")
     rollover_unused: bool = Field(False, description="Whether to roll over unused budget")
 
@@ -85,7 +85,7 @@ class AdvancedCostReporter:
         self,
         config: Config,
         cost_tracker: CostTracker,
-        cost_optimizer: Optional[CostOptimizer] = None,
+        cost_optimizer: CostOptimizer | None = None,
     ):
         self.config = config
         self.cost_tracker = cost_tracker
@@ -175,7 +175,7 @@ class AdvancedCostReporter:
 
         return report
 
-    async def generate_daily_cost_summary(self) -> Dict[str, Any]:
+    async def generate_daily_cost_summary(self) -> dict[str, Any]:
         """Generate daily cost summary."""
         logger.info("Generating daily cost summary")
 
@@ -211,7 +211,7 @@ class AdvancedCostReporter:
             ),
         }
 
-    async def generate_monthly_cost_projection(self) -> Dict[str, Any]:
+    async def generate_monthly_cost_projection(self) -> dict[str, Any]:
         """Generate monthly cost projection based on current trends."""
         logger.info("Generating monthly cost projection")
 
@@ -252,7 +252,7 @@ class AdvancedCostReporter:
             "is_projected_over_budget": projected_month_total > monthly_budget,
         }
 
-    async def generate_cost_trend_analysis(self, days: int = 90) -> Dict[str, Any]:
+    async def generate_cost_trend_analysis(self, days: int = 90) -> dict[str, Any]:
         """Generate long-term cost trend analysis."""
         logger.info(f"Generating cost trend analysis for the last {days} days")
 
@@ -325,7 +325,7 @@ class AdvancedCostReporter:
             "latest_monthly_cost": monthly_costs[-1]["total_cost"] if monthly_costs else 0,
         }
 
-    async def generate_service_comparison_report(self) -> Dict[str, Any]:
+    async def generate_service_comparison_report(self) -> dict[str, Any]:
         """Generate cost comparison between services."""
         logger.info("Generating service cost comparison report")
 
@@ -366,7 +366,7 @@ class AdvancedCostReporter:
             },
         }
 
-    async def generate_cost_anomaly_report(self) -> Dict[str, Any]:
+    async def generate_cost_anomaly_report(self) -> dict[str, Any]:
         """Detect and report cost anomalies."""
         logger.info("Generating cost anomaly report")
 
@@ -497,7 +497,7 @@ class AdvancedCostReporter:
             risk_assessment=risk_assessment,
         )
 
-    async def _check_budget_status(self) -> Dict[str, Any]:
+    async def _check_budget_status(self) -> dict[str, Any]:
         """Check current budget status."""
         # Get current costs
         daily_cost = await self._get_daily_cost()
@@ -590,7 +590,7 @@ class AdvancedCostReporter:
 
         return (next_month - datetime(year, month, 1)).days
 
-    async def _get_daily_costs(self, period: str = "month") -> List[Dict[str, Any]]:
+    async def _get_daily_costs(self, period: str = "month") -> list[dict[str, Any]]:
         """Get daily costs for the specified period."""
         # Calculate date range
         end_date = datetime.now().date()
@@ -649,7 +649,7 @@ class AdvancedCostReporter:
 
         return total
 
-    async def _get_recent_daily_costs(self, days: int) -> List[float]:
+    async def _get_recent_daily_costs(self, days: int) -> list[float]:
         """Get daily costs for the specified number of recent days."""
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=days)
@@ -675,7 +675,7 @@ class AdvancedCostReporter:
 
         return await self._get_costs_for_period(month_start, today)
 
-    async def _get_service_costs(self) -> Dict[str, float]:
+    async def _get_service_costs(self) -> dict[str, float]:
         """Get costs broken down by service."""
         if not self.cost_tracker:
             return {}
@@ -687,7 +687,7 @@ class AdvancedCostReporter:
             for service in self.cost_tracker.costs.keys()
         }
 
-    async def _get_historical_service_costs(self) -> Dict[str, List[float]]:
+    async def _get_historical_service_costs(self) -> dict[str, list[float]]:
         """Get historical costs by service."""
         # In a real implementation, this would return actual historical data
         # For simplicity, we'll return simulated data
@@ -698,7 +698,7 @@ class AdvancedCostReporter:
             "vector_storage": [3.0, 3.5, 4.0, 4.5, 5.0],
         }
 
-    async def _check_service_anomalies(self) -> List[Dict[str, Any]]:
+    async def _check_service_anomalies(self) -> list[dict[str, Any]]:
         """Check for anomalies in specific services."""
         # In a real implementation, this would analyze actual service metrics
         # For simplicity, we'll return simulated data
@@ -715,7 +715,7 @@ class AdvancedCostReporter:
             }
         ]
 
-    def _calculate_cost_trend(self, costs: List[float]) -> str:
+    def _calculate_cost_trend(self, costs: list[float]) -> str:
         """Calculate trend direction from a series of costs."""
         if not costs or len(costs) < 3:
             return "insufficient_data"

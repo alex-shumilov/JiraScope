@@ -2,9 +2,8 @@
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 from ..models import ProcessingResult, WorkItem
 from ..utils.logging import StructuredLogger
@@ -16,7 +15,7 @@ logger = StructuredLogger(__name__)
 class IncrementalProcessor:
     """Handle incremental updates and change detection."""
 
-    def __init__(self, config, cache_dir: Optional[Path] = None):
+    def __init__(self, config, cache_dir: Path | None = None):
         self.config = config
         self.cache_dir = cache_dir or Path.home() / ".jirascope" / "incremental_cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -27,7 +26,7 @@ class IncrementalProcessor:
         self.embedding_processor = EmbeddingProcessor(config)
 
     async def process_incremental_updates(
-        self, new_items: List[WorkItem], updated_items: List[WorkItem]
+        self, new_items: list[WorkItem], updated_items: list[WorkItem]
     ) -> ProcessingResult:
         """Process only new and updated items efficiently."""
         logger.info(
@@ -89,20 +88,20 @@ class IncrementalProcessor:
             logger.error("Failed to process incremental updates", error=str(e))
             return ProcessingResult(
                 failed_items=len(new_items) + len(updated_items),
-                errors=[f"Incremental processing failed: {str(e)}"],
+                errors=[f"Incremental processing failed: {e!s}"],
                 processing_time=time.time() - start_time,
             )
 
-    def get_last_sync_timestamp(self, project_key: str) -> Optional[str]:
+    def get_last_sync_timestamp(self, project_key: str) -> str | None:
         """Get the last sync timestamp for a project."""
         metadata = self._load_metadata()
         project_data = metadata.get("projects", {}).get(project_key, {})
         return project_data.get("last_sync")
 
-    def update_last_sync_timestamp(self, project_key: str, timestamp: Optional[str] = None):
+    def update_last_sync_timestamp(self, project_key: str, timestamp: str | None = None):
         """Update the last sync timestamp for a project."""
         if timestamp is None:
-            timestamp = datetime.now(timezone.utc).isoformat()
+            timestamp = datetime.now(UTC).isoformat()
 
         metadata = self._load_metadata()
         if "projects" not in metadata:
@@ -115,7 +114,7 @@ class IncrementalProcessor:
 
         logger.info(f"Updated last sync timestamp for {project_key}: {timestamp}")
 
-    def get_tracked_items(self, project_key: Optional[str] = None) -> Set[str]:
+    def get_tracked_items(self, project_key: str | None = None) -> set[str]:
         """Get set of tracked item keys, optionally filtered by project."""
         tracked_items = self._load_tracked_items()
 
@@ -126,7 +125,7 @@ class IncrementalProcessor:
 
         return set(tracked_items.keys())
 
-    def get_tracked_epics(self, project_key: Optional[str] = None) -> Set[str]:
+    def get_tracked_epics(self, project_key: str | None = None) -> set[str]:
         """Get set of tracked epic keys."""
         tracked_items = self._load_tracked_items()
 
@@ -162,7 +161,7 @@ class IncrementalProcessor:
         except Exception as e:
             logger.error("Failed to cleanup old cache files", error=str(e))
 
-    def get_cache_statistics(self) -> Dict[str, any]:
+    def get_cache_statistics(self) -> dict[str, any]:
         """Get statistics about the cache."""
         try:
             metadata = self._load_metadata()
@@ -190,43 +189,43 @@ class IncrementalProcessor:
             logger.error("Failed to get cache statistics", error=str(e))
             return {"error": str(e)}
 
-    def _load_metadata(self) -> Dict:
+    def _load_metadata(self) -> dict:
         """Load incremental processing metadata."""
         if self.metadata_file.exists():
             try:
-                with open(self.metadata_file, "r") as f:
+                with open(self.metadata_file) as f:
                     return json.load(f)
             except Exception as e:
                 logger.warning("Failed to load metadata, starting fresh", error=str(e))
 
         # Return default metadata
         return {
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "version": "1.0",
             "projects": {},
         }
 
-    def _save_metadata(self, metadata: Dict):
+    def _save_metadata(self, metadata: dict):
         """Save incremental processing metadata."""
         try:
-            metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
+            metadata["updated_at"] = datetime.now(UTC).isoformat()
             with open(self.metadata_file, "w") as f:
                 json.dump(metadata, f, indent=2)
         except Exception as e:
             logger.error("Failed to save metadata", error=str(e))
 
-    def _load_tracked_items(self) -> Dict[str, Dict]:
+    def _load_tracked_items(self) -> dict[str, dict]:
         """Load tracked items data."""
         if self.tracked_items_file.exists():
             try:
-                with open(self.tracked_items_file, "r") as f:
+                with open(self.tracked_items_file) as f:
                     return json.load(f)
             except Exception as e:
                 logger.warning("Failed to load tracked items, starting fresh", error=str(e))
 
         return {}
 
-    def _save_tracked_items(self, tracked_items: Dict[str, Dict]):
+    def _save_tracked_items(self, tracked_items: dict[str, dict]):
         """Save tracked items data."""
         try:
             with open(self.tracked_items_file, "w") as f:
@@ -239,7 +238,7 @@ class IncrementalProcessor:
         return self.embedding_processor._calculate_item_hash(item)
 
     def _update_tracking_data(
-        self, items: List[WorkItem], metadata: Dict, tracked_items: Dict[str, Dict]
+        self, items: list[WorkItem], metadata: dict, tracked_items: dict[str, dict]
     ):
         """Update tracking data with processed items."""
         for item in items:
@@ -248,7 +247,7 @@ class IncrementalProcessor:
 
             tracked_items[item.key] = {
                 "content_hash": self._calculate_content_hash(item),
-                "last_processed": datetime.now(timezone.utc).isoformat(),
+                "last_processed": datetime.now(UTC).isoformat(),
                 "project_key": project_key,
                 "issue_type": item.issue_type,
                 "epic_key": item.epic_key,
@@ -262,7 +261,7 @@ class IncrementalProcessor:
             if project_key not in metadata["projects"]:
                 metadata["projects"][project_key] = {
                     "items_count": 0,
-                    "first_seen": datetime.now(timezone.utc).isoformat(),
+                    "first_seen": datetime.now(UTC).isoformat(),
                 }
 
             # Count items per project (rough estimate)

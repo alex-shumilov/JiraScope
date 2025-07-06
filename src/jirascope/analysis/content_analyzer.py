@@ -2,7 +2,7 @@
 
 import json
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..clients.claude_client import ClaudeClient
 from ..core.config import Config
@@ -105,7 +105,7 @@ class ContentAnalyzer:
 
     def __init__(self, config: Config):
         self.config = config
-        self.claude_client: Optional[ClaudeClient] = None
+        self.claude_client: ClaudeClient | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -259,7 +259,7 @@ class ContentAnalyzer:
             logger.error(f"Failed to analyze splits for {work_item.key}", error=str(e))
             raise
 
-    def _parse_fallback_quality_response(self, content: str) -> Dict[str, Any]:
+    def _parse_fallback_quality_response(self, content: str) -> dict[str, Any]:
         """Fallback parser for malformed quality analysis responses."""
         # Basic parsing fallback - look for key indicators
         fallback = {
@@ -280,7 +280,7 @@ class ContentAnalyzer:
 
         return fallback
 
-    def _parse_fallback_split_response(self, content: str) -> Dict[str, Any]:
+    def _parse_fallback_split_response(self, content: str) -> dict[str, Any]:
         """Fallback parser for malformed split analysis responses."""
         return {
             "should_split": "split" in content.lower() and "recommend" in content.lower(),
@@ -295,7 +295,7 @@ class BatchContentAnalyzer:
 
     def __init__(self, config: Config):
         self.config = config
-        self.claude_client: Optional[ClaudeClient] = None
+        self.claude_client: ClaudeClient | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -309,7 +309,7 @@ class BatchContentAnalyzer:
             await self.claude_client.__aexit__(exc_type, exc_val, exc_tb)
 
     async def analyze_multiple_items(
-        self, work_items: List[WorkItem], analysis_types: List[str], batch_size: int = 5
+        self, work_items: list[WorkItem], analysis_types: list[str], batch_size: int = 5
     ) -> BatchAnalysisResult:
         """Batch multiple work items and analysis types into optimized Claude calls."""
         logger.info(f"Starting batch analysis of {len(work_items)} items")
@@ -336,7 +336,7 @@ class BatchContentAnalyzer:
                     successful_analyses += len(batch_result["analyses"])
 
                 except Exception as e:
-                    error_msg = f"Batch {i//batch_size + 1} failed: {str(e)}"
+                    error_msg = f"Batch {i//batch_size + 1} failed: {e!s}"
                     errors.append(error_msg)
                     failed_analyses += len(batch)
                     logger.error(error_msg)
@@ -367,8 +367,8 @@ class BatchContentAnalyzer:
             raise
 
     async def _process_batch(
-        self, work_items: List[WorkItem], analysis_types: List[str]
-    ) -> Dict[str, Any]:
+        self, work_items: list[WorkItem], analysis_types: list[str]
+    ) -> dict[str, Any]:
         """Process a single batch of work items."""
         # For now, focus on quality analysis batching
         if "quality" in analysis_types:
@@ -386,11 +386,11 @@ class BatchContentAnalyzer:
                         results.append(analysis.dict())
                         total_cost += analysis.analysis_cost
                     except Exception as e:
-                        logger.warning(f"Failed to analyze {item.key}: {str(e)}")
+                        logger.warning(f"Failed to analyze {item.key}: {e!s}")
 
             return {"analyses": results, "cost": total_cost}
 
-    async def _batch_quality_analysis(self, work_items: List[WorkItem]) -> Dict[str, Any]:
+    async def _batch_quality_analysis(self, work_items: list[WorkItem]) -> dict[str, Any]:
         """Batch quality analysis for multiple work items."""
         # Prepare batch prompt
         work_items_text = ""

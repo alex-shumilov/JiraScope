@@ -2,7 +2,7 @@
 
 import statistics
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -24,7 +24,7 @@ class RagTestQuery(BaseModel):
 
     id: str = Field(..., description="Unique identifier for this test query")
     query_text: str = Field(..., description="The query text")
-    expected_work_items: List[str] = Field(
+    expected_work_items: list[str] = Field(
         default_factory=list, description="Known relevant work item keys"
     )
     minimum_similarity: float = Field(0.5, description="Minimum similarity score threshold")
@@ -48,7 +48,7 @@ class RAGTestResult(BaseModel):
 class RAGQualityReport(BaseModel):
     """Comprehensive RAG quality report."""
 
-    test_results: List[RAGTestResult] = Field(default_factory=list)
+    test_results: list[RAGTestResult] = Field(default_factory=list)
     overall_f1_score: float = Field(..., description="Overall F1 score across all tests")
     passed_tests: int = Field(..., description="Number of tests that passed")
     total_tests: int = Field(..., description="Total number of tests")
@@ -69,7 +69,7 @@ class EmbeddingConsistencyResult(BaseModel):
 class EmbeddingConsistencyReport(BaseModel):
     """Report on embedding consistency."""
 
-    results: List[EmbeddingConsistencyResult] = Field(default_factory=list)
+    results: list[EmbeddingConsistencyResult] = Field(default_factory=list)
     overall_consistency: float = Field(..., description="Overall consistency score")
     consistent_items: int = Field(..., description="Number of items with consistent embeddings")
     total_items: int = Field(..., description="Total items tested")
@@ -88,7 +88,7 @@ class BatchSizeBenchmark(BaseModel):
 class PerformanceBenchmark(BaseModel):
     """Performance benchmark results for different configurations."""
 
-    results: List[BatchSizeBenchmark] = Field(default_factory=list)
+    results: list[BatchSizeBenchmark] = Field(default_factory=list)
     optimal_batch_size: int = Field(..., description="Optimal batch size based on tests")
     recommendation: str = Field(..., description="Recommendation based on benchmarks")
 
@@ -176,7 +176,7 @@ class QualityTestSuite:
 class RAGQualityTester:
     """Comprehensive RAG quality testing system."""
 
-    def __init__(self, config: Config, test_queries: Optional[List[RagTestQuery]] = None):
+    def __init__(self, config: Config, test_queries: list[RagTestQuery] | None = None):
         self.config = config
         self.test_queries = test_queries or QualityTestSuite().test_queries
         self.baseline_results = {}
@@ -462,7 +462,7 @@ class RAGQualityTester:
             total_items=len(consistency_results),
         )
 
-    async def get_regression_report(self) -> Dict[str, Any]:
+    async def get_regression_report(self) -> dict[str, Any]:
         """Compare current performance with baseline."""
         current_report = await self.run_quality_tests()
 
@@ -488,7 +488,7 @@ class RAGQualityTester:
             "baseline_passed_tests": self.baseline_results["passed_tests"],
         }
 
-    async def _get_test_work_items(self, sample_size: int = 100) -> List[WorkItem]:
+    async def _get_test_work_items(self, sample_size: int = 100) -> list[WorkItem]:
         """Get sample work items for testing."""
         # This would normally load from database or API
         # Here we'll create some sample items
@@ -510,13 +510,13 @@ class RAGQualityTester:
 
         return sample_items
 
-    def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+    def _cosine_similarity(self, vec1: list[float], vec2: list[float]) -> float:
         """Calculate cosine similarity between two vectors."""
         # Simple implementation - a real system would use numpy
         if len(vec1) != len(vec2):
             return 0.0
 
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
+        dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
         mag1 = sum(a * a for a in vec1) ** 0.5
         mag2 = sum(b * b for b in vec2) ** 0.5
 
@@ -533,7 +533,7 @@ class ComprehensiveQualityTester:
         self.config = config
         self.rag_tester = RAGQualityTester(config)
 
-    async def run_full_quality_assessment(self) -> Dict[str, Any]:
+    async def run_full_quality_assessment(self) -> dict[str, Any]:
         """Run comprehensive quality assessment across all areas."""
         start_time = time.time()
         logger.info("Starting comprehensive quality assessment")
@@ -572,7 +572,7 @@ class ComprehensiveQualityTester:
             "overall_health": self._calculate_overall_health(results),
         }
 
-    def _calculate_overall_health(self, results: Dict[str, Any]) -> float:
+    def _calculate_overall_health(self, results: dict[str, Any]) -> float:
         """Calculate overall system health score based on test results."""
         # Define weights for different metrics
         weights = {"rag_quality": 0.5, "embedding_consistency": 0.3, "regression": 0.2}

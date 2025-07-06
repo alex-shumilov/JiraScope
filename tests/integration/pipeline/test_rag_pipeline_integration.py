@@ -343,7 +343,7 @@ class TestRAGPipelineBusinessLogic:
         """Test Epic search business logic."""
         # This would test the actual epic search logic
         # Including hierarchical context assembly and filtering
-        pass  # Placeholder for epic search tests
+        # Placeholder for epic search tests
 
     def test_query_expansion_edge_cases(self):
         """Test query expansion edge cases."""

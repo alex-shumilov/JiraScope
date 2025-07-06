@@ -1,7 +1,6 @@
 """Cross-Epic Analyzer Coverage Boost Tests - Targeting 59% -> 85%+ coverage."""
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -18,15 +17,15 @@ class TestCrossEpicAnalyzerCoverage:
         """Set up test fixtures."""
         self.config = Config(jira_mcp_endpoint="http://localhost:8000")
         self.analyzer = CrossEpicAnalyzer(self.config)
-        self.base_time = datetime.now(timezone.utc)
+        self.base_time = datetime.now(UTC)
 
     def create_work_item(
         self,
         key: str,
         summary: str,
         issue_type: str = "Story",
-        epic_key: Optional[str] = None,
-        parent_key: Optional[str] = None,
+        epic_key: str | None = None,
+        parent_key: str | None = None,
     ) -> WorkItem:
         """Create a test work item."""
         return WorkItem(

@@ -2,7 +2,7 @@
 
 import statistics
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -17,11 +17,11 @@ class APICall(BaseModel):
 
     service: str = Field(..., description="Service name (claude, embeddings, etc.)")
     operation: str = Field(..., description="Operation performed")
-    timestamp: Union[str, datetime] = Field(..., description="Call timestamp")
+    timestamp: str | datetime = Field(..., description="Call timestamp")
     input_tokens: int = Field(0, description="Number of input tokens")
     output_tokens: int = Field(0, description="Number of output tokens")
     cost: float = Field(0.0, description="Cost of this call")
-    details: Dict[str, Any] = Field(default_factory=dict, description="Additional details")
+    details: dict[str, Any] = Field(default_factory=dict, description="Additional details")
 
 
 class PromptCategoryAnalysis(BaseModel):
@@ -39,7 +39,7 @@ class PromptCategoryAnalysis(BaseModel):
 class PromptEfficiencyAnalysis(BaseModel):
     """Analysis of prompt efficiency."""
 
-    categories: List[PromptCategoryAnalysis] = Field(default_factory=list)
+    categories: list[PromptCategoryAnalysis] = Field(default_factory=list)
     overall_efficiency_score: float = Field(0.0, description="Overall efficiency score (0-1)")
 
 
@@ -47,8 +47,8 @@ class OptimizationSuggestion(BaseModel):
     """Suggestion for cost optimization."""
 
     type: str = Field(..., description="Type of optimization")
-    current_value: Union[int, float, str] = Field(..., description="Current configuration value")
-    suggested_value: Union[int, float, str] = Field(..., description="Suggested new value")
+    current_value: int | float | str = Field(..., description="Current configuration value")
+    suggested_value: int | float | str = Field(..., description="Suggested new value")
     potential_savings: float = Field(0.0, description="Estimated monthly savings")
     risk_level: str = Field(..., description="Risk level (low, medium, high)")
     description: str = Field(..., description="Suggestion description")
@@ -57,7 +57,7 @@ class OptimizationSuggestion(BaseModel):
 class BatchOptimizationSuggestions(BaseModel):
     """Collection of batch optimization suggestions."""
 
-    suggestions: List[OptimizationSuggestion] = Field(default_factory=list)
+    suggestions: list[OptimizationSuggestion] = Field(default_factory=list)
     estimated_total_savings: float = Field(0.0, description="Total estimated monthly savings")
 
 
@@ -66,8 +66,8 @@ class ClaudeUsageAnalysis(BaseModel):
 
     prompt_efficiency: PromptEfficiencyAnalysis = Field(...)
     batch_opportunities: BatchOptimizationSuggestions = Field(...)
-    caching_opportunities: Dict[str, Any] = Field(default_factory=dict)
-    cost_per_analysis_type: Dict[str, float] = Field(default_factory=dict)
+    caching_opportunities: dict[str, Any] = Field(default_factory=dict)
+    cost_per_analysis_type: dict[str, float] = Field(default_factory=dict)
     total_calls: int = Field(0, description="Total calls analyzed")
     total_cost: float = Field(0.0, description="Total cost of calls analyzed")
     analysis_period_days: int = Field(0, description="Analysis period in days")
@@ -76,9 +76,9 @@ class ClaudeUsageAnalysis(BaseModel):
 class CostTrends(BaseModel):
     """Cost trends over time."""
 
-    daily_costs: List[float] = Field(default_factory=list, description="Daily costs")
-    weekly_costs: List[float] = Field(default_factory=list, description="Weekly costs")
-    monthly_costs: List[float] = Field(default_factory=list, description="Monthly costs")
+    daily_costs: list[float] = Field(default_factory=list, description="Daily costs")
+    weekly_costs: list[float] = Field(default_factory=list, description="Weekly costs")
+    monthly_costs: list[float] = Field(default_factory=list, description="Monthly costs")
     trend_direction: str = Field(
         "stable", description="Trend direction (increasing, stable, decreasing)"
     )
@@ -99,12 +99,12 @@ class ComprehensiveCostReport(BaseModel):
 
     period: str = Field(..., description="Report period")
     total_cost: float = Field(0.0, description="Total cost for the period")
-    service_breakdown: Dict[str, float] = Field(default_factory=dict)
+    service_breakdown: dict[str, float] = Field(default_factory=dict)
     trends: CostTrends = Field(...)
     predictions: CostPredictions = Field(...)
-    optimization_opportunities: List[OptimizationSuggestion] = Field(default_factory=list)
-    cost_per_analysis: Dict[str, float] = Field(default_factory=dict)
-    efficiency_metrics: Dict[str, Any] = Field(default_factory=dict)
+    optimization_opportunities: list[OptimizationSuggestion] = Field(default_factory=list)
+    cost_per_analysis: dict[str, float] = Field(default_factory=dict)
+    efficiency_metrics: dict[str, Any] = Field(default_factory=dict)
 
 
 class BudgetAlert(BaseModel):
@@ -132,7 +132,7 @@ class CostOptimizer:
 
         # Set up alert thresholds
         self.alert_thresholds = [0.5, 0.75, 0.9, 1.0]
-        self.sent_alerts: Dict[str, datetime] = {}
+        self.sent_alerts: dict[str, datetime] = {}
 
     async def analyze_api_usage_patterns(self) -> ClaudeUsageAnalysis:
         """Identify opportunities for cost reduction."""
@@ -178,7 +178,7 @@ class CostOptimizer:
             efficiency_metrics=efficiency_metrics,
         )
 
-    async def check_budget_alerts(self) -> List[BudgetAlert]:
+    async def check_budget_alerts(self) -> list[BudgetAlert]:
         """Check for budget threshold violations."""
         daily_cost = await self._get_daily_cost()
         monthly_cost = await self._get_monthly_cost()
@@ -272,7 +272,7 @@ class CostOptimizer:
         # Simply return the total for simulation
         return self.cost_tracker.get_total_cost()
 
-    async def _get_detailed_costs(self, period: str) -> Dict[str, Any]:
+    async def _get_detailed_costs(self, period: str) -> dict[str, Any]:
         """Get detailed cost data for the specified period."""
         if not self.cost_tracker:
             return {
@@ -294,7 +294,7 @@ class CostOptimizer:
             "jira_api_costs": 0.0,  # Usually free but track for rate limiting
         }
 
-    async def _get_service_breakdown(self, cost_data: Dict[str, Any]) -> Dict[str, float]:
+    async def _get_service_breakdown(self, cost_data: dict[str, Any]) -> dict[str, float]:
         """Calculate cost breakdown by service."""
         claude_cost = sum(call.get("cost", 0.0) for call in cost_data.get("claude_calls", []))
         embedding_cost = sum(
@@ -310,7 +310,7 @@ class CostOptimizer:
             "jira_api": jira_api_cost,
         }
 
-    async def _analyze_cost_trends(self, cost_data: Dict[str, Any], period: str) -> CostTrends:
+    async def _analyze_cost_trends(self, cost_data: dict[str, Any], period: str) -> CostTrends:
         """Analyze cost trends over time."""
         # For a simple implementation, we'll use simulated data
         daily_costs = [0.5, 0.7, 0.8, 1.0, 1.2, 1.5, 1.8]  # Last 7 days
@@ -369,8 +369,8 @@ class CostOptimizer:
         )
 
     async def _identify_cost_optimizations(
-        self, cost_data: Dict[str, Any]
-    ) -> List[OptimizationSuggestion]:
+        self, cost_data: dict[str, Any]
+    ) -> list[OptimizationSuggestion]:
         """Identify potential cost optimizations."""
         optimizations = []
 
@@ -427,8 +427,8 @@ class CostOptimizer:
         return optimizations
 
     async def _calculate_cost_per_analysis_type(
-        self, cost_data: Dict[str, Any]
-    ) -> Dict[str, float]:
+        self, cost_data: dict[str, Any]
+    ) -> dict[str, float]:
         """Calculate costs per analysis type."""
         # Group claude calls by operation type
         claude_calls = cost_data.get("claude_calls", [])
@@ -447,7 +447,7 @@ class CostOptimizer:
 
         return cost_by_type
 
-    async def _calculate_efficiency_metrics(self, cost_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _calculate_efficiency_metrics(self, cost_data: dict[str, Any]) -> dict[str, Any]:
         """Calculate cost efficiency metrics."""
         claude_calls = cost_data.get("claude_calls", [])
 
@@ -534,7 +534,7 @@ class UsagePatternAnalyzer:
             analysis_period_days=30,
         )
 
-    async def _get_claude_usage_history(self, days: int = 30) -> List[APICall]:
+    async def _get_claude_usage_history(self, days: int = 30) -> list[APICall]:
         """Get historical Claude API usage data."""
         if not self.cost_tracker or "claude" not in self.cost_tracker.costs:
             # If no real data, return simulated data
@@ -557,7 +557,7 @@ class UsagePatternAnalyzer:
 
         return calls
 
-    def _get_simulated_usage_data(self) -> List[APICall]:
+    def _get_simulated_usage_data(self) -> list[APICall]:
         """Generate simulated usage data for testing."""
         operations = [
             "similarity_search",
@@ -622,11 +622,11 @@ class UsagePatternAnalyzer:
         return calls
 
     async def _analyze_prompt_efficiency(
-        self, usage_data: List[APICall]
+        self, usage_data: list[APICall]
     ) -> PromptEfficiencyAnalysis:
         """Analyze prompt efficiency and suggest improvements."""
 
-        prompt_categories: Dict[str, List[APICall]] = {}
+        prompt_categories: dict[str, list[APICall]] = {}
 
         for call in usage_data:
             # Categorize by operation type
@@ -681,7 +681,7 @@ class UsagePatternAnalyzer:
         )
 
     async def _identify_batch_opportunities(
-        self, usage_data: List[APICall]
+        self, usage_data: list[APICall]
     ) -> BatchOptimizationSuggestions:
         """Identify opportunities for batching API calls."""
         suggestions = []
@@ -742,9 +742,9 @@ class UsagePatternAnalyzer:
             suggestions=suggestions, estimated_total_savings=total_potential_savings
         )
 
-    def _identify_potential_batches(self, usage_data: List[APICall]) -> Dict[str, List[APICall]]:
+    def _identify_potential_batches(self, usage_data: list[APICall]) -> dict[str, list[APICall]]:
         """Identify potential batch operations."""
-        batches: Dict[str, List[APICall]] = {}
+        batches: dict[str, list[APICall]] = {}
 
         # Group calls by operation type
         for call in usage_data:
@@ -758,7 +758,7 @@ class UsagePatternAnalyzer:
         # Filter only batch types with enough calls
         return {k: v for k, v in batches.items() if len(v) >= 3}
 
-    def _get_days_covered(self, calls: List[APICall]) -> int:
+    def _get_days_covered(self, calls: list[APICall]) -> int:
         """Calculate how many days are covered by the calls."""
         if not calls:
             return 0
@@ -781,7 +781,7 @@ class UsagePatternAnalyzer:
         unique_dates = set(dates)
         return len(unique_dates)
 
-    async def _identify_caching_opportunities(self, usage_data: List[APICall]) -> Dict[str, Any]:
+    async def _identify_caching_opportunities(self, usage_data: list[APICall]) -> dict[str, Any]:
         """Identify opportunities for result caching."""
         # Group calls by operation and input similarity
         # This is simplified - a real implementation would analyze input content
@@ -790,7 +790,7 @@ class UsagePatternAnalyzer:
         estimated_savings = 0.0
 
         # Group by operation
-        operations: Dict[str, List[APICall]] = {}
+        operations: dict[str, list[APICall]] = {}
         for call in usage_data:
             if call.operation not in operations:
                 operations[call.operation] = []
@@ -820,7 +820,7 @@ class UsagePatternAnalyzer:
             ),
         }
 
-    def _calculate_cost_per_analysis_type(self, usage_data: List[APICall]) -> Dict[str, float]:
+    def _calculate_cost_per_analysis_type(self, usage_data: list[APICall]) -> dict[str, float]:
         """Calculate cost per analysis type."""
         costs_by_type = {}
 
@@ -881,7 +881,7 @@ class UsagePatternAnalyzer:
             suggestions=suggestions, estimated_total_savings=total_savings
         )
 
-    async def _analyze_current_batching_patterns(self) -> Dict[str, Any]:
+    async def _analyze_current_batching_patterns(self) -> dict[str, Any]:
         """Analyze current batching patterns."""
         return {
             "embedding_batch_size": getattr(self.config, "embedding_batch_size", 32),
@@ -890,8 +890,8 @@ class UsagePatternAnalyzer:
         }
 
     async def _identify_batchable_claude_operations(
-        self, usage_data: List[APICall]
-    ) -> Dict[str, Any]:
+        self, usage_data: list[APICall]
+    ) -> dict[str, Any]:
         """Identify Claude operations that could be batched."""
         operations = {}
 

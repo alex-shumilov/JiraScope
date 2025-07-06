@@ -1,7 +1,7 @@
 """Service classes for the web API."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from jirascope.core.config import Config
 
@@ -12,7 +12,7 @@ class AnalysisService:
     def __init__(self, config: Config):
         self.config = config
 
-    async def get_available_projects(self) -> List[str]:
+    async def get_available_projects(self) -> list[str]:
         """Get list of available projects."""
         try:
             from jirascope.extraction.jira_extractor import JiraExtractor
@@ -25,8 +25,8 @@ class AnalysisService:
             return ["DEMO", "TEST", "SAMPLE"]
 
     async def find_duplicates(
-        self, threshold: float, project_keys: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        self, threshold: float, project_keys: list[str] | None = None
+    ) -> dict[str, Any]:
         """Find potential duplicate work items."""
         try:
             from jirascope.analysis.similarity_analyzer import SimilarityAnalyzer
@@ -94,11 +94,11 @@ class AnalysisService:
 
     async def analyze_quality(
         self,
-        project_key: Optional[str] = None,
+        project_key: str | None = None,
         use_claude: bool = False,
-        budget_limit: Optional[float] = None,
+        budget_limit: float | None = None,
         limit: int = 10,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze work item quality."""
         try:
             if use_claude:
@@ -186,7 +186,7 @@ class AnalysisService:
 
     async def analyze_epic(
         self, epic_key: str, depth: str = "basic", use_claude: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Analyze Epic comprehensively."""
         try:
             # Get epic data
@@ -237,7 +237,7 @@ class CostTracker:
     """Track costs for API operations."""
 
     def __init__(self):
-        self.session_costs: Dict[str, float] = {}
+        self.session_costs: dict[str, float] = {}
 
     def track_operation(self, operation: str, cost: float):
         """Track cost for an operation."""
@@ -245,7 +245,7 @@ class CostTracker:
             self.session_costs[operation] = 0.0
         self.session_costs[operation] += cost
 
-    def get_costs_for_period(self, period: str) -> Dict[str, Any]:
+    def get_costs_for_period(self, period: str) -> dict[str, Any]:
         """Get costs for specified period."""
         total = sum(self.session_costs.values())
 
@@ -260,9 +260,9 @@ class TaskManager:
     """Manage background tasks."""
 
     def __init__(self):
-        self.tasks: Dict[str, Dict[str, Any]] = {}
+        self.tasks: dict[str, dict[str, Any]] = {}
 
-    def create_task(self, task_id: str, task_type: str) -> Dict[str, Any]:
+    def create_task(self, task_id: str, task_type: str) -> dict[str, Any]:
         """Create a new task."""
         task_data = {
             "task_id": task_id,
@@ -281,9 +281,9 @@ class TaskManager:
         self,
         task_id: str,
         status: str,
-        progress: Optional[int] = None,
-        results: Optional[Dict] = None,
-        error: Optional[str] = None,
+        progress: int | None = None,
+        results: dict | None = None,
+        error: str | None = None,
     ):
         """Update task status."""
         if task_id in self.tasks:
@@ -297,6 +297,6 @@ class TaskManager:
             if error is not None:
                 self.tasks[task_id]["error"] = error
 
-    def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task_status(self, task_id: str) -> dict[str, Any] | None:
         """Get task status."""
         return self.tasks.get(task_id)

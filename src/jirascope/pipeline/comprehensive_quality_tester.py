@@ -3,7 +3,7 @@
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -20,12 +20,12 @@ class QualityTestPlan(BaseModel):
 
     name: str = Field(..., description="Test plan name")
     description: str = Field(..., description="Test plan description")
-    categories: List[str] = Field(default_factory=list, description="Categories to test")
+    categories: list[str] = Field(default_factory=list, description="Categories to test")
     min_f1_threshold: float = Field(0.6, description="Minimum acceptable F1 score")
     min_precision_threshold: float = Field(0.7, description="Minimum acceptable precision")
     min_recall_threshold: float = Field(0.5, description="Minimum acceptable recall")
     consistency_threshold: float = Field(0.99, description="Minimum consistency threshold")
-    report_file: Optional[Path] = Field(None, description="Path to save report")
+    report_file: Path | None = Field(None, description="Path to save report")
     include_regression_testing: bool = Field(True, description="Include regression testing")
     test_embedding_consistency: bool = Field(True, description="Test embedding consistency")
     run_performance_benchmarks: bool = Field(False, description="Run performance benchmarks")
@@ -34,19 +34,19 @@ class QualityTestPlan(BaseModel):
 class FullQualityReport(BaseModel):
     """Comprehensive quality report."""
 
-    rag_quality: Optional[RAGQualityReport] = Field(None)
-    embedding_consistency: Dict[str, Any] = Field(default_factory=dict)
-    analysis_reproducibility: Dict[str, Any] = Field(default_factory=dict)
-    performance_regression: Dict[str, Any] = Field(default_factory=dict)
-    cost_accuracy: Dict[str, Any] = Field(default_factory=dict)
+    rag_quality: RAGQualityReport | None = Field(None)
+    embedding_consistency: dict[str, Any] = Field(default_factory=dict)
+    analysis_reproducibility: dict[str, Any] = Field(default_factory=dict)
+    performance_regression: dict[str, Any] = Field(default_factory=dict)
+    cost_accuracy: dict[str, Any] = Field(default_factory=dict)
     overall_health_score: float = Field(0.0, description="Overall system health score (0-100)")
     test_plan: str = Field("", description="Test plan name")
     timestamp: datetime = Field(default_factory=datetime.now)
     processing_time: float = Field(0.0, description="Processing time in seconds")
-    recommendations: List[str] = Field(
+    recommendations: list[str] = Field(
         default_factory=list, description="Improvement recommendations"
     )
-    test_summary: Dict[str, Any] = Field(default_factory=dict)
+    test_summary: dict[str, Any] = Field(default_factory=dict)
 
 
 class ComprehensiveQualityTester:
@@ -56,10 +56,10 @@ class ComprehensiveQualityTester:
         self.config = config
         self.rag_tester = RAGQualityTester(config)
         self.test_manager = TestQueryManager(config)
-        self.previous_reports: List[Dict[str, Any]] = []
+        self.previous_reports: list[dict[str, Any]] = []
 
     async def run_full_quality_assessment(
-        self, test_plan: Optional[QualityTestPlan] = None
+        self, test_plan: QualityTestPlan | None = None
     ) -> FullQualityReport:
         """Run comprehensive quality assessment."""
         start_time = time.time()
@@ -149,7 +149,7 @@ class ComprehensiveQualityTester:
 
         return report
 
-    async def _test_analysis_reproducibility(self) -> Dict[str, Any]:
+    async def _test_analysis_reproducibility(self) -> dict[str, Any]:
         """Test if analysis results are reproducible."""
         logger.info("Testing analysis reproducibility")
 
@@ -232,7 +232,7 @@ class ComprehensiveQualityTester:
         # Convert to 0-100 scale and round
         return round(raw_score * 100, 1)
 
-    def _generate_recommendations(self, report: FullQualityReport) -> List[str]:
+    def _generate_recommendations(self, report: FullQualityReport) -> list[str]:
         """Generate improvement recommendations based on test results."""
         recommendations = []
 
@@ -330,8 +330,8 @@ class ComprehensiveQualityTester:
             return False
 
     async def test_with_custom_queries(
-        self, queries: List[RagTestQuery], test_name: str = "Custom Query Test"
-    ) -> Dict[str, Any]:
+        self, queries: list[RagTestQuery], test_name: str = "Custom Query Test"
+    ) -> dict[str, Any]:
         """Run quality tests with custom queries."""
         logger.info(f"Running quality assessment with {len(queries)} custom queries")
 
@@ -346,7 +346,7 @@ class ComprehensiveQualityTester:
             "custom_query_count": len(queries),
         }
 
-    async def generate_quality_trend_report(self) -> Dict[str, Any]:
+    async def generate_quality_trend_report(self) -> dict[str, Any]:
         """Generate a report of quality trends over time."""
         if len(self.previous_reports) <= 1:
             return {
@@ -394,7 +394,7 @@ class ComprehensiveQualityTester:
             },
         }
 
-    def _calculate_trend(self, values: List[float]) -> str:
+    def _calculate_trend(self, values: list[float]) -> str:
         """Calculate trend direction from a series of values."""
         if not values or len(values) < 2:
             return "stable"

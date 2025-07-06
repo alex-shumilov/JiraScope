@@ -4,7 +4,6 @@ import hashlib
 import re
 import time
 from pathlib import Path
-from typing import List, Optional
 
 from ..clients.lmstudio_client import LMStudioClient
 from ..clients.qdrant_client import QdrantVectorClient
@@ -24,7 +23,7 @@ class AdaptiveBatcher:
         self.performance_history = []
         self.max_history = 10
 
-    def calculate_optimal_batch_size(self, items: List[WorkItem]) -> int:
+    def calculate_optimal_batch_size(self, items: list[WorkItem]) -> int:
         """Adjust batch size based on text length and performance history."""
         if not items:
             return self.base_batch_size
@@ -79,7 +78,7 @@ class EmbeddingProcessor:
         self.cache_dir = Path.home() / ".jirascope" / "cache"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    async def process_work_items(self, items: List[WorkItem]) -> ProcessingResult:
+    async def process_work_items(self, items: list[WorkItem]) -> ProcessingResult:
         """Batch process work items with adaptive batch sizing."""
         logger.info(f"Starting processing of {len(items)} work items")
         start_time = time.time()
@@ -133,7 +132,7 @@ class EmbeddingProcessor:
                                 f"Failed to process batch {i//batch_size + 1}", error=str(e)
                             )
                             result.failed_items += len(batch)
-                            result.errors.append(f"Batch {i//batch_size + 1}: {str(e)}")
+                            result.errors.append(f"Batch {i//batch_size + 1}: {e!s}")
                             continue
 
             result.processing_time = time.time() - start_time
@@ -152,11 +151,11 @@ class EmbeddingProcessor:
 
         except Exception as e:
             logger.error("Failed to process work items", error=str(e))
-            result.errors.append(f"Processing failed: {str(e)}")
+            result.errors.append(f"Processing failed: {e!s}")
             result.processing_time = time.time() - start_time
             return result
 
-    async def process_work_items_with_chunking(self, items: List[WorkItem]) -> ProcessingResult:
+    async def process_work_items_with_chunking(self, items: list[WorkItem]) -> ProcessingResult:
         """Process work items using smart chunking strategy."""
         logger.info(f"Starting chunked processing of {len(items)} work items")
         start_time = time.time()
@@ -229,7 +228,7 @@ class EmbeddingProcessor:
                                 f"Failed to process chunk batch {i//batch_size + 1}", error=str(e)
                             )
                             result.failed_items += len(chunk_batch)
-                            result.errors.append(f"Chunk batch {i//batch_size + 1}: {str(e)}")
+                            result.errors.append(f"Chunk batch {i//batch_size + 1}: {e!s}")
                             continue
 
                     # Update cache hashes for processed items
@@ -252,12 +251,12 @@ class EmbeddingProcessor:
 
         except Exception as e:
             logger.error("Failed to process work items with chunking", error=str(e))
-            result.errors.append(f"Chunked processing failed: {str(e)}")
+            result.errors.append(f"Chunked processing failed: {e!s}")
             result.processing_time = time.time() - start_time
             return result
 
     async def _process_batch(
-        self, batch: List[WorkItem], lm_client: LMStudioClient, qdrant_client: QdrantVectorClient
+        self, batch: list[WorkItem], lm_client: LMStudioClient, qdrant_client: QdrantVectorClient
     ) -> ProcessingResult:
         """Process a single batch of work items."""
         result = ProcessingResult()
@@ -357,7 +356,7 @@ class EmbeddingProcessor:
 
         return text
 
-    def _filter_unchanged_items(self, items: List[WorkItem]) -> List[WorkItem]:
+    def _filter_unchanged_items(self, items: list[WorkItem]) -> list[WorkItem]:
         """Filter out items that haven't changed since last processing."""
         items_to_process = []
 
@@ -375,7 +374,7 @@ class EmbeddingProcessor:
         content = f"{item.key}|{item.summary}|{item.description or ''}|{item.updated.isoformat()}"
         return hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()
 
-    def _get_cached_hash(self, item_key: str) -> Optional[str]:
+    def _get_cached_hash(self, item_key: str) -> str | None:
         """Get cached hash for an item."""
         cache_file = self.cache_dir / f"{item_key}.hash"
 

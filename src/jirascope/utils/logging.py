@@ -5,7 +5,7 @@ import logging.config
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class CostTracker:
@@ -16,7 +16,7 @@ class CostTracker:
         self.session_start = datetime.now()
 
     def add_cost(
-        self, service: str, operation: str, cost: float, details: Optional[Dict[str, Any]] = None
+        self, service: str, operation: str, cost: float, details: dict[str, Any] | None = None
     ):
         """Add a cost entry."""
         timestamp = datetime.now()
@@ -33,14 +33,14 @@ class CostTracker:
 
         self.costs[service].append(entry)
 
-    def get_total_cost(self, service: Optional[str] = None) -> float:
+    def get_total_cost(self, service: str | None = None) -> float:
         """Get total cost for a service or all services."""
         if service:
             return sum(entry["cost"] for entry in self.costs.get(service, []))
 
         return sum(sum(entry["cost"] for entry in entries) for entries in self.costs.values())
 
-    def get_session_summary(self) -> Dict[str, Any]:
+    def get_session_summary(self) -> dict[str, Any]:
         """Get summary of session costs."""
         session_duration = (datetime.now() - self.session_start).total_seconds()
 
@@ -59,10 +59,10 @@ class CostTracker:
 class JiraScopeLogger(logging.Logger):
     """Custom logger class with cost tracking capabilities."""
 
-    cost_tracker: Optional[CostTracker] = None
+    cost_tracker: CostTracker | None = None
 
     def log_cost(
-        self, service: str, operation: str, cost: float, details: Optional[Dict[str, Any]] = None
+        self, service: str, operation: str, cost: float, details: dict[str, Any] | None = None
     ):
         """Log a cost entry if cost tracking is enabled."""
         if self.cost_tracker:
@@ -71,7 +71,7 @@ class JiraScopeLogger(logging.Logger):
 
 
 logging.setLoggerClass(JiraScopeLogger)
-setattr(logging.LogRecord, "cost", 0.0)
+logging.LogRecord.cost = 0.0
 
 
 class CostTrackingFormatter(logging.Formatter):
@@ -86,8 +86,8 @@ class CostTrackingFormatter(logging.Formatter):
 
 
 def setup_logging(
-    log_level: str = "INFO", log_file: Optional[Path] = None, enable_cost_tracking: bool = True
-) -> Optional[CostTracker]:
+    log_level: str = "INFO", log_file: Path | None = None, enable_cost_tracking: bool = True
+) -> CostTracker | None:
     """Setup structured logging with optional cost tracking."""
 
     log_level = getattr(logging, log_level.upper())
@@ -176,7 +176,7 @@ class StructuredLogger:
             self.error(message, **extra)
 
     def log_cost(
-        self, service: str, operation: str, cost: float, details: Optional[Dict[str, Any]] = None
+        self, service: str, operation: str, cost: float, details: dict[str, Any] | None = None
     ):
         """Log cost information."""
         self.logger.log_cost(service, operation, cost, details)

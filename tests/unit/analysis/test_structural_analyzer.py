@@ -1,6 +1,6 @@
 """Tests for structural analyzer components."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -40,7 +40,7 @@ class TestTechDebtClusterer:
         clusterer = TechDebtClusterer(config)
 
         # Create test work items with tech debt keywords
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
         work_items = [
             WorkItem(
                 key="PROJ-1",

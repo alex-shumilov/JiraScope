@@ -2,7 +2,7 @@
 
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..clients.claude_client import ClaudeClient
 from ..clients.lmstudio_client import LMStudioClient
@@ -25,9 +25,9 @@ class ScopeDriftDetector:
 
     def __init__(self, config: Config):
         self.config = config
-        self.mcp_client: Optional[MCPClient] = None
-        self.lm_client: Optional[LMStudioClient] = None
-        self.claude_client: Optional[ClaudeClient] = None
+        self.mcp_client: MCPClient | None = None
+        self.lm_client: LMStudioClient | None = None
+        self.claude_client: ClaudeClient | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -144,7 +144,7 @@ class ScopeDriftDetector:
             logger.error(f"Failed to analyze scope drift for {work_item_key}", error=str(e))
             raise
 
-    async def _get_change_history(self, work_item_key: str) -> List[Dict[str, Any]]:
+    async def _get_change_history(self, work_item_key: str) -> list[dict[str, Any]]:
         """Get change history for a work item (simplified implementation)."""
         # In a real implementation, this would fetch actual change history from Jira
         # For now, return a mock structure
@@ -189,7 +189,7 @@ class ScopeDriftDetector:
         # Calculate cosine similarity
         return self.lm_client.calculate_similarity(embeddings[0], embeddings[1])
 
-    async def _analyze_change_nature(self, old_text: str, new_text: str) -> Dict[str, str]:
+    async def _analyze_change_nature(self, old_text: str, new_text: str) -> dict[str, str]:
         """Use Claude to analyze the nature of scope changes."""
         prompt = f"""Analyze the change between these two versions of a work item description:
 
@@ -228,14 +228,14 @@ Respond in JSON format:
             return json.loads(response.content)
 
         except Exception as e:
-            logger.warning(f"Failed to analyze change nature: {str(e)}")
+            logger.warning(f"Failed to analyze change nature: {e!s}")
             return {
                 "change_type": "unknown",
                 "impact_level": "moderate",
                 "summary": "Unable to analyze change details",
             }
 
-    def _calculate_overall_drift(self, drift_events: List[ScopeDriftEvent]) -> float:
+    def _calculate_overall_drift(self, drift_events: list[ScopeDriftEvent]) -> float:
         """Calculate overall drift severity score."""
         if not drift_events:
             return 0.0
@@ -286,7 +286,6 @@ class TemporalAnalyzer:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
-        pass
 
     async def detect_scope_drift(self, work_item: WorkItem) -> ScopeDriftAnalysis:
         """Analyze how work item descriptions evolve over time."""

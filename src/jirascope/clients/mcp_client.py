@@ -1,7 +1,7 @@
 """MCP client for Jira integration."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 
@@ -18,9 +18,9 @@ class MCPClient:
     def __init__(self, config: Config):
         self.config = config
         self.endpoint = config.jira_mcp_endpoint
-        self.session: Optional[httpx.AsyncClient] = None
-        self.authenticator: Optional[SSEAuthenticator] = None
-        self.auth_tokens: Optional[AuthTokens] = None
+        self.session: httpx.AsyncClient | None = None
+        self.authenticator: SSEAuthenticator | None = None
+        self.auth_tokens: AuthTokens | None = None
 
         # Initialize authenticator for SSE endpoints
         if self.endpoint and ("/sse" in self.endpoint or "atlassian.com" in self.endpoint):
@@ -73,8 +73,8 @@ class MCPClient:
                 )
 
     async def get_work_items(
-        self, jql: str = "", batch_size: Optional[int] = None
-    ) -> List[WorkItem]:
+        self, jql: str = "", batch_size: int | None = None
+    ) -> list[WorkItem]:
         """Fetch work items from Jira using JQL query."""
         if not self.session:
             raise RuntimeError("MCP client not initialized. Use async context manager.")
@@ -108,7 +108,7 @@ class MCPClient:
             logger.error(f"Failed to fetch work items: {e}")
             raise
 
-    async def get_work_item(self, key: str) -> Optional[WorkItem]:
+    async def get_work_item(self, key: str) -> WorkItem | None:
         """Fetch a single work item by key."""
         if not self.session:
             raise RuntimeError("MCP client not initialized. Use async context manager.")
@@ -133,7 +133,7 @@ class MCPClient:
             raise
 
     async def update_work_item(
-        self, key: str, fields: Dict[str, Any], dry_run: Optional[bool] = None
+        self, key: str, fields: dict[str, Any], dry_run: bool | None = None
     ) -> bool:
         """Update a work item. Returns True if successful."""
         if not self.session:
@@ -160,7 +160,7 @@ class MCPClient:
             logger.error(f"Failed to update work item {key}: {e}")
             return False
 
-    def _parse_work_item(self, issue_data: Dict[str, Any]) -> WorkItem:
+    def _parse_work_item(self, issue_data: dict[str, Any]) -> WorkItem:
         """Parse Jira issue data into WorkItem model."""
         fields = issue_data["fields"]
 

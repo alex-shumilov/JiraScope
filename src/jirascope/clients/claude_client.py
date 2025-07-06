@@ -1,7 +1,7 @@
 """Claude client for AI analysis."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from anthropic import Anthropic
 
@@ -26,7 +26,6 @@ class ClaudeClient:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         # No cleanup needed for Anthropic client
-        pass
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Calculate the cost of a Claude API call."""
@@ -38,7 +37,7 @@ class ClaudeClient:
         self,
         work_item: WorkItem,
         analysis_type: str = "general",
-        context: Optional[List[WorkItem]] = None,
+        context: list[WorkItem] | None = None,
     ) -> AnalysisResult:
         """Analyze a work item using Claude."""
 
@@ -79,7 +78,7 @@ class ClaudeClient:
             raise
 
     def _build_analysis_prompt(
-        self, work_item: WorkItem, analysis_type: str, context: Optional[List[WorkItem]] = None
+        self, work_item: WorkItem, analysis_type: str, context: list[WorkItem] | None = None
     ) -> str:
         """Build the analysis prompt for Claude."""
         base_prompt = f"""
@@ -160,7 +159,7 @@ Respond in JSON format with these fields:
 """
             )
 
-    def _parse_analysis_response(self, response: str, analysis_type: str) -> Dict[str, Any]:
+    def _parse_analysis_response(self, response: str, analysis_type: str) -> dict[str, Any]:
         """Parse Claude's analysis response."""
         try:
             import json

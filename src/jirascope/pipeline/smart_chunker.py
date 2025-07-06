@@ -3,7 +3,6 @@
 import hashlib
 import re
 from dataclasses import dataclass
-from typing import List
 
 from ..models.metadata_schema import ChunkMetadata
 from ..models.work_item import WorkItem
@@ -82,7 +81,7 @@ class SmartChunker:
             ),
         }
 
-    def chunk_work_item(self, work_item: WorkItem) -> List[Chunk]:
+    def chunk_work_item(self, work_item: WorkItem) -> list[Chunk]:
         """
         Chunk a work item using content-aware strategy.
 
@@ -119,7 +118,7 @@ class SmartChunker:
 
         return chunks
 
-    def _chunk_epic(self, work_item: WorkItem, start_index: int) -> List[Chunk]:
+    def _chunk_epic(self, work_item: WorkItem, start_index: int) -> list[Chunk]:
         """Epic-specific chunking strategy."""
         chunks = []
         current_index = start_index
@@ -166,7 +165,7 @@ class SmartChunker:
 
         return chunks
 
-    def _chunk_story(self, work_item: WorkItem, start_index: int) -> List[Chunk]:
+    def _chunk_story(self, work_item: WorkItem, start_index: int) -> list[Chunk]:
         """Story-specific chunking strategy."""
         chunks = []
         current_index = start_index
@@ -214,7 +213,7 @@ class SmartChunker:
 
         return chunks
 
-    def _chunk_bug(self, work_item: WorkItem, start_index: int) -> List[Chunk]:
+    def _chunk_bug(self, work_item: WorkItem, start_index: int) -> list[Chunk]:
         """Bug-specific chunking strategy."""
         chunks = []
         current_index = start_index
@@ -251,7 +250,7 @@ class SmartChunker:
 
         return chunks
 
-    def _chunk_generic(self, work_item: WorkItem, start_index: int) -> List[Chunk]:
+    def _chunk_generic(self, work_item: WorkItem, start_index: int) -> list[Chunk]:
         """Generic chunking strategy for other item types."""
         chunks = []
 
@@ -268,7 +267,7 @@ class SmartChunker:
 
     def _chunk_text(
         self, text: str, work_item: WorkItem, chunk_type: str, start_index: int
-    ) -> List[Chunk]:
+    ) -> list[Chunk]:
         """
         Chunk text content while preserving sentence boundaries.
 
@@ -322,12 +321,10 @@ class SmartChunker:
                     chunks.extend(word_chunks)
                     current_index += len(word_chunks)
                     current_chunk = ""
+            elif current_chunk:
+                current_chunk += " " + sentence
             else:
-                # Add sentence to current chunk
-                if current_chunk:
-                    current_chunk += " " + sentence
-                else:
-                    current_chunk = sentence
+                current_chunk = sentence
 
         # Add final chunk if it has content
         if current_chunk.strip():
@@ -343,7 +340,7 @@ class SmartChunker:
 
     def _chunk_by_words(
         self, text: str, work_item: WorkItem, chunk_type: str, start_index: int
-    ) -> List[Chunk]:
+    ) -> list[Chunk]:
         """Chunk text by words when sentences are too long."""
         words = text.split()
         chunks = []
@@ -373,11 +370,10 @@ class SmartChunker:
                     )
                     chunks.append(chunk)
                     current_index += 1
+            elif current_chunk:
+                current_chunk += " " + word
             else:
-                if current_chunk:
-                    current_chunk += " " + word
-                else:
-                    current_chunk = word
+                current_chunk = word
 
         if current_chunk.strip():
             chunk = self._create_chunk(
@@ -390,7 +386,7 @@ class SmartChunker:
 
         return chunks
 
-    def _split_into_sentences(self, text: str) -> List[str]:
+    def _split_into_sentences(self, text: str) -> list[str]:
         """Split text into sentences using simple heuristics."""
         # Simple sentence splitting - can be enhanced with more sophisticated NLP
         sentences = re.split(r"[.!?]+\s+", text)

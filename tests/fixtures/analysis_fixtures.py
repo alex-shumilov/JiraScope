@@ -1,7 +1,6 @@
 """Test fixtures for analysis components."""
 
 from datetime import datetime, timedelta
-from typing import List
 
 import pytest
 
@@ -12,7 +11,7 @@ class AnalysisFixtures:
     """Centralized test fixtures for analysis components."""
 
     @staticmethod
-    def create_sample_work_items() -> List[WorkItem]:
+    def create_sample_work_items() -> list[WorkItem]:
         """Create sample work items for testing."""
         base_time = datetime(2024, 1, 1, 12, 0, 0)
 
@@ -145,7 +144,7 @@ As a business user, I want to see analytics widgets on my dashboard so that I ca
         ]
 
     @staticmethod
-    def create_sample_epics() -> List[WorkItem]:
+    def create_sample_epics() -> list[WorkItem]:
         """Create sample epics for testing."""
         base_time = datetime(2024, 1, 1, 12, 0, 0)
 
@@ -183,7 +182,7 @@ As a business user, I want to see analytics widgets on my dashboard so that I ca
         ]
 
     @staticmethod
-    def create_sample_hierarchies() -> List[EpicHierarchy]:
+    def create_sample_hierarchies() -> list[EpicHierarchy]:
         """Create sample epic hierarchies for testing."""
         epics = AnalysisFixtures.create_sample_epics()
         work_items = AnalysisFixtures.create_sample_work_items()
@@ -221,7 +220,7 @@ As a business user, I want to see analytics widgets on my dashboard so that I ca
         ]
 
     @staticmethod
-    def create_mock_embeddings() -> List[List[float]]:
+    def create_mock_embeddings() -> list[list[float]]:
         """Create mock embeddings for testing."""
         import random
 

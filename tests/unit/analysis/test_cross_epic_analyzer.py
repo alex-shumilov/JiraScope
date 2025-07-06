@@ -117,7 +117,7 @@ class TestCrossEpicAnalyzer:
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
 
-                _ = await analyzer.find_misplaced_work_items(project_key="TEST")  # noqa: F841
+                _ = await analyzer.find_misplaced_work_items(project_key="TEST")
 
                 # Verify project filter was applied in Qdrant queries
                 calls = qdrant_client.client.scroll.call_args_list

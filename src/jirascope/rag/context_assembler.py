@@ -1,7 +1,6 @@
 """Context assembly and ranking for RAG pipeline."""
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
 
 from .query_processor import QueryPlan
 from .retrieval_engine import ContextTree, RetrievalResult
@@ -12,11 +11,11 @@ class ContextSummary:
     """Summary of assembled context."""
 
     total_items: int
-    item_types: Dict[str, int]
-    status_distribution: Dict[str, int]
-    priority_distribution: Dict[str, int]
-    epics_covered: List[str]
-    teams_involved: List[str]
+    item_types: dict[str, int]
+    status_distribution: dict[str, int]
+    priority_distribution: dict[str, int]
+    epics_covered: list[str]
+    teams_involved: list[str]
 
     def to_text(self) -> str:
         """Convert summary to readable text."""
@@ -39,14 +38,14 @@ class ContextSummary:
 class AssembledContext:
     """Complete assembled context for LLM consumption."""
 
-    primary_results: List[RetrievalResult]
-    hierarchical_context: List[ContextTree]
+    primary_results: list[RetrievalResult]
+    hierarchical_context: list[ContextTree]
     summary: ContextSummary
     formatted_text: str
     token_count: int
 
     @property
-    def jira_keys(self) -> List[str]:
+    def jira_keys(self) -> list[str]:
         """Get all Jira keys mentioned in this context."""
         keys = []
         for result in self.primary_results:
@@ -67,9 +66,9 @@ class ContextAssembler:
 
     def assemble_context(
         self,
-        retrieval_results: List[RetrievalResult],
+        retrieval_results: list[RetrievalResult],
         query_plan: QueryPlan,
-        hierarchical_context: Optional[List[ContextTree]] = None,
+        hierarchical_context: list[ContextTree] | None = None,
     ) -> AssembledContext:
         """Intelligently combine retrieved content into coherent context."""
         if hierarchical_context is None:
@@ -95,7 +94,7 @@ class ContextAssembler:
         )
 
     def create_context_summary(
-        self, results: List[RetrievalResult], hierarchical_context: List[ContextTree]
+        self, results: list[RetrievalResult], hierarchical_context: list[ContextTree]
     ) -> ContextSummary:
         """Generate concise summary of the assembled context."""
         # Count items by type
@@ -146,8 +145,8 @@ class ContextAssembler:
         )
 
     def rank_by_relevance(
-        self, results: List[RetrievalResult], query_plan: QueryPlan
-    ) -> List[RetrievalResult]:
+        self, results: list[RetrievalResult], query_plan: QueryPlan
+    ) -> list[RetrievalResult]:
         """Multi-factor relevance ranking."""
         for result in results:
             relevance_score = result.score
@@ -171,9 +170,7 @@ class ContextAssembler:
             # Apply priority boosts from query plan
             if query_plan.priority_boost:
                 for boost_type, boost_value in query_plan.priority_boost.items():
-                    if boost_type == "priority_boost" and result.content.get("priority") == "High":
-                        relevance_score *= boost_value
-                    elif boost_type == "status_boost" and result.content.get("status") == "Blocked":
+                    if boost_type == "priority_boost" and result.content.get("priority") == "High" or boost_type == "status_boost" and result.content.get("status") == "Blocked":
                         relevance_score *= boost_value
 
             # Update score
@@ -184,8 +181,8 @@ class ContextAssembler:
 
     def _format_context_text(
         self,
-        results: List[RetrievalResult],
-        hierarchical_context: List[ContextTree],
+        results: list[RetrievalResult],
+        hierarchical_context: list[ContextTree],
         query_plan: QueryPlan,
     ) -> tuple[str, int]:
         """Format context text within token limits."""

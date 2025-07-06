@@ -68,7 +68,7 @@ async def test_lmstudio_client_generate_embeddings(mock_config, mock_httpx_respo
     """Test LMStudio client embedding generation."""
     # Ensure the mock config has proper integer values
     mock_config.embedding_batch_size = 10  # Set to proper integer
-    
+
     with patch("httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_response = AsyncMock()

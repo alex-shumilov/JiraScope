@@ -14,7 +14,6 @@ import webbrowser
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
-from typing import Dict, Optional, Tuple
 
 import httpx
 
@@ -26,10 +25,10 @@ class AuthTokens:
     """Container for authentication tokens."""
 
     access_token: str
-    refresh_token: Optional[str] = None
-    expires_at: Optional[float] = None
+    refresh_token: str | None = None
+    expires_at: float | None = None
     token_type: str = "Bearer"
-    scope: Optional[str] = None  # Track granted scopes
+    scope: str | None = None  # Track granted scopes
 
     @property
     def is_expired(self) -> bool:
@@ -38,7 +37,7 @@ class AuthTokens:
             return False
         return time.time() >= self.expires_at - 60  # 60 second buffer
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for storage."""
         return {
             "access_token": self.access_token,
@@ -49,7 +48,7 @@ class AuthTokens:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict) -> "AuthTokens":
+    def from_dict(cls, data: dict) -> "AuthTokens":
         """Create from dictionary."""
         return cls(**data)
 
@@ -57,7 +56,6 @@ class AuthTokens:
 class AuthError(Exception):
     """Authentication-related errors."""
 
-    pass
 
 
 class AuthHTTPServer(HTTPServer):
@@ -65,9 +63,9 @@ class AuthHTTPServer(HTTPServer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.auth_code: Optional[str] = None
-        self.auth_error: Optional[str] = None
-        self.auth_state: Optional[str] = None
+        self.auth_code: str | None = None
+        self.auth_error: str | None = None
+        self.auth_state: str | None = None
 
 
 class AuthCallbackHandler(BaseHTTPRequestHandler):
@@ -126,7 +124,6 @@ class AuthCallbackHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
         """Suppress default HTTP server logging."""
-        pass
 
 
 class SSEAuthenticator:
@@ -135,9 +132,9 @@ class SSEAuthenticator:
     def __init__(
         self,
         endpoint: str,
-        client_id: Optional[str] = None,
-        client_secret: Optional[str] = None,
-        redirect_port: Optional[int] = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        redirect_port: int | None = None,
         scope: str = "read:jira-work read:jira-user write:jira-work",
     ):
         self.endpoint = endpoint.rstrip("/")
@@ -323,7 +320,7 @@ class SSEAuthenticator:
         finally:
             server.shutdown()
 
-    async def _discover_oauth_endpoints(self) -> Tuple[str, str]:
+    async def _discover_oauth_endpoints(self) -> tuple[str, str]:
         """Discover OAuth endpoints from the SSE endpoint."""
         async with httpx.AsyncClient(timeout=httpx.Timeout(10.0)) as client:
             discovery_urls = [
@@ -413,11 +410,11 @@ class SSEAuthenticator:
                 scope=token_response.get("scope"),
             )
 
-    def _load_cached_tokens(self) -> Optional[AuthTokens]:
+    def _load_cached_tokens(self) -> AuthTokens | None:
         """Load tokens from cache file."""
         try:
             if self.cache_file.exists():
-                with open(self.cache_file, "r") as f:
+                with open(self.cache_file) as f:
                     data = json.load(f)
                     tokens = AuthTokens.from_dict(data)
                     logger.debug(f"Loaded cached tokens, expires at: {tokens.expires_at}")

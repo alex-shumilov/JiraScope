@@ -1,7 +1,7 @@
 """Unit tests for IncrementalProcessor component."""
 
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -48,7 +48,7 @@ class TestIncrementalProcessor:
 
             # Test saving metadata
             test_metadata = {
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(UTC).isoformat(),
                 "processed_items": 100,
                 "version": "1.0",
             }
@@ -77,12 +77,12 @@ class TestIncrementalProcessor:
             test_tracked = {
                 "PROJ-1": {
                     "content_hash": "abc123",
-                    "last_processed": datetime.now(timezone.utc).isoformat(),
+                    "last_processed": datetime.now(UTC).isoformat(),
                     "processing_count": 1,
                 },
                 "PROJ-2": {
                     "content_hash": "def456",
-                    "last_processed": datetime.now(timezone.utc).isoformat(),
+                    "last_processed": datetime.now(UTC).isoformat(),
                     "processing_count": 2,
                 },
             }
@@ -103,7 +103,7 @@ class TestIncrementalProcessor:
         processor = IncrementalProcessor(config)
 
         # Create test work items
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
         item1 = WorkItem(
             key="TEST-1",
             summary="Original summary",
@@ -156,7 +156,7 @@ class TestIncrementalProcessor:
         processor = IncrementalProcessor(config)
 
         # Create test work items
-        base_time = datetime.now(timezone.utc)
+        base_time = datetime.now(UTC)
         items = []
         for i in range(3):
             item = WorkItem(
@@ -176,7 +176,7 @@ class TestIncrementalProcessor:
             items.append(item)
 
         # Initialize metadata and tracked items
-        metadata = {"created_at": datetime.now(timezone.utc).isoformat()}
+        metadata = {"created_at": datetime.now(UTC).isoformat()}
         tracked_items = {}
 
         # Test tracking data update
@@ -210,7 +210,7 @@ class TestIncrementalProcessor:
             processor = IncrementalProcessor(config, cache_dir)
 
             # Create test work items
-            base_time = datetime.now(timezone.utc)
+            base_time = datetime.now(UTC)
             items = []
             for i in range(3):
                 item = WorkItem(

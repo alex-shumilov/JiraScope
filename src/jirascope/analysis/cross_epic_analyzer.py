@@ -2,7 +2,6 @@
 
 import time
 from collections import defaultdict
-from typing import Dict, List, Optional
 
 from ..clients.claude_client import ClaudeClient
 from ..clients.lmstudio_client import LMStudioClient
@@ -19,9 +18,9 @@ class CrossEpicAnalyzer:
 
     def __init__(self, config: Config):
         self.config = config
-        self.qdrant_client: Optional[QdrantVectorClient] = None
-        self.lm_client: Optional[LMStudioClient] = None
-        self.claude_client: Optional[ClaudeClient] = None
+        self.qdrant_client: QdrantVectorClient | None = None
+        self.lm_client: LMStudioClient | None = None
+        self.claude_client: ClaudeClient | None = None
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -44,7 +43,7 @@ class CrossEpicAnalyzer:
         if self.claude_client:
             await self.claude_client.__aexit__(exc_type, exc_val, exc_tb)
 
-    async def find_misplaced_work_items(self, project_key: Optional[str] = None) -> CrossEpicReport:
+    async def find_misplaced_work_items(self, project_key: str | None = None) -> CrossEpicReport:
         """Find work items that might belong to different Epics."""
         logger.info(f"Starting cross-Epic analysis for project {project_key or 'all'}")
         start_time = time.time()
@@ -159,8 +158,8 @@ class CrossEpicAnalyzer:
             raise
 
     async def _get_all_epics_with_items(
-        self, project_key: Optional[str] = None
-    ) -> Dict[str, List[Dict]]:
+        self, project_key: str | None = None
+    ) -> dict[str, list[dict]]:
         """Get all Epics and their work items from Qdrant."""
         epics_data = defaultdict(list)
 
@@ -194,8 +193,8 @@ class CrossEpicAnalyzer:
         return dict(epics_data)
 
     async def _calculate_epic_theme_embedding(
-        self, epic: WorkItem, work_items: List[WorkItem]
-    ) -> List[float]:
+        self, epic: WorkItem, work_items: list[WorkItem]
+    ) -> list[float]:
         """Calculate a representative embedding for an Epic's theme."""
         epic_key = epic.key
 
@@ -229,7 +228,7 @@ class CrossEpicAnalyzer:
         return avg_embedding
 
     async def _calculate_epic_coherence_score(
-        self, epic_theme: List[float], work_items: List[WorkItem]
+        self, epic_theme: list[float], work_items: list[WorkItem]
     ) -> float:
         """Calculate coherence score between epic theme and work items."""
         if len(work_items) < 1:
@@ -271,8 +270,8 @@ class CrossEpicAnalyzer:
         return sum(similarities) / len(similarities) if similarities else 0.0
 
     async def _find_similar_across_epics(
-        self, item_embedding: List[float], exclude_epic: str, threshold: float = 0.65
-    ) -> List[Dict]:
+        self, item_embedding: list[float], exclude_epic: str, threshold: float = 0.65
+    ) -> list[dict]:
         """Find similar work items across other Epics."""
         # Search for similar items in Qdrant
         similar_items = await self.qdrant_client.search_similar_work_items(
@@ -296,7 +295,7 @@ class CrossEpicAnalyzer:
         return cross_epic_matches
 
     def _generate_misplacement_reasoning(
-        self, item_data: Dict, current_epic: str, best_match: Dict, current_coherence: float
+        self, item_data: dict, current_epic: str, best_match: dict, current_coherence: float
     ) -> str:
         """Generate human-readable reasoning for why an item might be misplaced."""
         reasons = []
@@ -330,7 +329,7 @@ class CrossEpicAnalyzer:
 
     async def _analyze_misplacement_with_claude(
         self, work_item: WorkItem, current_epic: WorkItem, suggested_epic: WorkItem
-    ) -> Dict:
+    ) -> dict:
         """Analyze work item misplacement using Claude."""
         if not self.claude_client:
             raise RuntimeError("Claude client not initialized")
@@ -373,7 +372,7 @@ Respond in JSON format:
             return analysis
 
         except Exception as e:
-            logger.warning(f"Failed to analyze misplacement for {work_item.key}: {str(e)}")
+            logger.warning(f"Failed to analyze misplacement for {work_item.key}: {e!s}")
             return {
                 "reasoning": "Unable to analyze misplacement due to analysis error",
                 "confidence": 0.5,

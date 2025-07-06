@@ -1,7 +1,7 @@
 """Pydantic models for the web API."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -9,37 +9,37 @@ from pydantic import BaseModel, Field
 # Request models
 class DuplicateAnalysisRequest(BaseModel):
     threshold: float = Field(ge=0.0, le=1.0, description="Similarity threshold")
-    project_keys: Optional[List[str]] = None
-    issue_types: Optional[List[str]] = None
+    project_keys: list[str] | None = None
+    issue_types: list[str] | None = None
 
 
 class QualityAnalysisRequest(BaseModel):
-    project_key: Optional[str] = None
+    project_key: str | None = None
     use_claude: bool = False
-    budget_limit: Optional[float] = Field(None, ge=0.0, le=50.0)
+    budget_limit: float | None = Field(None, ge=0.0, le=50.0)
     limit: int = Field(10, ge=1, le=100, description="Maximum items to analyze")
 
 
 class EpicAnalysisRequest(BaseModel):
     depth: str = Field("basic", pattern="^(basic|full)$")
     use_claude: bool = False
-    budget_limit: Optional[float] = Field(None, ge=0.0, le=50.0)
+    budget_limit: float | None = Field(None, ge=0.0, le=50.0)
 
 
 # Response models
 class AnalysisResponse(BaseModel):
     task_id: str
     status: str
-    estimated_completion: Optional[datetime] = None
-    message: Optional[str] = None
+    estimated_completion: datetime | None = None
+    message: str | None = None
 
 
 class TaskStatusResponse(BaseModel):
     task_id: str
     status: str
     progress: int = 0
-    results: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
+    results: dict[str, Any] | None = None
+    error: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -47,8 +47,8 @@ class TaskStatusResponse(BaseModel):
 class CostSummary(BaseModel):
     period: str
     total_cost: float
-    breakdown: Dict[str, float]
-    budget_remaining: Optional[float] = None
+    breakdown: dict[str, float]
+    budget_remaining: float | None = None
 
 
 # Analysis result models
@@ -62,7 +62,7 @@ class DuplicateCandidate(BaseModel):
 
 class DuplicateResults(BaseModel):
     total_candidates: int
-    candidates_by_level: Dict[str, List[DuplicateCandidate]]
+    candidates_by_level: dict[str, list[DuplicateCandidate]]
     processing_cost: float
 
 
@@ -74,12 +74,12 @@ class QualityAnalysis(BaseModel):
     testability_score: int
     overall_score: float
     risk_level: str
-    improvement_suggestions: List[str]
+    improvement_suggestions: list[str]
 
 
 class QualityResults(BaseModel):
     total_analyzed: int
-    analyses: List[QualityAnalysis]
+    analyses: list[QualityAnalysis]
     average_score: float
     processing_cost: float
 
@@ -88,5 +88,5 @@ class EpicResults(BaseModel):
     epic_key: str
     total_items: int
     duplicates_found: int
-    quality_score: Optional[float] = None
+    quality_score: float | None = None
     processing_cost: float

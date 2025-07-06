@@ -1,6 +1,5 @@
 """Main RAG pipeline orchestrator for JiraScope."""
 
-from typing import Dict, List, Optional
 
 from ..clients.lmstudio_client import LMStudioClient
 from ..clients.qdrant_client import QdrantVectorClient
@@ -30,7 +29,7 @@ class JiraRAGPipeline:
         self.retriever = ContextualRetriever(qdrant_client, embedding_client)
         self.context_assembler = ContextAssembler(max_tokens=max_context_tokens)
 
-    async def process_query(self, user_query: str, include_hierarchy: bool = True) -> Dict:
+    async def process_query(self, user_query: str, include_hierarchy: bool = True) -> dict:
         """
         Process a natural language query end-to-end.
 
@@ -91,7 +90,7 @@ class JiraRAGPipeline:
                 "error_type": type(e).__name__,
             }
 
-    async def search_by_epic(self, epic_key: str, query: str = "") -> Dict:
+    async def search_by_epic(self, epic_key: str, query: str = "") -> dict:
         """
         Search within a specific Epic hierarchy.
 
@@ -141,7 +140,7 @@ class JiraRAGPipeline:
         except Exception as e:
             return {"epic_key": epic_key, "query": query, "success": False, "error": str(e)}
 
-    async def analyze_technical_debt(self, team: Optional[str] = None) -> Dict:
+    async def analyze_technical_debt(self, team: str | None = None) -> dict:
         """
         Specialized analysis for technical debt items.
 
@@ -185,7 +184,7 @@ class JiraRAGPipeline:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def _analyze_debt_patterns(self, results: List[RetrievalResult]) -> Dict:
+    def _analyze_debt_patterns(self, results: list[RetrievalResult]) -> dict:
         """Analyze patterns in technical debt items."""
         patterns = {
             "by_component": {},
@@ -212,7 +211,7 @@ class JiraRAGPipeline:
 
         return patterns
 
-    def _generate_debt_recommendations(self, debt_analysis: Dict) -> List[str]:
+    def _generate_debt_recommendations(self, debt_analysis: dict) -> list[str]:
         """Generate recommendations based on debt analysis."""
         recommendations = []
 
