@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "re-mcp-atlassian": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "CONFLUENCE_URL",
+        "-e",
+        "CONFLUENCE_USERNAME",
+        "-e",
+        "CONFLUENCE_API_TOKEN",
+        "-e",
+        "JIRA_URL",
+        "-e",
+        "JIRA_USERNAME",
+        "-e",
+        "JIRA_API_TOKEN",
+        "ghcr.io/sooperset/mcp-atlassian:latest"
+      ],
+      "env": {
+        "CONFLUENCE_URL": "https://your-domain.atlassian.net/wiki",
+        "CONFLUENCE_USERNAME": "your-email@your-domain.com",
+        "CONFLUENCE_API_TOKEN": "YOUR_CONFLUENCE_API_TOKEN_HERE",
+        "JIRA_URL": "https://your-domain.atlassian.net",
+        "JIRA_USERNAME": "your-email@your-domain.com",
+        "JIRA_API_TOKEN": "YOUR_JIRA_API_TOKEN_HERE"
+      }
+    }
+  }
+}

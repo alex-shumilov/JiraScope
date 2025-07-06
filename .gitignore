@@ -11,6 +11,9 @@ env/
 .env.local
 .env.*.local
 
+# MCP Configuration (contains sensitive tokens)
+.mcp.json
+
 # Python
 __pycache__/
 *.py[cod]
