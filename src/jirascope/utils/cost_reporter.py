@@ -583,10 +583,7 @@ class AdvancedCostReporter:
 
     def _days_in_month(self, year: int, month: int) -> int:
         """Get the number of days in a specific month."""
-        if month == 12:
-            next_month = datetime(year + 1, 1, 1)
-        else:
-            next_month = datetime(year, month + 1, 1)
+        next_month = datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
 
         return (next_month - datetime(year, month, 1)).days
 
@@ -684,7 +681,7 @@ class AdvancedCostReporter:
         # For now, we'll return the total costs by service
         return {
             service: self.cost_tracker.get_total_cost(service)
-            for service in self.cost_tracker.costs.keys()
+            for service in self.cost_tracker.costs
         }
 
     async def _get_historical_service_costs(self) -> dict[str, list[float]]:

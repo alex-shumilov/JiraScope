@@ -118,6 +118,6 @@ This setup replaces the old pylint configuration:
 
 Old commands are no longer supported:
 - `pylint` → `ruff check`
-- `flake8` → `ruff check`  
+- `flake8` → `ruff check`
 - `isort` → `ruff format` or `ruff check --select I`
-- `black` → `ruff format` 
+- `black` → `ruff format`

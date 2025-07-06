@@ -146,7 +146,7 @@ async def test_get_epic_tree(mock_config, sample_epic, sample_story):
 
     # Test that the tree maintains proper relationships
     for descendant in tree.all_descendants:
-        assert descendant.epic_key == tree.epic.key or descendant.key == tree.epic.key
+        assert tree.epic.key in (descendant.epic_key, descendant.key)
 
 
 def test_cost_tracking(mock_config):

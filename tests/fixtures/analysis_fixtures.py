@@ -228,7 +228,7 @@ As a business user, I want to see analytics widgets on my dashboard so that I ca
 
         # Create 8 embeddings (one for each work item)
         embeddings = []
-        for i in range(8):
+        for _i in range(8):
             # Create 384-dimensional embeddings (common size)
             embedding = [random.uniform(-1, 1) for _ in range(384)]
             embeddings.append(embedding)

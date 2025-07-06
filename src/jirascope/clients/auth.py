@@ -57,7 +57,6 @@ class AuthError(Exception):
     """Authentication-related errors."""
 
 
-
 class AuthHTTPServer(HTTPServer):
     """Custom HTTP server to store OAuth callback data."""
 
@@ -247,17 +246,11 @@ class SSEAuthenticator:
             full_auth_url = f"{auth_url}?" + urllib.parse.urlencode(auth_params)
 
             # Open browser for authentication
-            print("\n🔐 Opening browser for authentication...")
-            print(f"📋 Client ID: {self.client_id}")
-            print(f"🔗 Redirect URI: {redirect_uri}")
-            print(f"🎯 Scope: {self.scope}")
-            print(f"If browser doesn't open automatically, visit: {full_auth_url}\n")
 
             if not webbrowser.open(full_auth_url):
-                print(f"Please manually open this URL in your browser:\n{full_auth_url}")
+                pass
 
             # Wait for callback
-            print("⏳ Waiting for authentication...")
             timeout = 300  # 5 minutes
             start_time = time.time()
 

@@ -241,15 +241,14 @@ async def main():
 
     try:
         # Validate environment
-        if not args.skip_checks:
-            if not await manager.validate_environment():
-                console.print("\n[red]❌ Environment validation failed[/red]")
-                console.print("\n💡 Tips:")
-                console.print("  • Ensure all dependencies are installed: pip install -e .")
-                console.print("  • Set JIRA_MCP_ENDPOINT environment variable")
-                console.print("  • Start Qdrant: docker run -p 6333:6333 qdrant/qdrant")
-                console.print("  • Start LMStudio (optional)")
-                sys.exit(1)
+        if not args.skip_checks and not await manager.validate_environment():
+            console.print("\n[red]❌ Environment validation failed[/red]")
+            console.print("\n💡 Tips:")
+            console.print("  • Ensure all dependencies are installed: pip install -e .")
+            console.print("  • Set JIRA_MCP_ENDPOINT environment variable")
+            console.print("  • Start Qdrant: docker run -p 6333:6333 qdrant/qdrant")
+            console.print("  • Start LMStudio (optional)")
+            sys.exit(1)
 
         # Start server
         success = await manager.start_server()

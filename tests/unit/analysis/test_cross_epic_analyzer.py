@@ -16,8 +16,7 @@ class TestCrossEpicAnalyzer:
     @pytest.fixture
     def mock_config(self):
         """Create mock configuration."""
-        config = MagicMock(spec=Config)
-        return config
+        return MagicMock(spec=Config)
 
     @pytest.fixture
     def mock_clients(self):

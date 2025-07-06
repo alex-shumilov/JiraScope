@@ -392,9 +392,7 @@ class SmartChunker:
         sentences = re.split(r"[.!?]+\s+", text)
 
         # Clean up and filter empty sentences
-        sentences = [s.strip() for s in sentences if s.strip()]
-
-        return sentences
+        return [s.strip() for s in sentences if s.strip()]
 
     def _create_chunk(
         self, text: str, work_item: WorkItem, chunk_type: str, chunk_index: int

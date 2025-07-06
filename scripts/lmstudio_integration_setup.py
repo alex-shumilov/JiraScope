@@ -108,7 +108,7 @@ class LMStudioIntegrator:
     def _check_jirascope(self) -> tuple[bool, str]:
         """Check if JiraScope is installed."""
         try:
-            import jirascope
+            import jirascope  # noqa: F401
 
             return True, "Package found"
         except ImportError:

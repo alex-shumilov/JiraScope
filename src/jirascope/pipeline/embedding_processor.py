@@ -352,9 +352,7 @@ class EmbeddingProcessor:
 
         # Clean up whitespace
         text = re.sub(r"\s+", " ", text)
-        text = text.strip()
-
-        return text
+        return text.strip()
 
     def _filter_unchanged_items(self, items: list[WorkItem]) -> list[WorkItem]:
         """Filter out items that haven't changed since last processing."""

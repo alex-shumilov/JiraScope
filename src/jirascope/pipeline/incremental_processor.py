@@ -137,9 +137,8 @@ class IncrementalProcessor:
 
             # Also include epic_key references
             epic_key = data.get("epic_key")
-            if epic_key:
-                if not project_key or data.get("project_key") == project_key:
-                    epic_keys.add(epic_key)
+            if epic_key and (not project_key or data.get("project_key") == project_key):
+                epic_keys.add(epic_key)
 
         return epic_keys
 
@@ -173,7 +172,7 @@ class IncrementalProcessor:
             # Calculate cache size
             total_size = sum(f.stat().st_size for f in self.cache_dir.iterdir() if f.is_file())
 
-            stats = {
+            return {
                 "cache_directory": str(self.cache_dir),
                 "tracked_items_count": len(tracked_items),
                 "hash_files_count": len(hash_files),
@@ -182,8 +181,6 @@ class IncrementalProcessor:
                 "last_cleanup": metadata.get("last_cleanup"),
                 "cache_created": metadata.get("created_at"),
             }
-
-            return stats
 
         except Exception as e:
             logger.error("Failed to get cache statistics", error=str(e))

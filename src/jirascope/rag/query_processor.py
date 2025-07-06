@@ -80,7 +80,7 @@ class ExpandedQuery:
     @property
     def full_query_text(self) -> str:
         """Combined query text with expansions."""
-        all_terms = [self.original_query] + self.expanded_terms + self.semantic_variants
+        all_terms = [self.original_query, *self.expanded_terms, *self.semantic_variants]
         return " ".join(all_terms)
 
 

@@ -44,16 +44,12 @@ class CostTracker:
         """Get summary of session costs."""
         session_duration = (datetime.now() - self.session_start).total_seconds()
 
-        summary = {
+        return {
             "session_duration_seconds": session_duration,
             "total_cost": self.get_total_cost(),
-            "costs_by_service": {
-                service: self.get_total_cost(service) for service in self.costs.keys()
-            },
+            "costs_by_service": {service: self.get_total_cost(service) for service in self.costs},
             "operation_count": sum(len(entries) for entries in self.costs.values()),
         }
-
-        return summary
 
 
 class JiraScopeLogger(logging.Logger):

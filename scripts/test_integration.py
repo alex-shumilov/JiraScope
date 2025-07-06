@@ -122,8 +122,8 @@ class IntegrationTester:
                 }
 
             # Check optional variables with defaults
-            qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
-            lmstudio_endpoint = os.getenv("LMSTUDIO_ENDPOINT", "http://localhost:1234/v1")
+            os.getenv("QDRANT_URL", "http://localhost:6333")
+            os.getenv("LMSTUDIO_ENDPOINT", "http://localhost:1234/v1")
 
             return {
                 "success": True,
@@ -165,8 +165,8 @@ class IntegrationTester:
         """Test that the MCP server can be imported."""
         try:
             # Try importing the MCP server module
-            from jirascope.core.config import Config
-            from jirascope.mcp_server.server import mcp
+            from jirascope.core.config import Config  # noqa: F401
+            from jirascope.mcp_server.server import mcp  # noqa: F401
 
             # Test that we can import the server without errors
             # Note: We can't easily check tool count without inspecting FastMCP internals
@@ -189,7 +189,7 @@ class IntegrationTester:
             # Just test that we can load the configuration
             from jirascope.core.config import Config
 
-            config = Config.from_env()
+            Config.from_env()
 
             elapsed = time.time() - start_time
 

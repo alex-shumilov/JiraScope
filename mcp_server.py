@@ -57,13 +57,13 @@ async def init_components():
 
         logger.info("JiraScope MCP Server components initialized successfully")
 
-    except Exception as e:
-        logger.error(f"Failed to initialize components: {e}")
+    except Exception:
+        logger.exception("Failed to initialize components")
         raise
 
 
 @mcp.tool()
-async def search_jira_issues(query: str, limit: int | None = 10) -> dict[str, Any]:
+async def search_jira_issues(query: str, limit: int | None = 10) -> dict[str, Any]:  # noqa: ARG001
     """Search Jira issues using natural language query.
 
     Args:
@@ -97,7 +97,7 @@ async def search_jira_issues(query: str, limit: int | None = 10) -> dict[str, An
         }
 
     except Exception as e:
-        logger.error(f"Error in search_jira_issues: {e}")
+        logger.exception("Error in search_jira_issues")
         return {"status": "error", "error": str(e), "query": query}
 
 
@@ -133,7 +133,7 @@ async def analyze_technical_debt(
         }
 
     except Exception as e:
-        logger.error(f"Error in analyze_technical_debt: {e}")
+        logger.exception("Error in analyze_technical_debt")
         return {"status": "error", "error": str(e), "component": component}
 
 
@@ -166,14 +166,12 @@ async def detect_scope_drift(epic_key: str) -> dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Error in detect_scope_drift: {e}")
+        logger.exception("Error in detect_scope_drift")
         return {"status": "error", "error": str(e), "epic_key": epic_key}
 
 
 @mcp.tool()
-async def map_dependencies(
-    epic_key: str | None = None, team: str | None = None
-) -> dict[str, Any]:
+async def map_dependencies(epic_key: str | None = None, team: str | None = None) -> dict[str, Any]:
     """Map dependencies and blockers across teams and Epics.
 
     Args:
@@ -209,7 +207,7 @@ async def map_dependencies(
         }
 
     except Exception as e:
-        logger.error(f"Error in map_dependencies: {e}")
+        logger.exception("Error in map_dependencies")
         return {"status": "error", "error": str(e), "epic_key": epic_key, "team": team}
 
 
@@ -273,19 +271,18 @@ async def main():
 
         # Parse command line arguments for transport
         transport = "stdio"  # Default
-        if len(sys.argv) > 1:
-            if "--transport" in sys.argv:
-                idx = sys.argv.index("--transport")
-                if idx + 1 < len(sys.argv):
-                    transport = sys.argv[idx + 1]
+        if len(sys.argv) > 1 and "--transport" in sys.argv:
+            idx = sys.argv.index("--transport")
+            if idx + 1 < len(sys.argv):
+                transport = sys.argv[idx + 1]
 
         logger.info(f"Using transport: {transport}")
 
         # Run the MCP server
         mcp.run(transport=transport)
 
-    except Exception as e:
-        logger.error(f"Failed to start MCP server: {e}")
+    except Exception:
+        logger.exception("Failed to start MCP server")
         raise
 
 

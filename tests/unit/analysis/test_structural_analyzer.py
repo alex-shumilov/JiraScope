@@ -418,13 +418,15 @@ class TestStructuralAnalyzer:
                     mock_claude_instance.__aexit__ = AsyncMock()
 
                     # Mock successful embedding generation to reach the search call
-                    with patch.object(
-                        analyzer.tech_debt_clusterer,
-                        "_get_embeddings_for_text",
-                        return_value=[[0.1] * 384],
+                    with (
+                        patch.object(
+                            analyzer.tech_debt_clusterer,
+                            "_get_embeddings_for_text",
+                            return_value=[[0.1] * 384],
+                        ),
+                        pytest.raises(Exception, match="Qdrant connection error"),
                     ):
-                        with pytest.raises(Exception, match="Qdrant connection error"):
-                            await analyzer.tech_debt_clustering()
+                        await analyzer.tech_debt_clustering()
 
     @pytest.mark.asyncio
     async def test_error_handling_claude_failure(self, mock_config, sample_work_items):
@@ -524,7 +526,7 @@ class TestStructuralAnalyzer:
         mock_embeddings = AnalysisFixtures.create_mock_embeddings()
 
         # Make embeddings similar for clustering (first 3 items should cluster together)
-        for i, item in enumerate(tech_debt_items):
+        for _i, item in enumerate(tech_debt_items):
             item.embedding = mock_embeddings[0]  # Same embedding for clustering
 
         with (

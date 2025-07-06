@@ -702,10 +702,7 @@ class UsagePatternAnalyzer:
 
                 # Extrapolate to monthly savings
                 days_covered = self._get_days_covered(calls)
-                if days_covered > 0:
-                    monthly_savings = (savings / days_covered) * 30
-                else:
-                    monthly_savings = savings
+                monthly_savings = savings / days_covered * 30 if days_covered > 0 else savings
 
                 if monthly_savings >= 1.0:  # Only suggest if savings is significant
                     suggestions.append(
@@ -797,7 +794,7 @@ class UsagePatternAnalyzer:
             operations[call.operation].append(call)
 
         # For each operation, estimate duplicate calls
-        for operation, calls in operations.items():
+        for calls in operations.values():
             if len(calls) <= 1:
                 continue
 
@@ -912,7 +909,7 @@ class UsagePatternAnalyzer:
             operations[op]["count"] += 1
 
         # Analyze each operation for batching potential
-        for op_name, op_data in operations.items():
+        for op_data in operations.values():
             if op_data["count"] < 5:  # Ignore operations with few calls
                 continue
 
@@ -940,7 +937,7 @@ class UsagePatternAnalyzer:
             clusters = []
             current_cluster = []
 
-            for i, ts in enumerate(timestamps):
+            for _i, ts in enumerate(timestamps):
                 if not current_cluster:
                     current_cluster.append(ts)
                     continue

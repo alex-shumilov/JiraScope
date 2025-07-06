@@ -170,7 +170,12 @@ class ContextAssembler:
             # Apply priority boosts from query plan
             if query_plan.priority_boost:
                 for boost_type, boost_value in query_plan.priority_boost.items():
-                    if boost_type == "priority_boost" and result.content.get("priority") == "High" or boost_type == "status_boost" and result.content.get("status") == "Blocked":
+                    if (
+                        boost_type == "priority_boost"
+                        and result.content.get("priority") == "High"
+                        or boost_type == "status_boost"
+                        and result.content.get("status") == "Blocked"
+                    ):
                         relevance_score *= boost_value
 
             # Update score
@@ -197,7 +202,7 @@ class ContextAssembler:
         # Add primary results
         if results:
             sections.append("\n## Relevant Items:")
-            for i, result in enumerate(results[:10]):  # Limit to top 10
+            for _i, result in enumerate(results[:10]):  # Limit to top 10
                 content = result.content
 
                 # Format item header

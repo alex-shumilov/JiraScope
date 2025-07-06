@@ -8,7 +8,7 @@ help:
 	@echo "lint-fix      - Run ruff linter with auto-fix"
 	@echo "format        - Format code with ruff"
 	@echo "format-check  - Check code formatting without changes"
-	@echo "type-check    - Run mypy type checker" 
+	@echo "type-check    - Run mypy type checker"
 	@echo "check-all     - Run all checks (lint + format + type)"
 	@echo "install-dev   - Install development dependencies"
 	@echo "clean         - Clean cache files"
@@ -53,4 +53,4 @@ clean:
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	rm -rf htmlcov/ .coverage .pytest_cache/ 
+	rm -rf htmlcov/ .coverage .pytest_cache/

@@ -105,7 +105,7 @@ class JiraExtractor:
 
                 # Calculate completion percentage (simplified)
                 completion_percentage = self._calculate_completion_percentage(
-                    [epic] + all_descendants
+                    [epic, *all_descendants]
                 )
 
                 tree = EpicTree(

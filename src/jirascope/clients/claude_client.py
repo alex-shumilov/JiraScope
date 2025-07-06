@@ -170,8 +170,7 @@ Respond in JSON format with these fields:
 
             if start_idx != -1 and end_idx != -1:
                 json_str = response[start_idx:end_idx]
-                insights = json.loads(json_str)
-                return insights
+                return json.loads(json_str)
             else:
                 # Fallback: return raw response
                 return {

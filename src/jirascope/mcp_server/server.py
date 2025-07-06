@@ -159,9 +159,7 @@ async def detect_scope_drift(epic_key: str) -> dict[str, Any]:
 
 
 @mcp.tool()
-async def map_dependencies(
-    epic_key: str | None = None, team: str | None = None
-) -> dict[str, Any]:
+async def map_dependencies(epic_key: str | None = None, team: str | None = None) -> dict[str, Any]:
     """Map dependencies and blockers across teams and Epics.
 
     Args:

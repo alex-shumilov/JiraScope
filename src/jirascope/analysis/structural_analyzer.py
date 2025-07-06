@@ -203,7 +203,7 @@ class TechDebtClusterer:
 
             # Calculate optimal eps using distance to nearest neighbors
             distances = []
-            for i, emb in enumerate(embeddings_array):
+            for _i, emb in enumerate(embeddings_array):
                 similarities = cosine_similarity([emb], embeddings_array)[0]
                 # Convert to distances (1 - similarity)
                 dists = 1 - similarities
@@ -274,9 +274,7 @@ class TechDebtClusterer:
             logger.error("Failed to cluster tech debt items", error=str(e))
             raise
 
-    async def _find_tech_debt_items(
-        self, project_key: str | None = None
-    ) -> list[dict[str, Any]]:
+    async def _find_tech_debt_items(self, project_key: str | None = None) -> list[dict[str, Any]]:
         """Find all tech debt related items."""
         # Tech debt keywords to search for
         tech_debt_keywords = [
@@ -461,9 +459,7 @@ class StructuralAnalyzer:
         if self.qdrant_client:
             await self.qdrant_client.__aexit__(exc_type, exc_val, exc_tb)
 
-    async def analyze_labeling_patterns(
-        self, project_key: str | None = None
-    ) -> LabelingAnalysis:
+    async def analyze_labeling_patterns(self, project_key: str | None = None) -> LabelingAnalysis:
         """Suggest improvements to label/component structure."""
         logger.info(f"Analyzing labeling patterns for project {project_key or 'all'}")
         start_time = time.time()

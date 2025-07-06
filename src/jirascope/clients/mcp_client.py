@@ -72,9 +72,7 @@ class MCPClient:
                     f"{self.auth_tokens.token_type} {self.auth_tokens.access_token}"
                 )
 
-    async def get_work_items(
-        self, jql: str = "", batch_size: int | None = None
-    ) -> list[WorkItem]:
+    async def get_work_items(self, jql: str = "", batch_size: int | None = None) -> list[WorkItem]:
         """Fetch work items from Jira using JQL query."""
         if not self.session:
             raise RuntimeError("MCP client not initialized. Use async context manager.")

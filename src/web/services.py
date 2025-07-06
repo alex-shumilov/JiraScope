@@ -18,8 +18,7 @@ class AnalysisService:
             from jirascope.extraction.jira_extractor import JiraExtractor
 
             async with JiraExtractor(self.config) as extractor:
-                projects = await extractor.get_available_projects()
-                return projects
+                return await extractor.get_available_projects()
         except Exception:
             # Return demo projects if real connection fails
             return ["DEMO", "TEST", "SAMPLE"]

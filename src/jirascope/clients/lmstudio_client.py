@@ -69,9 +69,7 @@ class LMStudioClient:
             response.raise_for_status()
 
             data = response.json()
-            embeddings = [item["embedding"] for item in data["data"]]
-
-            return embeddings
+            return [item["embedding"] for item in data["data"]]
 
         except httpx.HTTPError as e:
             logger.error(f"Failed to generate embeddings: {e}")

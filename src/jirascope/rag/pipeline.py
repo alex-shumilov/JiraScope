@@ -1,6 +1,5 @@
 """Main RAG pipeline orchestrator for JiraScope."""
 
-
 from ..clients.lmstudio_client import LMStudioClient
 from ..clients.qdrant_client import QdrantVectorClient
 from .context_assembler import ContextAssembler
@@ -67,7 +66,7 @@ class JiraRAGPipeline:
             )
 
             # Step 5: Format Response
-            response = {
+            return {
                 "query": user_query,
                 "intent": query_plan.intent,
                 "expected_output": query_plan.expected_output,
@@ -79,8 +78,6 @@ class JiraRAGPipeline:
                 "filters_applied": query_plan.filters.to_qdrant_filter(),
                 "success": True,
             }
-
-            return response
 
         except Exception as e:
             return {

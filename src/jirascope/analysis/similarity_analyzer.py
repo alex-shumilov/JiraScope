@@ -125,7 +125,7 @@ class MultiLevelSimilarityDetector:
         logger.info(f"Starting duplicate detection for {len(work_items)} work items")
         start_time = time.time()
 
-        duplicates_by_level = {level: [] for level in self.similarity_thresholds.keys()}
+        duplicates_by_level = {level: [] for level in self.similarity_thresholds}
         processed_pairs = set()  # Avoid duplicate comparisons
 
         try:

@@ -122,17 +122,19 @@ async def test_process_work_items(mock_config, sample_work_items):
     mock_qdrant_context.__aenter__.return_value = mock_qdrant_client
     mock_qdrant_context.__aexit__.return_value = None
 
-    with patch(
-        "jirascope.pipeline.embedding_processor.LMStudioClient", return_value=mock_lm_context
-    ):
-        with patch(
+    with (
+        patch(
+            "jirascope.pipeline.embedding_processor.LMStudioClient", return_value=mock_lm_context
+        ),
+        patch(
             "jirascope.pipeline.embedding_processor.QdrantVectorClient",
             return_value=mock_qdrant_context,
-        ):
-            # Mock the filtering method to return all items
-            processor._filter_unchanged_items = MagicMock(return_value=sample_work_items)
+        ),
+    ):
+        # Mock the filtering method to return all items
+        processor._filter_unchanged_items = MagicMock(return_value=sample_work_items)
 
-            result = await processor.process_work_items(sample_work_items)
+        result = await processor.process_work_items(sample_work_items)
 
     assert isinstance(result, ProcessingResult)
     assert result.processed_items == 2

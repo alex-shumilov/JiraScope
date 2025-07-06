@@ -7,7 +7,7 @@ src = ["src", "tests"]
 
 exclude = [
     ".bzr",
-    ".direnv", 
+    ".direnv",
     ".eggs",
     ".git",
     ".git-rewrite",
@@ -33,7 +33,7 @@ exclude = [
 [lint]
 select = [
     "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings  
+    "W",   # pycodestyle warnings
     "F",   # Pyflakes
     "UP",  # pyupgrade
     "B",   # flake8-bugbear
@@ -98,6 +98,6 @@ force-single-line = true
 
 [format]
 quote-style = "double"
-indent-style = "space"  
+indent-style = "space"
 skip-magic-trailing-comma = false
-line-ending = "auto" 
+line-ending = "auto"
