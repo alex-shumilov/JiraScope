@@ -120,7 +120,7 @@ Respond in JSON format with these fields:
 """
             )
 
-        elif analysis_type == "similarity":
+        if analysis_type == "similarity":
             return (
                 base_prompt
                 + """
@@ -138,10 +138,10 @@ Respond in JSON format with these fields:
 """
             )
 
-        else:  # general analysis
-            return (
-                base_prompt
-                + """
+        # general analysis
+        return (
+            base_prompt
+            + """
 Provide a general analysis of this work item. Consider:
 1. Clarity and completeness of requirements
 2. Potential issues or risks
@@ -157,7 +157,7 @@ Respond in JSON format with these fields:
 - confidence: number (0-1)
 - reasoning: string
 """
-            )
+        )
 
     def _parse_analysis_response(self, response: str, analysis_type: str) -> dict[str, Any]:
         """Parse Claude's analysis response."""
@@ -171,13 +171,12 @@ Respond in JSON format with these fields:
             if start_idx != -1 and end_idx != -1:
                 json_str = response[start_idx:end_idx]
                 return json.loads(json_str)
-            else:
-                # Fallback: return raw response
-                return {
-                    "raw_response": response,
-                    "confidence": 0.5,
-                    "reasoning": "Failed to parse structured response",
-                }
+            # Fallback: return raw response
+            return {
+                "raw_response": response,
+                "confidence": 0.5,
+                "reasoning": "Failed to parse structured response",
+            }
 
         except json.JSONDecodeError:
             logger.warning(f"Failed to parse JSON response for {analysis_type}")

@@ -728,14 +728,13 @@ class AdvancedCostReporter:
         # Determine trend direction
         if normalized_change > 5:
             return "sharply_increasing"
-        elif normalized_change > 2:
+        if normalized_change > 2:
             return "increasing"
-        elif normalized_change < -5:
+        if normalized_change < -5:
             return "sharply_decreasing"
-        elif normalized_change < -2:
+        if normalized_change < -2:
             return "decreasing"
-        else:
-            return "stable"
+        return "stable"
 
     async def _count_analyzed_calls(self) -> int:
         """Count the total number of API calls analyzed."""

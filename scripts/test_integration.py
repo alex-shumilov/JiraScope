@@ -91,7 +91,7 @@ class IntegrationTester:
                 }
 
             # Validate JSON
-            with open(lmstudio_config) as f:
+            with lmstudio_config.open() as f:
                 config = json.load(f)
 
             if "mcpServers" not in config:
@@ -104,8 +104,8 @@ class IntegrationTester:
             yaml_config = self.config_dir / "jirascope.yaml"
             if yaml_config.exists():
                 return {"success": True, "message": "All config files present and valid"}
-            else:
-                return {"success": True, "message": "LMStudio config valid, YAML optional"}
+
+            return {"success": True, "message": "LMStudio config valid, YAML optional"}
 
         except Exception as e:
             return {"success": False, "message": f"Config validation failed: {e}"}
@@ -168,14 +168,14 @@ class IntegrationTester:
             from jirascope.core.config import Config  # noqa: F401
             from jirascope.mcp_server.server import mcp  # noqa: F401
 
-            # Test that we can import the server without errors
-            # Note: We can't easily check tool count without inspecting FastMCP internals
-            return {"success": True, "message": "MCP server imported successfully"}
-
         except ImportError as e:
             return {"success": False, "message": f"Import failed: {e}"}
         except Exception as e:
             return {"success": False, "message": f"MCP server test failed: {e}"}
+        else:
+            # Test that we can import the server without errors
+            # Note: We can't easily check tool count without inspecting FastMCP internals
+            return {"success": True, "message": "MCP server imported successfully"}
 
     async def _test_server_startup(self) -> dict[str, Any]:
         """Test that the server can start (briefly)."""
@@ -193,10 +193,10 @@ class IntegrationTester:
 
             elapsed = time.time() - start_time
 
-            return {"success": True, "message": f"Server components ready ({elapsed:.2f}s)"}
-
         except Exception as e:
             return {"success": False, "message": f"Server startup test failed: {e}"}
+        else:
+            return {"success": True, "message": f"Server components ready ({elapsed:.2f}s)"}
 
     def _show_summary(self):
         """Show test results summary."""

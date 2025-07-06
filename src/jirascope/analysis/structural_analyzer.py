@@ -143,12 +143,11 @@ class TechDebtClusterer:
         max_count = max(complexity_count, simple_count, medium_count)
         if max_count == 0:
             return "Medium"  # Default
-        elif complexity_count == max_count:
+        if complexity_count == max_count:
             return "Large"
-        elif simple_count == max_count:
+        if simple_count == max_count:
             return "Small"
-        else:
-            return "Medium"
+        return "Medium"
 
     async def __aenter__(self):
         """Async context manager entry."""
@@ -806,7 +805,6 @@ class StructuralAnalyzer:
         # Determine effort level
         if complexity_score >= 5:
             return "Large"
-        elif complexity_score >= 2:
+        if complexity_score >= 2:
             return "Medium"
-        else:
-            return "Small"
+        return "Small"

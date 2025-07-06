@@ -103,7 +103,7 @@ class MCPServerManager:
         try:
             if self.config_file and Path(self.config_file).exists():
                 # Load from file
-                with open(self.config_file) as f:
+                with Path(self.config_file).open() as f:
                     yaml.safe_load(f)
                 console.print(f"📁 Using config file: {self.config_file}")
             elif not os.getenv("JIRA_MCP_ENDPOINT"):
@@ -112,10 +112,11 @@ class MCPServerManager:
 
             # Try to load config
             self.config = Config.from_env()
-            return True
         except Exception as e:
             console.print(f"❌ Configuration error: {e}")
             return False
+        else:
+            return True
 
     async def _check_lmstudio(self) -> bool:
         """Check LMStudio availability."""
@@ -185,10 +186,10 @@ class MCPServerManager:
             return True
         except Exception as e:
             console.print(f"[red]❌ Failed to start server: {e}[/red]")
-            logger.error(f"Server startup failed: {e}")
+            logger.exception(f"Server startup failed: {e}")
             return False
 
-    def _signal_handler(self, signum, frame):
+    def _signal_handler(self, signum, _frame):
         """Handle shutdown signals gracefully."""
         console.print(f"\n[yellow]🛑 Received signal {signum}, shutting down...[/yellow]")
         self.shutdown_requested = True

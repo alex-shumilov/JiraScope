@@ -407,7 +407,6 @@ class ComprehensiveQualityTester:
 
         if change > 0.05:
             return "improving"
-        elif change < -0.05:
+        if change < -0.05:
             return "declining"
-        else:
-            return "stable"
+        return "stable"

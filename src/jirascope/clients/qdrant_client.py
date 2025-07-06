@@ -125,7 +125,9 @@ class QdrantVectorClient:
             payload["text"] = chunk.text  # Include the actual text
 
             point = PointStruct(
-                id=abs(hash(chunk.chunk_id)), vector=embedding, payload=payload  # Use chunk ID hash
+                id=abs(hash(chunk.chunk_id)),
+                vector=embedding,
+                payload=payload,  # Use chunk ID hash
             )
             points.append(point)
 

@@ -105,6 +105,3 @@ analysis_output/
 # Config backups
 *.bak
 *.backup
-
-# Project Management
-MVP.md

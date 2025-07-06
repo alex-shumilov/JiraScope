@@ -56,15 +56,15 @@ class LMStudioIntegrator:
             # Step 4: Provide integration instructions
             self._show_integration_instructions()
 
-            console.print("\n[bold green]✅ Setup completed successfully![/bold green]")
-            return True
-
         except KeyboardInterrupt:
             console.print("\n[yellow]Setup cancelled by user[/yellow]")
             return False
         except Exception as e:
             console.print(f"\n[red]Setup failed: {e}[/red]")
             return False
+        else:
+            console.print("\n[bold green]✅ Setup completed successfully![/bold green]")
+            return True
 
     def _check_prerequisites(self) -> bool:
         """Check that prerequisites are met."""
@@ -109,10 +109,10 @@ class LMStudioIntegrator:
         """Check if JiraScope is installed."""
         try:
             import jirascope  # noqa: F401
-
-            return True, "Package found"
         except ImportError:
             return False, "Run: pip install -e ."
+        else:
+            return True, "Package found"
 
     def _check_config_dir(self) -> tuple[bool, str]:
         """Check if config directory exists."""
@@ -130,7 +130,7 @@ class LMStudioIntegrator:
 
         if env_file.exists():
             console.print(f"📁 Found existing .env file: {env_file}")
-            with open(env_file) as f:
+            with env_file.open() as f:
                 for line in f:
                     if "=" in line and not line.startswith("#"):
                         key, value = line.strip().split("=", 1)
@@ -169,7 +169,7 @@ class LMStudioIntegrator:
 
         # Write updated .env file
         if updated:
-            with open(env_file, "w") as f:
+            with env_file.open("w") as f:
                 f.write("# JiraScope Configuration\n")
                 for key, value in env_vars.items():
                     f.write(f"{key}={value}\n")
@@ -200,7 +200,7 @@ class LMStudioIntegrator:
         }
 
         # Write configuration file
-        with open(self.lmstudio_config_file, "w") as f:
+        with self.lmstudio_config_file.open("w") as f:
             json.dump(config, f, indent=2)
 
         console.print(f"✅ Created: {self.lmstudio_config_file}")
@@ -234,7 +234,7 @@ class LMStudioIntegrator:
         console.print(instructions)
 
         # Show the configuration to copy
-        with open(self.lmstudio_config_file) as f:
+        with self.lmstudio_config_file.open() as f:
             config_content = f.read()
 
         console.print("\n[bold]Configuration to copy into LMStudio's mcp.json:[/bold]")
@@ -309,11 +309,12 @@ class LMStudioIntegrator:
         # Copy our configuration
         try:
             shutil.copy2(self.lmstudio_config_file, mcp_json_path)
-            console.print(f"✅ Configuration copied to: {mcp_json_path}")
-            return True
         except Exception as e:
             console.print(f"❌ Failed to copy configuration: {e}")
             return False
+        else:
+            console.print(f"✅ Configuration copied to: {mcp_json_path}")
+            return True
 
 
 def main():

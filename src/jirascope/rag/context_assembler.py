@@ -171,10 +171,9 @@ class ContextAssembler:
             if query_plan.priority_boost:
                 for boost_type, boost_value in query_plan.priority_boost.items():
                     if (
-                        boost_type == "priority_boost"
-                        and result.content.get("priority") == "High"
-                        or boost_type == "status_boost"
-                        and result.content.get("status") == "Blocked"
+                        boost_type == "priority_boost" and result.content.get("priority") == "High"
+                    ) or (
+                        boost_type == "status_boost" and result.content.get("status") == "Blocked"
                     ):
                         relevance_score *= boost_value
 

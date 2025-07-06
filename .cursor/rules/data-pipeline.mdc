@@ -1,5 +1,5 @@
 ---
-description:
+description: Data processing pipeline components including extraction, embedding, chunking, and validation
 globs:
 alwaysApply: false
 ---

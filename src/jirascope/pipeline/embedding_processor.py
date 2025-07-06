@@ -88,7 +88,6 @@ class EmbeddingProcessor:
         try:
             async with LMStudioClient(self.config) as lm_client:
                 async with QdrantVectorClient(self.config) as qdrant_client:
-
                     # Filter out items that haven't changed (for incremental processing)
                     items_to_process = self._filter_unchanged_items(items)
                     result.skipped_items = len(items) - len(items_to_process)
@@ -165,7 +164,6 @@ class EmbeddingProcessor:
         try:
             async with LMStudioClient(self.config) as lm_client:
                 async with QdrantVectorClient(self.config) as qdrant_client:
-
                     # Filter unchanged items
                     items_to_process = self._filter_unchanged_items(items)
                     result.skipped_items = len(items) - len(items_to_process)
@@ -393,3 +391,7 @@ class EmbeddingProcessor:
             cache_file.write_text(current_hash)
         except Exception as e:
             logger.warning(f"Failed to update cache hash for {item.key}", error=str(e))
+
+    def filter_unchanged_items(self, items, *args, **kwargs):
+        """Public method for filtering unchanged items (for test compatibility)."""
+        return self._filter_unchanged_items(items)

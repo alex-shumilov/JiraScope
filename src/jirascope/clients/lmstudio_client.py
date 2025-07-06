@@ -90,9 +90,8 @@ class LMStudioClient:
             if EMBEDDING_CONFIG["model"] in available_models:
                 logger.info("LMStudio health check passed")
                 return True
-            else:
-                logger.warning(f"Embedding model {EMBEDDING_CONFIG['model']} not available")
-                return False
+            logger.warning(f"Embedding model {EMBEDDING_CONFIG['model']} not available")
+            return False
 
         except httpx.HTTPError as e:
             logger.error(f"LMStudio health check failed: {e}")

@@ -358,19 +358,17 @@ class JiraQueryProcessor:
 
         if any(keyword in query_lower for keyword in analysis_keywords):
             return "analysis"
-        elif any(keyword in query_lower for keyword in search_keywords):
+        if any(keyword in query_lower for keyword in search_keywords):
             return "search"
-        else:
-            return "search"  # Default to search
+        return "search"  # Default to search
 
     def _determine_output_format(self, query: str) -> str:
         """Determine expected output format."""
         if any(word in query.lower() for word in ["summary", "report", "analysis"]):
             return "summary"
-        elif any(word in query.lower() for word in ["list", "show", "find"]):
+        if any(word in query.lower() for word in ["list", "show", "find"]):
             return "list"
-        else:
-            return "list"  # Default
+        return "list"  # Default
 
     def _calculate_priority_boost(self, query: str, filters: FilterSet) -> dict[str, float]:
         """Calculate priority boosts based on query terms."""

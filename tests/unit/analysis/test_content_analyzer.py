@@ -427,11 +427,19 @@ class TestBatchContentAnalyzer:
 
             async with BatchContentAnalyzer(mock_config) as batch_analyzer:
                 work_items = sample_work_items[:2]
-                _ = await batch_analyzer._process_batch(
-                    work_items, ["split"]
-                )  # Non-quality analysis
 
-                # Note: result is created for testing batch processing but not validated in this test
+                # Test fallback behavior through public interface (SOLID principle)
+                result = await batch_analyzer.analyze_multiple_items(
+                    work_items=work_items,
+                    analysis_types=["split"],  # Non-quality analysis triggers fallback
+                    batch_size=2,
+                )
+
+                # Verify fallback behavior occurred through observable effects
+                assert result.total_items_processed == len(work_items)
+                assert result.successful_analyses >= 0
+                # Verify individual analyzer was instantiated for fallback
+                mock_analyzer_class.assert_called_with(mock_config)
 
     @pytest.mark.asyncio
     async def test_batch_analysis_error_handling(self, mock_config, sample_work_items):

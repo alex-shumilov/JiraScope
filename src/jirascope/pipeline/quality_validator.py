@@ -45,7 +45,6 @@ class EmbeddingQualityValidator:
         try:
             async with LMStudioClient(self.config) as lm_client:
                 async with QdrantVectorClient(self.config) as qdrant_client:
-
                     for i, query in enumerate(self.test_queries):
                         try:
                             result = await self._test_single_query(query, lm_client, qdrant_client)
@@ -121,7 +120,9 @@ class EmbeddingQualityValidator:
 
         # Search for similar work items
         search_results = await qdrant_client.search_similar_work_items(
-            query_embedding, limit=5, score_threshold=0.3  # Lower threshold for testing
+            query_embedding,
+            limit=5,
+            score_threshold=0.3,  # Lower threshold for testing
         )
 
         # Calculate metrics
@@ -202,7 +203,6 @@ class EmbeddingQualityValidator:
         try:
             async with LMStudioClient(self.config) as lm_client:
                 async with QdrantVectorClient(self.config) as qdrant_client:
-
                     for query in test_queries:
                         query_start = time.time()
 

@@ -121,7 +121,6 @@ class TestTemporalAnalyzer:
             patch("jirascope.analysis.temporal_analyzer.LMStudioClient", return_value=lm_client),
             patch("jirascope.analysis.temporal_analyzer.ClaudeClient", return_value=claude_client),
         ):
-
             async with TemporalAnalyzer(mock_config) as analyzer:
                 # Mock async context managers
                 jira_client.__aenter__ = AsyncMock(return_value=jira_client)
@@ -156,7 +155,6 @@ class TestTemporalAnalyzer:
             patch("jirascope.analysis.temporal_analyzer.LMStudioClient", return_value=lm_client),
             patch("jirascope.analysis.temporal_analyzer.ClaudeClient", return_value=claude_client),
         ):
-
             async with TemporalAnalyzer(mock_config) as analyzer:
                 jira_client.__aenter__ = AsyncMock(return_value=jira_client)
                 jira_client.__aexit__ = AsyncMock()
@@ -187,7 +185,6 @@ class TestTemporalAnalyzer:
             patch("jirascope.analysis.temporal_analyzer.LMStudioClient", return_value=lm_client),
             patch("jirascope.analysis.temporal_analyzer.ClaudeClient", return_value=claude_client),
         ):
-
             async with TemporalAnalyzer(mock_config) as analyzer:
                 jira_client.__aenter__ = AsyncMock(return_value=jira_client)
                 jira_client.__aexit__ = AsyncMock()
@@ -219,7 +216,6 @@ class TestTemporalAnalyzer:
             patch("jirascope.analysis.temporal_analyzer.LMStudioClient", return_value=lm_client),
             patch("jirascope.analysis.temporal_analyzer.ClaudeClient", return_value=claude_client),
         ):
-
             async with TemporalAnalyzer(mock_config) as analyzer:
                 jira_client.__aenter__ = AsyncMock(return_value=jira_client)
                 jira_client.__aexit__ = AsyncMock()
@@ -278,7 +274,6 @@ class TestTemporalAnalyzer:
             patch("jirascope.analysis.temporal_analyzer.LMStudioClient", return_value=lm_client),
             patch("jirascope.analysis.temporal_analyzer.ClaudeClient", return_value=claude_client),
         ):
-
             async with TemporalAnalyzer(mock_config) as analyzer:
                 jira_client.__aenter__ = AsyncMock(return_value=jira_client)
                 jira_client.__aexit__ = AsyncMock()
@@ -307,7 +302,6 @@ class TestTemporalAnalyzer:
             patch("jirascope.analysis.temporal_analyzer.LMStudioClient", return_value=lm_client),
             patch("jirascope.analysis.temporal_analyzer.ClaudeClient", return_value=claude_client),
         ):
-
             async with TemporalAnalyzer(mock_config) as analyzer:
                 jira_client.__aenter__ = AsyncMock(return_value=jira_client)
                 jira_client.__aexit__ = AsyncMock()
@@ -413,7 +407,6 @@ class TestTemporalAnalyzer:
             patch("jirascope.analysis.temporal_analyzer.LMStudioClient", return_value=lm_client),
             patch("jirascope.analysis.temporal_analyzer.ClaudeClient", return_value=claude_client),
         ):
-
             async with TemporalAnalyzer(mock_config) as analyzer:
                 jira_client.__aenter__ = AsyncMock(return_value=jira_client)
                 jira_client.__aexit__ = AsyncMock()

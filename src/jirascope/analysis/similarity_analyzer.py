@@ -69,12 +69,11 @@ class MultiLevelSimilarityDetector:
         """Generate suggested action based on confidence level and score."""
         if confidence_level == "exact":
             return "Immediate review - likely exact duplicate"
-        elif confidence_level == "high":
+        if confidence_level == "high":
             return "High priority review - consider merging"
-        elif confidence_level == "medium":
+        if confidence_level == "medium":
             return "Investigate potential relationship - compare for related work"
-        else:
-            return "Low priority - monitor for patterns"
+        return "Low priority - monitor for patterns"
 
     def _determine_suggested_action(self, candidate: DuplicateCandidate) -> str:
         """Determine suggested action based on candidate properties."""

@@ -1,5 +1,5 @@
 ---
-description:
+description: Interface guide for CLI, MCP server, and programmatic APIs with usage examples
 globs:
 alwaysApply: false
 ---
@@ -160,7 +160,7 @@ lm_client = LMStudioClient(config)
 # Create RAG pipeline
 async with qdrant_client, lm_client:
     rag_pipeline = JiraRAGPipeline(qdrant_client, lm_client)
-    
+
     # Process natural language query
     result = await rag_pipeline.process_query(
         user_query="high priority bugs in authentication",

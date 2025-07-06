@@ -28,9 +28,8 @@ def run_command(cmd: list[str], description: str, fix_mode: bool = False) -> boo
         if result.returncode == 0:
             print(f"✅ {description} passed!")
             return True
-        else:
-            print(f"❌ {description} failed!")
-            return False
+        print(f"❌ {description} failed!")
+        return False
 
     except FileNotFoundError:
         print(f"❌ Command not found: {cmd[0]}")
@@ -75,11 +74,11 @@ def main():
     if success:
         print("🎉 All linting checks passed!")
         sys.exit(0)
-    else:
-        print("💥 Some linting checks failed!")
-        if not fix_mode:
-            print("💡 Try running with --fix to auto-fix issues: python scripts/lint.py --fix")
-        sys.exit(1)
+
+    print("💥 Some linting checks failed!")
+    if not fix_mode:
+        print("💡 Try running with --fix to auto-fix issues: python scripts/lint.py --fix")
+    sys.exit(1)
 
 
 if __name__ == "__main__":

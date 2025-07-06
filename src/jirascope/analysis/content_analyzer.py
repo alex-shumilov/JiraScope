@@ -181,7 +181,10 @@ class ContentAnalyzer:
             return analysis
 
         except Exception as e:
-            logger.error(f"Failed to analyze description quality for {work_item.key}", error=str(e))
+            logger.exception(
+                f"Claude API error during description quality analysis for {work_item.key}",
+                error=str(e),
+            )
             raise
 
     async def suggest_work_item_splits(self, work_item: WorkItem) -> SplitAnalysis:
@@ -256,7 +259,7 @@ class ContentAnalyzer:
             return analysis
 
         except Exception as e:
-            logger.error(f"Failed to analyze splits for {work_item.key}", error=str(e))
+            logger.exception(f"Failed to analyze splits for {work_item.key}", error=str(e))
             raise
 
     def _parse_fallback_quality_response(self, content: str) -> dict[str, Any]:
@@ -363,7 +366,7 @@ class BatchContentAnalyzer:
             )
 
         except Exception as e:
-            logger.error("Batch analysis failed completely", error=str(e))
+            logger.exception("Batch analysis failed completely", error=str(e))
             raise
 
     async def _process_batch(
@@ -373,22 +376,21 @@ class BatchContentAnalyzer:
         # For now, focus on quality analysis batching
         if "quality" in analysis_types:
             return await self._batch_quality_analysis(work_items)
-        else:
-            # Fallback to individual analysis
-            results = []
-            total_cost = 0.0
+        # Fallback to individual analysis
+        results = []
+        total_cost = 0.0
 
-            analyzer = ContentAnalyzer(self.config)
-            async with analyzer:
-                for item in work_items:
-                    try:
-                        analysis = await analyzer.analyze_description_quality(item)
-                        results.append(analysis.dict())
-                        total_cost += analysis.analysis_cost
-                    except Exception as e:
-                        logger.warning(f"Failed to analyze {item.key}: {e!s}")
+        analyzer = ContentAnalyzer(self.config)
+        async with analyzer:
+            for item in work_items:
+                try:
+                    analysis = await analyzer.analyze_description_quality(item)
+                    results.append(analysis.dict())
+                    total_cost += analysis.analysis_cost
+                except Exception as e:
+                    logger.warning(f"Failed to analyze {item.key}: {e!s}")
 
-            return {"analyses": results, "cost": total_cost}
+        return {"analyses": results, "cost": total_cost}
 
     async def _batch_quality_analysis(self, work_items: list[WorkItem]) -> dict[str, Any]:
         """Batch quality analysis for multiple work items."""

@@ -235,12 +235,11 @@ class CostOptimizer:
         """Determine alert severity based on threshold."""
         if threshold >= 1.0:
             return "critical"
-        elif threshold >= 0.9:
+        if threshold >= 0.9:
             return "high"
-        elif threshold >= 0.75:
+        if threshold >= 0.75:
             return "medium"
-        else:
-            return "low"
+        return "low"
 
     def _alert_already_sent(self, alert_key: str) -> bool:
         """Check if an alert has already been sent."""

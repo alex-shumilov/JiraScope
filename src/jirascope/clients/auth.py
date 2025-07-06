@@ -220,8 +220,7 @@ class SSEAuthenticator:
                             f"Could not find an available port after {max_retries} attempts"
                         )
                     continue
-                else:
-                    raise  # Re-raise other OSErrors
+                raise  # Re-raise other OSErrors
 
         server_thread = threading.Thread(target=server.serve_forever, daemon=True)
         server_thread.start()
