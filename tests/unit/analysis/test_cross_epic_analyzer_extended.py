@@ -84,7 +84,9 @@ class TestCrossEpicAnalyzerCoverage:
         """Test the main misplacement detection business logic."""
         # Setup mocks
         mock_qdrant_instance = AsyncMock()
-        mock_lm_instance = AsyncMock()  # Need AsyncMock for context manager, but calculate_similarity is sync
+        mock_lm_instance = (
+            AsyncMock()
+        )  # Need AsyncMock for context manager, but calculate_similarity is sync
         mock_claude_instance = AsyncMock()
 
         mock_qdrant.return_value = mock_qdrant_instance
@@ -120,7 +122,14 @@ class TestCrossEpicAnalyzerCoverage:
 
         # Mock the _find_similar_across_epics method
         self.analyzer._find_similar_across_epics = AsyncMock(
-            return_value=[{"epic_key": "EPIC-2", "score": 0.8, "key": "PROJ-3", "work_item": {"key": "PROJ-3"}}]
+            return_value=[
+                {
+                    "epic_key": "EPIC-2",
+                    "score": 0.8,
+                    "key": "PROJ-3",
+                    "work_item": {"key": "PROJ-3"},
+                }
+            ]
         )
 
         # Mock LMStudio similarity calculation (SYNC method, returns float directly)
@@ -142,24 +151,24 @@ class TestCrossEpicAnalyzerCoverage:
         """Test epic data collection logic."""
         # Mock Qdrant client
         mock_qdrant_client = AsyncMock()
-        
+
         # Create proper mock points with the correct structure
         mock_point_1 = Mock()
         mock_point_1.payload = {"key": "PROJ-1", "epic_key": "EPIC-1", "summary": "Story 1"}
         mock_point_1.vector = [0.1, 0.2, 0.3] * 100
-        
+
         mock_point_2 = Mock()
         mock_point_2.payload = {"key": "PROJ-2", "epic_key": "EPIC-1", "summary": "Story 2"}
         mock_point_2.vector = [0.1, 0.2, 0.3] * 100
-        
+
         mock_point_3 = Mock()
         mock_point_3.payload = {"key": "PROJ-3", "epic_key": "EPIC-2", "summary": "Story 3"}
         mock_point_3.vector = [0.8, 0.9, 0.7] * 100
-        
+
         mock_point_4 = Mock()
         mock_point_4.payload = {"key": "PROJ-4", "epic_key": "EPIC-2", "summary": "Story 4"}
         mock_point_4.vector = [0.8, 0.9, 0.7] * 100
-        
+
         # Mock scroll returns (points_list, next_offset) tuple
         mock_scroll_result = (
             [mock_point_1, mock_point_2, mock_point_3, mock_point_4],
@@ -234,25 +243,21 @@ class TestCrossEpicAnalyzerCoverage:
         """Test finding similar items across epics algorithm."""
         # Mock Qdrant client
         mock_qdrant_client = AsyncMock()
-        
+
         # Mock search_similar_work_items to return the correct format
         # The real method returns List[Dict[str, Any]] with "score" and "work_item" keys
         mock_search_result = [
             {
                 "score": 0.85,
-                "work_item": {
-                    "key": "PROJ-3", 
-                    "epic_key": "EPIC-2", 
-                    "summary": "Similar item"
-                }
+                "work_item": {"key": "PROJ-3", "epic_key": "EPIC-2", "summary": "Similar item"},
             },
             {
                 "score": 0.75,
                 "work_item": {
-                    "key": "PROJ-4", 
-                    "epic_key": "EPIC-3", 
-                    "summary": "Another similar item"
-                }
+                    "key": "PROJ-4",
+                    "epic_key": "EPIC-3",
+                    "summary": "Another similar item",
+                },
             },
         ]
 
@@ -270,11 +275,11 @@ class TestCrossEpicAnalyzerCoverage:
         assert all("score" in item for item in result)
         assert all("key" in item for item in result)
         assert all("work_item" in item for item in result)
-        
+
         # Verify the actual values
         assert result[0]["epic_key"] == "EPIC-2"
         assert result[0]["score"] == 0.85
-        assert result[1]["epic_key"] == "EPIC-3"  
+        assert result[1]["epic_key"] == "EPIC-3"
         assert result[1]["score"] == 0.75
 
     def test_generate_misplacement_reasoning_logic(self):
@@ -309,13 +314,13 @@ class TestCrossEpicAnalyzerCoverage:
 
         # Mock Claude client - it should return a simple object with content field containing JSON
         mock_claude_client = AsyncMock()
-        
+
         # Create a mock response object that matches the SimpleResponse class in claude_client.py
         class MockResponse:
             def __init__(self):
                 self.content = '{"reasoning": "Authentication feature belongs in authentication epic", "confidence": 0.85}'
                 self.cost = 0.05
-        
+
         mock_claude_response = MockResponse()
         mock_claude_client.analyze.return_value = mock_claude_response
         self.analyzer.claude_client = mock_claude_client
@@ -328,7 +333,7 @@ class TestCrossEpicAnalyzerCoverage:
         # Verify results - the method parses response.content as JSON and adds cost
         assert isinstance(result, dict)
         assert "reasoning" in result
-        assert "confidence" in result  
+        assert "confidence" in result
         assert "cost" in result
         assert result["reasoning"] == "Authentication feature belongs in authentication epic"
         assert result["confidence"] == 0.85
@@ -406,25 +411,21 @@ class TestCrossEpicAnalyzerCoverage:
         """Test similarity threshold filtering logic."""
         # Mock Qdrant client with various similarity scores
         mock_qdrant_client = AsyncMock()
-        
+
         # Mock search_similar_work_items to return the correct format
         # The Qdrant client is supposed to filter by threshold, so only return items above 0.7
         mock_search_result = [
             {
                 "score": 0.95,  # Above threshold
-                "work_item": {
-                    "key": "PROJ-3", 
-                    "epic_key": "EPIC-2", 
-                    "summary": "High similarity"
-                }
+                "work_item": {"key": "PROJ-3", "epic_key": "EPIC-2", "summary": "High similarity"},
             },
             {
                 "score": 0.75,  # Above threshold
                 "work_item": {
-                    "key": "PROJ-4", 
-                    "epic_key": "EPIC-3", 
-                    "summary": "Medium similarity"
-                }
+                    "key": "PROJ-4",
+                    "epic_key": "EPIC-3",
+                    "summary": "Medium similarity",
+                },
             },
             # Note: Item with score 0.45 is filtered out by Qdrant's score_threshold
         ]
@@ -485,7 +486,7 @@ class TestCrossEpicAnalyzerCoverage:
         assert len(result) > 20  # Reasonable length
         assert "epic" in result.lower()
         assert "coherence" in result.lower()
-        
+
         # Check for authentication-related keywords (including epic names)
         auth_keywords = ["authentication", "user", "auth", "epic-auth", "login"]
         assert any(keyword in result.lower() for keyword in auth_keywords)

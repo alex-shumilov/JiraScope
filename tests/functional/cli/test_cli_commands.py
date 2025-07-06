@@ -174,11 +174,7 @@ logging:
         mock_duplicate_report.medium_confidence_duplicates = []
         mock_duplicate_report.processing_cost = 0.0
         # Add the missing candidates_by_level attribute
-        mock_duplicate_report.candidates_by_level = {
-            "high": [],
-            "medium": [],
-            "low": []
-        }
+        mock_duplicate_report.candidates_by_level = {"high": [], "medium": [], "low": []}
         mock_analyzer_instance.find_potential_duplicates.return_value = mock_duplicate_report
         mock_similarity_analyzer.return_value.__aenter__.return_value = mock_analyzer_instance
         mock_similarity_analyzer.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -221,7 +217,7 @@ logging:
         assert result.exit_code == 0
 
     @patch("jirascope.cli.main.ContentAnalyzer")
-    @patch("jirascope.clients.mcp_client.MCPClient") 
+    @patch("jirascope.clients.mcp_client.MCPClient")
     @patch("jirascope.cli.main.Config.load")
     def test_analyze_quality_command(
         self, mock_config_load, mock_mcp_client, mock_content_analyzer
@@ -233,9 +229,7 @@ logging:
 
         # Mock MCP client
         mock_mcp_instance = AsyncMock()
-        mock_work_item = Mock(
-            key="TEST-123", summary="Test item", description="Test description"
-        )
+        mock_work_item = Mock(key="TEST-123", summary="Test item", description="Test description")
         mock_mcp_instance.get_work_item.return_value = mock_work_item
         mock_mcp_client.return_value.__aenter__.return_value = mock_mcp_instance
         mock_mcp_client.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -250,7 +244,7 @@ logging:
             completeness_score=4,
             actionability_score=4,
             testability_score=5,
-            improvement_suggestions=["Add more details"]
+            improvement_suggestions=["Add more details"],
         )
         mock_content_analyzer.return_value.__aenter__.return_value = mock_analyzer_instance
         mock_content_analyzer.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -264,9 +258,7 @@ logging:
 
     @patch("jirascope.cli.main.TemplateInferenceEngine")
     @patch("jirascope.cli.main.Config.load")
-    def test_analyze_template_command(
-        self, mock_config_load, mock_template_engine
-    ):
+    def test_analyze_template_command(self, mock_config_load, mock_template_engine):
         """Test analyze template command."""
         # Setup mocks
         mock_config = Mock()
@@ -281,7 +273,7 @@ logging:
         mock_template.description_template = "Test description template"
         mock_template.required_fields = ["summary", "description"]
         mock_template.common_components = ["frontend", "backend"]
-        
+
         mock_engine_instance.infer_templates_from_samples.return_value = mock_template
         mock_template_engine.return_value.__aenter__.return_value = mock_engine_instance
         mock_template_engine.return_value.__aexit__ = AsyncMock(return_value=None)
@@ -339,16 +331,16 @@ logging:
 
         # Mock extractor with proper async methods
         mock_extractor_instance = Mock()  # Use Mock, not AsyncMock for the instance
-        
+
         # Set up async methods properly
         mock_extractor_instance.extract_active_hierarchies = AsyncMock(return_value=[])
-        
-        # Set up the synchronous calculate_extraction_cost method  
+
+        # Set up the synchronous calculate_extraction_cost method
         mock_cost = Mock()
         mock_cost.api_calls = 5
         mock_cost.estimated_cost = 0.025
         mock_extractor_instance.calculate_extraction_cost = Mock(return_value=mock_cost)
-        
+
         # Make sure the extractor constructor returns our mock instance
         mock_extractor.return_value = mock_extractor_instance
 
@@ -363,14 +355,14 @@ logging:
         # Mock incremental processor
         mock_incremental_instance = Mock()
         mock_incremental_result = Mock()
-        mock_incremental_instance.process_incremental_updates = AsyncMock(return_value=mock_incremental_result)
+        mock_incremental_instance.process_incremental_updates = AsyncMock(
+            return_value=mock_incremental_result
+        )
         mock_incremental_instance.update_last_sync_timestamp = Mock()
         mock_incremental_proc.return_value = mock_incremental_instance
 
         config_file = self.create_test_config()
-        result = self.runner.invoke(
-            cli, ["--config", config_file, "fetch", "--project", "TEST"]
-        )
+        result = self.runner.invoke(cli, ["--config", config_file, "fetch", "--project", "TEST"])
 
         # Add debug output if the test fails
         if result.exit_code != 0:
@@ -400,8 +392,12 @@ logging:
         mock_search_result = Mock()
         mock_search_result.points = [
             Mock(
-                payload={"key": "TEST-1", "summary": "Test result", "description": "Test description"},
-                score=0.95
+                payload={
+                    "key": "TEST-1",
+                    "summary": "Test result",
+                    "description": "Test description",
+                },
+                score=0.95,
             )
         ]
         mock_qdrant_instance.search.return_value = mock_search_result
@@ -432,9 +428,9 @@ logging:
         mock_report.recommendations = ["Increase embedding dimensions"]
         mock_report.results = [
             {"passed": True, "query": "test query 1", "avg_similarity": 0.85},
-            {"passed": False, "query": "test query 2", "avg_similarity": 0.65}
+            {"passed": False, "query": "test query 2", "avg_similarity": 0.65},
         ]
-        
+
         # Make validate_embedding_quality async
         mock_validator_instance.validate_embedding_quality = AsyncMock(return_value=mock_report)
         mock_quality_validator.return_value = mock_validator_instance
@@ -576,7 +572,7 @@ class TestCLIErrorHandling:
     def setup_method(self):
         """Set up test fixtures."""
         self.runner = CliRunner()
-        
+
     def create_test_config(self) -> str:
         """Create a temporary test configuration file."""
         config_content = """
@@ -598,6 +594,7 @@ logging:
         """
 
         import tempfile
+
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write(config_content.strip())
             f.flush()
