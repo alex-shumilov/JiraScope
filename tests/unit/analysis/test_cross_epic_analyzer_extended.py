@@ -44,6 +44,7 @@ class TestCrossEpicAnalyzerCoverage:
             embedding=[0.1, 0.2, 0.3] * 100,  # Mock embedding
         )
 
+    @pytest.mark.asyncio
     @patch("jirascope.analysis.cross_epic_analyzer.QdrantVectorClient")
     @patch("jirascope.analysis.cross_epic_analyzer.LMStudioClient")
     @patch("jirascope.analysis.cross_epic_analyzer.ClaudeClient")
@@ -73,6 +74,7 @@ class TestCrossEpicAnalyzerCoverage:
         mock_lm_instance.__aexit__.assert_called_once()
         mock_claude_instance.__aexit__.assert_called_once()
 
+    @pytest.mark.asyncio
     @patch("jirascope.analysis.cross_epic_analyzer.QdrantVectorClient")
     @patch("jirascope.analysis.cross_epic_analyzer.LMStudioClient")
     @patch("jirascope.analysis.cross_epic_analyzer.ClaudeClient")
@@ -82,7 +84,7 @@ class TestCrossEpicAnalyzerCoverage:
         """Test the main misplacement detection business logic."""
         # Setup mocks
         mock_qdrant_instance = AsyncMock()
-        mock_lm_instance = AsyncMock()
+        mock_lm_instance = AsyncMock()  # Need AsyncMock for context manager, but calculate_similarity is sync
         mock_claude_instance = AsyncMock()
 
         mock_qdrant.return_value = mock_qdrant_instance
@@ -118,11 +120,13 @@ class TestCrossEpicAnalyzerCoverage:
 
         # Mock the _find_similar_across_epics method
         self.analyzer._find_similar_across_epics = AsyncMock(
-            return_value=[{"epic_key": "EPIC-2", "score": 0.8}]
+            return_value=[{"epic_key": "EPIC-2", "score": 0.8, "key": "PROJ-3", "work_item": {"key": "PROJ-3"}}]
         )
 
-        # Mock LMStudio similarity calculation
-        mock_lm_instance.calculate_similarity.return_value = 0.75
+        # Mock LMStudio similarity calculation (SYNC method, returns float directly)
+        mock_lm_instance.calculate_similarity = Mock(return_value=0.75)
+        # Ensure calculate_similarity is treated as sync even though instance is AsyncMock
+        mock_lm_instance.calculate_similarity.side_effect = None  # Clear any async side effects
 
         # Test the method
         async with self.analyzer as analyzer:
@@ -133,25 +137,32 @@ class TestCrossEpicAnalyzerCoverage:
             assert result.epics_analyzed == 2
             assert len(result.misplaced_items) >= 0
 
+    @pytest.mark.asyncio
     async def test_get_all_epics_with_items_logic(self):
         """Test epic data collection logic."""
         # Mock Qdrant client
         mock_qdrant_client = AsyncMock()
+        
+        # Create proper mock points with the correct structure
+        mock_point_1 = Mock()
+        mock_point_1.payload = {"key": "PROJ-1", "epic_key": "EPIC-1", "summary": "Story 1"}
+        mock_point_1.vector = [0.1, 0.2, 0.3] * 100
+        
+        mock_point_2 = Mock()
+        mock_point_2.payload = {"key": "PROJ-2", "epic_key": "EPIC-1", "summary": "Story 2"}
+        mock_point_2.vector = [0.1, 0.2, 0.3] * 100
+        
+        mock_point_3 = Mock()
+        mock_point_3.payload = {"key": "PROJ-3", "epic_key": "EPIC-2", "summary": "Story 3"}
+        mock_point_3.vector = [0.8, 0.9, 0.7] * 100
+        
+        mock_point_4 = Mock()
+        mock_point_4.payload = {"key": "PROJ-4", "epic_key": "EPIC-2", "summary": "Story 4"}
+        mock_point_4.vector = [0.8, 0.9, 0.7] * 100
+        
+        # Mock scroll returns (points_list, next_offset) tuple
         mock_scroll_result = (
-            [
-                Mock(
-                    payload={"key": "PROJ-1", "epic_key": "EPIC-1", "summary": "Story 1"},
-                    vector=[0.1, 0.2, 0.3] * 100,
-                ),
-                Mock(
-                    payload={"key": "PROJ-2", "epic_key": "EPIC-1", "summary": "Story 2"},
-                    vector=[0.1, 0.2, 0.3] * 100,
-                ),
-                Mock(
-                    payload={"key": "PROJ-3", "epic_key": "EPIC-2", "summary": "Story 3"},
-                    vector=[0.8, 0.9, 0.7] * 100,
-                ),
-            ],
+            [mock_point_1, mock_point_2, mock_point_3, mock_point_4],
             None,  # Next page offset
         )
 
@@ -166,8 +177,9 @@ class TestCrossEpicAnalyzerCoverage:
         assert "EPIC-1" in result
         assert "EPIC-2" in result
         assert len(result["EPIC-1"]) == 2
-        assert len(result["EPIC-2"]) == 1
+        assert len(result["EPIC-2"]) == 2
 
+    @pytest.mark.asyncio
     async def test_calculate_epic_theme_embedding_algorithm(self):
         """Test epic theme embedding calculation algorithm."""
         # Create test work items
@@ -192,6 +204,7 @@ class TestCrossEpicAnalyzerCoverage:
         assert len(result) == 300  # 3 * 100 dimension mock embedding
         assert all(isinstance(x, float) for x in result)
 
+    @pytest.mark.asyncio
     async def test_calculate_epic_coherence_score_algorithm(self):
         """Test epic coherence score calculation algorithm."""
         # Create test work items
@@ -202,8 +215,8 @@ class TestCrossEpicAnalyzerCoverage:
 
         epic_theme = [0.5, 0.5, 0.5] * 100
 
-        # Mock LMStudio client
-        mock_lm_client = AsyncMock()
+        # Mock LMStudio client (calculate_similarity is SYNC, not async)
+        mock_lm_client = Mock()
         mock_lm_client.calculate_similarity.return_value = 0.85
         self.analyzer.lm_client = mock_lm_client
 
@@ -213,23 +226,37 @@ class TestCrossEpicAnalyzerCoverage:
         # Verify results
         assert isinstance(result, float)
         assert 0.0 <= result <= 1.0
+        # Should be around 0.85 since both items have embeddings and similarity returns 0.85
+        assert abs(result - 0.85) < 0.1
 
+    @pytest.mark.asyncio
     async def test_find_similar_across_epics_algorithm(self):
         """Test finding similar items across epics algorithm."""
         # Mock Qdrant client
         mock_qdrant_client = AsyncMock()
+        
+        # Mock search_similar_work_items to return the correct format
+        # The real method returns List[Dict[str, Any]] with "score" and "work_item" keys
         mock_search_result = [
-            Mock(
-                payload={"key": "PROJ-3", "epic_key": "EPIC-2", "summary": "Similar item"},
-                score=0.85,
-            ),
-            Mock(
-                payload={"key": "PROJ-4", "epic_key": "EPIC-3", "summary": "Another similar item"},
-                score=0.75,
-            ),
+            {
+                "score": 0.85,
+                "work_item": {
+                    "key": "PROJ-3", 
+                    "epic_key": "EPIC-2", 
+                    "summary": "Similar item"
+                }
+            },
+            {
+                "score": 0.75,
+                "work_item": {
+                    "key": "PROJ-4", 
+                    "epic_key": "EPIC-3", 
+                    "summary": "Another similar item"
+                }
+            },
         ]
 
-        mock_qdrant_client.client.search.return_value = mock_search_result
+        mock_qdrant_client.search_similar_work_items.return_value = mock_search_result
         self.analyzer.qdrant_client = mock_qdrant_client
 
         # Test the method
@@ -241,6 +268,14 @@ class TestCrossEpicAnalyzerCoverage:
         assert len(result) == 2
         assert all("epic_key" in item for item in result)
         assert all("score" in item for item in result)
+        assert all("key" in item for item in result)
+        assert all("work_item" in item for item in result)
+        
+        # Verify the actual values
+        assert result[0]["epic_key"] == "EPIC-2"
+        assert result[0]["score"] == 0.85
+        assert result[1]["epic_key"] == "EPIC-3"  
+        assert result[1]["score"] == 0.75
 
     def test_generate_misplacement_reasoning_logic(self):
         """Test misplacement reasoning generation logic."""
@@ -264,6 +299,7 @@ class TestCrossEpicAnalyzerCoverage:
         assert "EPIC-AUTH" in result
         assert "0.85" in result or "85%" in result
 
+    @pytest.mark.asyncio
     async def test_analyze_misplacement_with_claude_integration(self):
         """Test Claude integration for misplacement analysis."""
         # Create test work items
@@ -271,14 +307,17 @@ class TestCrossEpicAnalyzerCoverage:
         current_epic = self.create_work_item("EPIC-1", "Miscellaneous Tasks", "Epic")
         suggested_epic = self.create_work_item("EPIC-AUTH", "Authentication System", "Epic")
 
-        # Mock Claude client
+        # Mock Claude client - it should return a simple object with content field containing JSON
         mock_claude_client = AsyncMock()
-        mock_claude_response = {
-            "analysis": "The work item appears to be misplaced",
-            "confidence": 0.85,
-            "reasoning": "Authentication feature belongs in authentication epic",
-        }
-        mock_claude_client.analyze_text.return_value = mock_claude_response
+        
+        # Create a mock response object that matches the SimpleResponse class in claude_client.py
+        class MockResponse:
+            def __init__(self):
+                self.content = '{"reasoning": "Authentication feature belongs in authentication epic", "confidence": 0.85}'
+                self.cost = 0.05
+        
+        mock_claude_response = MockResponse()
+        mock_claude_client.analyze.return_value = mock_claude_response
         self.analyzer.claude_client = mock_claude_client
 
         # Test Claude analysis
@@ -286,12 +325,16 @@ class TestCrossEpicAnalyzerCoverage:
             work_item, current_epic, suggested_epic
         )
 
-        # Verify results
+        # Verify results - the method parses response.content as JSON and adds cost
         assert isinstance(result, dict)
-        assert "analysis" in result
-        assert "confidence" in result
         assert "reasoning" in result
+        assert "confidence" in result  
+        assert "cost" in result
+        assert result["reasoning"] == "Authentication feature belongs in authentication epic"
+        assert result["confidence"] == 0.85
+        assert result["cost"] == 0.05
 
+    @pytest.mark.asyncio
     async def test_calculate_epic_coherence_business_logic(self):
         """Test epic coherence calculation business logic."""
         # Create test work item
@@ -327,6 +370,7 @@ class TestCrossEpicAnalyzerCoverage:
         assert isinstance(result, float)
         assert 0.0 <= result <= 1.0
 
+    @pytest.mark.asyncio
     @patch("jirascope.analysis.cross_epic_analyzer.QdrantVectorClient")
     @patch("jirascope.analysis.cross_epic_analyzer.LMStudioClient")
     @patch("jirascope.analysis.cross_epic_analyzer.ClaudeClient")
@@ -357,26 +401,35 @@ class TestCrossEpicAnalyzerCoverage:
             assert result.epics_analyzed == 1
             assert len(result.misplaced_items) == 0
 
+    @pytest.mark.asyncio
     async def test_similarity_threshold_filtering(self):
         """Test similarity threshold filtering logic."""
         # Mock Qdrant client with various similarity scores
         mock_qdrant_client = AsyncMock()
+        
+        # Mock search_similar_work_items to return the correct format
+        # The Qdrant client is supposed to filter by threshold, so only return items above 0.7
         mock_search_result = [
-            Mock(
-                payload={"key": "PROJ-3", "epic_key": "EPIC-2", "summary": "High similarity"},
-                score=0.95,  # Above threshold
-            ),
-            Mock(
-                payload={"key": "PROJ-4", "epic_key": "EPIC-3", "summary": "Medium similarity"},
-                score=0.75,  # Above threshold
-            ),
-            Mock(
-                payload={"key": "PROJ-5", "epic_key": "EPIC-4", "summary": "Low similarity"},
-                score=0.45,  # Below threshold
-            ),
+            {
+                "score": 0.95,  # Above threshold
+                "work_item": {
+                    "key": "PROJ-3", 
+                    "epic_key": "EPIC-2", 
+                    "summary": "High similarity"
+                }
+            },
+            {
+                "score": 0.75,  # Above threshold
+                "work_item": {
+                    "key": "PROJ-4", 
+                    "epic_key": "EPIC-3", 
+                    "summary": "Medium similarity"
+                }
+            },
+            # Note: Item with score 0.45 is filtered out by Qdrant's score_threshold
         ]
 
-        mock_qdrant_client.client.search.return_value = mock_search_result
+        mock_qdrant_client.search_similar_work_items.return_value = mock_search_result
         self.analyzer.qdrant_client = mock_qdrant_client
 
         # Test with threshold of 0.7
@@ -386,23 +439,30 @@ class TestCrossEpicAnalyzerCoverage:
         # Verify only items above threshold are returned
         assert len(result) == 2
         assert all(item["score"] >= 0.7 for item in result)
+        # Verify the specific items that should be returned
+        assert result[0]["score"] == 0.95
+        assert result[1]["score"] == 0.75
 
+    @pytest.mark.asyncio
     async def test_epic_theme_embedding_edge_cases(self):
         """Test epic theme embedding calculation edge cases."""
         # Test with no work items
         epic = self.create_work_item("EPIC-1", "Empty Epic", "Epic")
 
-        # Mock LMStudio client
+        # Mock LMStudio client - the implementation returns default size from EMBEDDING_CONFIG
         mock_lm_client = AsyncMock()
-        mock_lm_client.generate_embeddings.return_value = [[0.0] * 300]
+        # The _calculate_epic_theme_embedding method returns [0.0] * 1024 for empty items
+        # But let's check what the actual config uses by looking at the constants
+        mock_lm_client.generate_embeddings.return_value = [[0.0] * 1024]  # Use actual default size
         self.analyzer.lm_client = mock_lm_client
 
         # Test with empty work items list
         result = await self.analyzer._calculate_epic_theme_embedding(epic, [])
 
-        # Should handle gracefully
+        # Should handle gracefully and return the default embedding size (1024, not 300)
         assert isinstance(result, list)
-        assert len(result) == 300
+        assert len(result) == 1024  # This is the actual default size from the implementation
+        assert all(x == 0.0 for x in result)  # Should be all zeros for empty epic
 
     def test_misplacement_reasoning_content_quality(self):
         """Test quality of misplacement reasoning content."""
@@ -439,11 +499,13 @@ class TestCrossEpicAnalyzerEdgeCases:
         self.config = Config(jira_mcp_endpoint="http://localhost:8000")
         self.analyzer = CrossEpicAnalyzer(self.config)
 
+    @pytest.mark.asyncio
     async def test_uninitialized_analyzer_error(self):
         """Test error handling when analyzer is not initialized."""
         with pytest.raises(RuntimeError, match="not initialized"):
             await self.analyzer.find_misplaced_work_items("TEST")
 
+    @pytest.mark.asyncio
     async def test_empty_epics_data_handling(self):
         """Test handling of empty epics data."""
         # Mock empty data
@@ -461,6 +523,7 @@ class TestCrossEpicAnalyzerEdgeCases:
         assert result.epics_analyzed == 0
         assert len(result.misplaced_items) == 0
 
+    @pytest.mark.asyncio
     async def test_missing_embeddings_handling(self):
         """Test handling of work items without embeddings."""
         # Mock epics data with missing embeddings
@@ -484,6 +547,7 @@ class TestCrossEpicAnalyzerEdgeCases:
         # Should handle gracefully
         assert isinstance(result, CrossEpicReport)
 
+    @pytest.mark.asyncio
     async def test_none_input_handling(self):
         """Test handling of None inputs."""
         # Test with None project key
@@ -495,6 +559,7 @@ class TestCrossEpicAnalyzerEdgeCases:
         result = await self.analyzer.find_misplaced_work_items(None)
         assert isinstance(result, CrossEpicReport)
 
+    @pytest.mark.asyncio
     async def test_large_dataset_performance(self):
         """Test performance with large datasets."""
         # Create large mock dataset

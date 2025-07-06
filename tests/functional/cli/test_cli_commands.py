@@ -220,30 +220,40 @@ logging:
 
         assert result.exit_code == 0
 
-    @patch("jirascope.cli.main.EmbeddingQualityValidator")
-    @patch("jirascope.cli.main.QdrantVectorClient")
+    @patch("jirascope.cli.main.ContentAnalyzer")
+    @patch("jirascope.clients.mcp_client.MCPClient") 
     @patch("jirascope.cli.main.Config.load")
     def test_analyze_quality_command(
-        self, mock_config_load, mock_qdrant_client, mock_quality_validator
+        self, mock_config_load, mock_mcp_client, mock_content_analyzer
     ):
         """Test analyze quality command."""
         # Setup mocks
         mock_config = Mock()
         mock_config_load.return_value = mock_config
 
-        mock_qdrant_instance = AsyncMock()
-        mock_qdrant_instance.get_work_item_by_key.return_value = Mock(
+        # Mock MCP client
+        mock_mcp_instance = AsyncMock()
+        mock_work_item = Mock(
             key="TEST-123", summary="Test item", description="Test description"
         )
-        mock_qdrant_client.return_value.__aenter__.return_value = mock_qdrant_instance
-        mock_qdrant_client.return_value.__aexit__ = AsyncMock(return_value=None)
+        mock_mcp_instance.get_work_item.return_value = mock_work_item
+        mock_mcp_client.return_value.__aenter__.return_value = mock_mcp_instance
+        mock_mcp_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
-        mock_validator_instance = AsyncMock()
-        mock_validator_instance.validate_work_item.return_value = Mock(
-            validation_score=0.8, issues=[], recommendations=[]
+        # Mock ContentAnalyzer (not EmbeddingQualityValidator)
+        mock_analyzer_instance = AsyncMock()
+        mock_analyzer_instance.analyze_description_quality.return_value = Mock(
+            overall_score=4.2,
+            risk_level="Low",
+            analysis_cost=0.015,
+            clarity_score=4,
+            completeness_score=4,
+            actionability_score=4,
+            testability_score=5,
+            improvement_suggestions=["Add more details"]
         )
-        mock_quality_validator.return_value.__aenter__.return_value = mock_validator_instance
-        mock_quality_validator.return_value.__aexit__ = AsyncMock(return_value=None)
+        mock_content_analyzer.return_value.__aenter__.return_value = mock_analyzer_instance
+        mock_content_analyzer.return_value.__aexit__ = AsyncMock(return_value=None)
 
         config_file = self.create_test_config()
         result = self.runner.invoke(
@@ -253,27 +263,26 @@ logging:
         assert result.exit_code == 0
 
     @patch("jirascope.cli.main.TemplateInferenceEngine")
-    @patch("jirascope.cli.main.QdrantVectorClient")
     @patch("jirascope.cli.main.Config.load")
     def test_analyze_template_command(
-        self, mock_config_load, mock_qdrant_client, mock_template_engine
+        self, mock_config_load, mock_template_engine
     ):
         """Test analyze template command."""
         # Setup mocks
         mock_config = Mock()
         mock_config_load.return_value = mock_config
 
-        mock_qdrant_instance = AsyncMock()
-        mock_qdrant_instance.get_work_items_by_filters.return_value = []
-        mock_qdrant_client.return_value.__aenter__.return_value = mock_qdrant_instance
-        mock_qdrant_client.return_value.__aexit__ = AsyncMock(return_value=None)
-
         mock_engine_instance = AsyncMock()
-        mock_engine_instance.infer_template.return_value = Mock(
-            title_template="Test template",
-            description_template="Test description",
-            common_fields={}
-        )
+        mock_template = Mock()
+        mock_template.confidence_score = 0.85
+        mock_template.sample_count = 3
+        mock_template.generation_cost = 0.025
+        mock_template.title_template = "Test template title"
+        mock_template.description_template = "Test description template"
+        mock_template.required_fields = ["summary", "description"]
+        mock_template.common_components = ["frontend", "backend"]
+        
+        mock_engine_instance.infer_templates_from_samples.return_value = mock_template
         mock_template_engine.return_value.__aenter__.return_value = mock_engine_instance
         mock_template_engine.return_value.__aexit__ = AsyncMock(return_value=None)
 
@@ -328,24 +337,33 @@ logging:
         mock_config = Mock()
         mock_config_load.return_value = mock_config
 
-        # Mock extractor
-        mock_extractor_instance = AsyncMock()
-        mock_extractor_instance.extract_active_hierarchies.return_value = []
-        mock_extractor_instance.calculate_extraction_cost.return_value = Mock(
-            api_calls=0, estimated_cost=0.0
-        )
+        # Mock extractor with proper async methods
+        mock_extractor_instance = Mock()  # Use Mock, not AsyncMock for the instance
+        
+        # Set up async methods properly
+        mock_extractor_instance.extract_active_hierarchies = AsyncMock(return_value=[])
+        
+        # Set up the synchronous calculate_extraction_cost method  
+        mock_cost = Mock()
+        mock_cost.api_calls = 5
+        mock_cost.estimated_cost = 0.025
+        mock_extractor_instance.calculate_extraction_cost = Mock(return_value=mock_cost)
+        
+        # Make sure the extractor constructor returns our mock instance
         mock_extractor.return_value = mock_extractor_instance
 
         # Mock embedding processor
-        mock_embedding_instance = AsyncMock()
-        mock_embedding_instance.process_work_items.return_value = Mock(
-            processed_items=0, failed_items=0, skipped_items=0
-        )
+        mock_embedding_instance = Mock()
+        mock_result = Mock()
+        mock_result.processed_items = 0
+        mock_result.failed_items = 0
+        mock_embedding_instance.process_work_items = AsyncMock(return_value=mock_result)
         mock_embedding_proc.return_value = mock_embedding_instance
 
         # Mock incremental processor
         mock_incremental_instance = Mock()
-        mock_incremental_instance.process_incremental_updates = AsyncMock(return_value=Mock())
+        mock_incremental_result = Mock()
+        mock_incremental_instance.process_incremental_updates = AsyncMock(return_value=mock_incremental_result)
         mock_incremental_instance.update_last_sync_timestamp = Mock()
         mock_incremental_proc.return_value = mock_incremental_instance
 
@@ -353,6 +371,12 @@ logging:
         result = self.runner.invoke(
             cli, ["--config", config_file, "fetch", "--project", "TEST"]
         )
+
+        # Add debug output if the test fails
+        if result.exit_code != 0:
+            print(f"Command output: {result.output}")
+            if result.exception:
+                print(f"Exception: {result.exception}")
 
         assert result.exit_code == 0
 
@@ -399,12 +423,21 @@ logging:
         mock_config = Mock()
         mock_config_load.return_value = mock_config
 
-        mock_validator_instance = AsyncMock()
-        mock_validator_instance.validate_collection.return_value = Mock(
-            total_items=100, valid_items=95, invalid_items=5, validation_score=0.95
-        )
-        mock_quality_validator.return_value.__aenter__.return_value = mock_validator_instance
-        mock_quality_validator.return_value.__aexit__ = AsyncMock(return_value=None)
+        # Mock validator to be properly async
+        mock_validator_instance = Mock()
+        mock_report = Mock()
+        mock_report.overall_score = 95.0
+        mock_report.passed_tests = 8
+        mock_report.total_tests = 10
+        mock_report.recommendations = ["Increase embedding dimensions"]
+        mock_report.results = [
+            {"passed": True, "query": "test query 1", "avg_similarity": 0.85},
+            {"passed": False, "query": "test query 2", "avg_similarity": 0.65}
+        ]
+        
+        # Make validate_embedding_quality async
+        mock_validator_instance.validate_embedding_quality = AsyncMock(return_value=mock_report)
+        mock_quality_validator.return_value = mock_validator_instance
 
         config_file = self.create_test_config()
         result = self.runner.invoke(cli, ["--config", config_file, "validate"])
