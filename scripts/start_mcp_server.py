@@ -25,8 +25,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
-from jirascope.core.config import Config
-from jirascope.utils.logging import StructuredLogger
+from jirascope.core.config import Config  # noqa: E402
+from jirascope.utils.logging import StructuredLogger  # noqa: E402
 
 console = Console()
 logger = StructuredLogger(__name__)
@@ -75,9 +75,10 @@ class MCPServerManager:
         """Check Python version compatibility."""
         try:
             version = sys.version_info
-            return version >= (3, 11)
         except Exception:
             return False
+        else:
+            return version >= (3, 11)
 
     async def _check_packages(self) -> bool:
         """Check that required packages are installed."""
@@ -103,7 +104,7 @@ class MCPServerManager:
         try:
             if self.config_file and Path(self.config_file).exists():
                 # Load from file
-                with open(self.config_file) as f:
+                with Path(self.config_file).open() as f:
                     yaml.safe_load(f)
                 console.print(f"📁 Using config file: {self.config_file}")
             elif not os.getenv("JIRA_MCP_ENDPOINT"):
@@ -112,10 +113,11 @@ class MCPServerManager:
 
             # Try to load config
             self.config = Config.from_env()
-            return True
         except Exception as e:
             console.print(f"❌ Configuration error: {e}")
             return False
+        else:
+            return True
 
     async def _check_lmstudio(self) -> bool:
         """Check LMStudio availability."""
@@ -125,10 +127,11 @@ class MCPServerManager:
                     self.config.lmstudio_endpoint if self.config else "http://localhost:1234/v1"
                 )
                 response = await client.get(f"{endpoint}/models")
-                return response.status_code == 200
         except Exception:
             console.print("⚠️  LMStudio not running (optional for MCP server)")
             return True  # Non-critical for MCP server operation
+        else:
+            return response.status_code == 200
 
     async def _check_qdrant(self) -> bool:
         """Check Qdrant availability."""
@@ -136,10 +139,11 @@ class MCPServerManager:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 qdrant_url = self.config.qdrant_url if self.config else "http://localhost:6333"
                 response = await client.get(f"{qdrant_url}/collections")
-                return response.status_code == 200
         except Exception:
             console.print("⚠️  Qdrant not running (required for vector search)")
             return False
+        else:
+            return response.status_code == 200
 
     async def start_server(self) -> bool:
         """Start the JiraScope MCP server."""
@@ -185,10 +189,10 @@ class MCPServerManager:
             return True
         except Exception as e:
             console.print(f"[red]❌ Failed to start server: {e}[/red]")
-            logger.error(f"Server startup failed: {e}")
+            logger.exception(f"Server startup failed: {e}")
             return False
 
-    def _signal_handler(self, signum, frame):
+    def _signal_handler(self, signum, _frame):
         """Handle shutdown signals gracefully."""
         console.print(f"\n[yellow]🛑 Received signal {signum}, shutting down...[/yellow]")
         self.shutdown_requested = True

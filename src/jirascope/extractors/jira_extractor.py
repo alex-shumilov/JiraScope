@@ -64,7 +64,7 @@ class JiraExtractor:
                         hierarchy = await self._extract_epic_hierarchy(client, epic)
                         hierarchies.append(hierarchy)
                     except Exception as e:
-                        logger.error(
+                        logger.exception(
                             f"Failed to extract hierarchy for epic {epic.key}", error=str(e)
                         )
                         continue
@@ -81,7 +81,7 @@ class JiraExtractor:
                 return hierarchies
 
         except Exception as e:
-            logger.error("Failed to extract active hierarchies", error=str(e))
+            logger.exception("Failed to extract active hierarchies", error=str(e))
             raise
 
     async def get_epic_tree(self, epic_key: str) -> EpicTree:
@@ -130,7 +130,7 @@ class JiraExtractor:
                 return tree
 
         except Exception as e:
-            logger.error(f"Failed to build epic tree for {epic_key}", error=str(e))
+            logger.exception(f"Failed to build epic tree for {epic_key}", error=str(e))
             raise
 
     async def get_incremental_updates(
@@ -168,7 +168,7 @@ class JiraExtractor:
                 return updated_items
 
         except Exception as e:
-            logger.error("Failed to get incremental updates", error=str(e))
+            logger.exception("Failed to get incremental updates", error=str(e))
             raise
 
     def calculate_extraction_cost(self) -> ExtractionCost:

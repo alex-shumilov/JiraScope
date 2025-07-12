@@ -1,5 +1,5 @@
 ---
-description:
+description: Common issues, debugging strategies, and solutions for JiraScope development and deployment
 globs:
 alwaysApply: false
 ---

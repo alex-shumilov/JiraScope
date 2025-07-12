@@ -5,4 +5,4 @@ from .lmstudio_client import LMStudioClient
 from .mcp_client import MCPClient
 from .qdrant_client import QdrantVectorClient
 
-__all__ = ["MCPClient", "LMStudioClient", "QdrantVectorClient", "ClaudeClient"]
+__all__ = ["ClaudeClient", "LMStudioClient", "MCPClient", "QdrantVectorClient"]

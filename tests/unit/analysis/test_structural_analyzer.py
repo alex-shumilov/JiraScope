@@ -200,7 +200,6 @@ class TestStructuralAnalyzer:
                 "jirascope.analysis.structural_analyzer.ClaudeClient", return_value=claude_client
             ),
         ):
-
             async with StructuralAnalyzer(mock_config) as analyzer:
                 # Mock async context managers
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
@@ -229,7 +228,6 @@ class TestStructuralAnalyzer:
                 "jirascope.analysis.structural_analyzer.ClaudeClient", return_value=claude_client
             ),
         ):
-
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
@@ -264,7 +262,6 @@ class TestStructuralAnalyzer:
                 "jirascope.analysis.structural_analyzer.ClaudeClient", return_value=claude_client
             ),
         ):
-
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
@@ -301,7 +298,6 @@ class TestStructuralAnalyzer:
                 "jirascope.analysis.structural_analyzer.ClaudeClient", return_value=claude_client
             ),
         ):
-
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
@@ -336,7 +332,6 @@ class TestStructuralAnalyzer:
                 "jirascope.analysis.structural_analyzer.ClaudeClient", return_value=claude_client
             ),
         ):
-
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()
@@ -352,7 +347,6 @@ class TestStructuralAnalyzer:
     async def test_context_manager_initialization(self, mock_config):
         """Test that async context manager properly initializes clients."""
         with patch("jirascope.analysis.structural_analyzer.QdrantVectorClient") as mock_qdrant:
-
             mock_qdrant_instance = AsyncMock()
             mock_qdrant.return_value = mock_qdrant_instance
 
@@ -371,7 +365,6 @@ class TestStructuralAnalyzer:
             patch("jirascope.analysis.structural_analyzer.QdrantVectorClient") as mock_qdrant,
             patch("jirascope.analysis.structural_analyzer.ClaudeClient") as mock_claude,
         ):
-
             mock_qdrant_instance = AsyncMock()
             mock_claude_instance = AsyncMock()
             mock_qdrant.return_value = mock_qdrant_instance
@@ -391,7 +384,6 @@ class TestStructuralAnalyzer:
             patch("jirascope.analysis.structural_analyzer.QdrantVectorClient") as mock_qdrant,
             patch("jirascope.analysis.structural_analyzer.ClaudeClient") as mock_claude,
         ):
-
             mock_qdrant_instance = AsyncMock()
             mock_claude_instance = AsyncMock()
             mock_qdrant.return_value = mock_qdrant_instance
@@ -411,7 +403,6 @@ class TestStructuralAnalyzer:
                         analyzer.tech_debt_clusterer, "claude_client", mock_claude_instance
                     ),
                 ):
-
                     mock_qdrant_instance.__aenter__ = AsyncMock(return_value=mock_qdrant_instance)
                     mock_qdrant_instance.__aexit__ = AsyncMock()
                     mock_claude_instance.__aenter__ = AsyncMock(return_value=mock_claude_instance)
@@ -435,7 +426,6 @@ class TestStructuralAnalyzer:
             patch("jirascope.analysis.structural_analyzer.QdrantVectorClient") as mock_qdrant,
             patch("jirascope.analysis.structural_analyzer.ClaudeClient") as mock_claude,
         ):
-
             mock_qdrant_instance = AsyncMock()
             mock_claude_instance = AsyncMock()
             mock_qdrant.return_value = mock_qdrant_instance
@@ -455,7 +445,6 @@ class TestStructuralAnalyzer:
                         analyzer.tech_debt_clusterer, "claude_client", mock_claude_instance
                     ),
                 ):
-
                     mock_qdrant_instance.__aenter__ = AsyncMock(return_value=mock_qdrant_instance)
                     mock_qdrant_instance.__aexit__ = AsyncMock()
                     mock_claude_instance.__aenter__ = AsyncMock(return_value=mock_claude_instance)
@@ -538,7 +527,6 @@ class TestStructuralAnalyzer:
                 "jirascope.analysis.structural_analyzer.ClaudeClient", return_value=claude_client
             ),
         ):
-
             async with StructuralAnalyzer(mock_config) as analyzer:
                 qdrant_client.__aenter__ = AsyncMock(return_value=qdrant_client)
                 qdrant_client.__aexit__ = AsyncMock()

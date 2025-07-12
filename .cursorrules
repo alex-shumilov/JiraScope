@@ -1,0 +1,5 @@
+# Custom slash commands and AI behavior
+When I use /deploy, help me with deployment-related tasks
+When I use /test, focus on testing and validation
+When I use /docs, generate comprehensive documentation
+When I use /commit, analyze changes, group relevant, commit separately with concise description, push

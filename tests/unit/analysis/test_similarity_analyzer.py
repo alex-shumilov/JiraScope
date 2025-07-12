@@ -115,7 +115,6 @@ class TestSimilarityAnalyzer:
                 return_value=qdrant_client,
             ),
         ):
-
             async with SimilarityAnalyzer(mock_config) as analyzer:
                 # Mock async context managers
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
@@ -147,7 +146,6 @@ class TestSimilarityAnalyzer:
                 return_value=qdrant_client,
             ),
         ):
-
             async with SimilarityAnalyzer(mock_config) as analyzer:
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
@@ -177,7 +175,6 @@ class TestSimilarityAnalyzer:
                 return_value=qdrant_client,
             ),
         ):
-
             async with SimilarityAnalyzer(mock_config) as analyzer:
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()
@@ -195,7 +192,6 @@ class TestSimilarityAnalyzer:
             patch("jirascope.analysis.similarity_analyzer.LMStudioClient") as mock_lm,
             patch("jirascope.analysis.similarity_analyzer.QdrantVectorClient") as mock_qdrant,
         ):
-
             mock_lm_instance = AsyncMock()
             mock_qdrant_instance = AsyncMock()
             mock_lm.return_value = mock_lm_instance
@@ -217,7 +213,6 @@ class TestSimilarityAnalyzer:
             patch("jirascope.analysis.similarity_analyzer.LMStudioClient") as mock_lm,
             patch("jirascope.analysis.similarity_analyzer.QdrantVectorClient") as mock_qdrant,
         ):
-
             mock_lm_instance = AsyncMock()
             mock_qdrant_instance = AsyncMock()
             mock_lm.return_value = mock_lm_instance
@@ -246,7 +241,6 @@ class TestSimilarityAnalyzer:
                 return_value=qdrant_client,
             ),
         ):
-
             async with SimilarityAnalyzer(mock_config) as analyzer:
                 lm_client.__aenter__ = AsyncMock(return_value=lm_client)
                 lm_client.__aexit__ = AsyncMock()

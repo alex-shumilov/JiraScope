@@ -1,5 +1,5 @@
 ---
-description:
+description: Testing structure, fixtures, and execution patterns for unit and integration tests
 globs:
 alwaysApply: false
 ---

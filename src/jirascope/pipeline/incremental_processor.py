@@ -85,7 +85,7 @@ class IncrementalProcessor:
             return result
 
         except Exception as e:
-            logger.error("Failed to process incremental updates", error=str(e))
+            logger.exception("Failed to process incremental updates", error=str(e))
             return ProcessingResult(
                 failed_items=len(new_items) + len(updated_items),
                 errors=[f"Incremental processing failed: {e!s}"],
@@ -158,7 +158,7 @@ class IncrementalProcessor:
             logger.info(f"Cleaned up {cleaned_count} old cache files")
 
         except Exception as e:
-            logger.error("Failed to cleanup old cache files", error=str(e))
+            logger.exception("Failed to cleanup old cache files", error=str(e))
 
     def get_cache_statistics(self) -> dict[str, any]:
         """Get statistics about the cache."""
@@ -183,7 +183,7 @@ class IncrementalProcessor:
             }
 
         except Exception as e:
-            logger.error("Failed to get cache statistics", error=str(e))
+            logger.exception("Failed to get cache statistics", error=str(e))
             return {"error": str(e)}
 
     def _load_metadata(self) -> dict:
@@ -194,6 +194,9 @@ class IncrementalProcessor:
                     return json.load(f)
             except Exception as e:
                 logger.warning("Failed to load metadata, starting fresh", error=str(e))
+            else:
+                # Successfully loaded metadata from file
+                pass
 
         # Return default metadata
         return {
@@ -209,7 +212,10 @@ class IncrementalProcessor:
             with open(self.metadata_file, "w") as f:
                 json.dump(metadata, f, indent=2)
         except Exception as e:
-            logger.error("Failed to save metadata", error=str(e))
+            logger.exception("Failed to save metadata", error=str(e))
+        else:
+            # Successfully saved metadata
+            pass
 
     def _load_tracked_items(self) -> dict[str, dict]:
         """Load tracked items data."""
@@ -219,6 +225,9 @@ class IncrementalProcessor:
                     return json.load(f)
             except Exception as e:
                 logger.warning("Failed to load tracked items, starting fresh", error=str(e))
+            else:
+                # Successfully loaded tracked items from file
+                pass
 
         return {}
 
@@ -228,7 +237,10 @@ class IncrementalProcessor:
             with open(self.tracked_items_file, "w") as f:
                 json.dump(tracked_items, f, indent=2)
         except Exception as e:
-            logger.error("Failed to save tracked items", error=str(e))
+            logger.exception("Failed to save tracked items", error=str(e))
+        else:
+            # Successfully saved tracked items
+            pass
 
     def _calculate_content_hash(self, item: WorkItem) -> str:
         """Calculate hash of item content for change detection."""

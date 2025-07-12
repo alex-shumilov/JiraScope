@@ -1,5 +1,5 @@
 ---
-description:
+description: External service integrations including Qdrant, LMStudio, Claude, and authentication patterns
 globs:
 alwaysApply: false
 ---

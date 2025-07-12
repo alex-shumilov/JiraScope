@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir --upgrade pip
 FROM base as dev
 
 # Install development dependencies
-RUN pip install --no-cache-dir pytest pytest-asyncio black ruff
+RUN pip install --no-cache-dir pytest pytest-asyncio black mypy
 
 # Copy source code
 COPY . .

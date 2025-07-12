@@ -1,0 +1,70 @@
+# JiraScope Configuration Template
+# Copy this file to jirascope.yaml and customize for your environment
+# Values shown use environment variable substitution with defaults
+
+# === JIRA CONFIGURATION ===
+jira:
+  # Required: Your Jira instance URL or MCP endpoint
+  mcp_endpoint: "${JIRA_MCP_ENDPOINT}"
+
+  # SSE OAuth Configuration
+  sse_client_id: "${JIRA_SSE_CLIENT_ID:-jirascope-cli}"
+  sse_client_secret: "${JIRA_SSE_CLIENT_SECRET:-}"
+  sse_redirect_port: "${JIRA_SSE_REDIRECT_PORT:-0}"
+  sse_scope: "${JIRA_SSE_SCOPE:-read:jira-work read:jira-user write:jira-work}"
+
+  # API Configuration
+  batch_size: "${JIRA_BATCH_SIZE:-100}"
+  dry_run: "${JIRA_DRY_RUN:-true}"
+
+# === AI SERVICE CONFIGURATION ===
+
+# LMStudio Local AI Configuration
+lmstudio:
+  endpoint: "${LMSTUDIO_ENDPOINT:-http://localhost:1234/v1}"
+
+# Qdrant Vector Database Configuration
+qdrant:
+  url: "${QDRANT_URL:-http://localhost:6333}"
+
+# Claude API Configuration (optional, for advanced analysis)
+claude:
+  api_key: "${CLAUDE_API_KEY:-}"
+  model: "${CLAUDE_MODEL:-claude-3-5-sonnet-latest}"
+
+# === PROCESSING CONFIGURATION ===
+processing:
+  # Batch size for embedding generation
+  embedding_batch_size: "${EMBEDDING_BATCH_SIZE:-32}"
+
+  # Similarity threshold for finding related items (0.0-1.0)
+  similarity_threshold: "${SIMILARITY_THRESHOLD:-0.8}"
+
+# === COST MANAGEMENT ===
+cost:
+  # Enable cost tracking and budget monitoring
+  tracking: "${COST_TRACKING:-true}"
+
+  # Daily budget for AI API calls (USD)
+  daily_budget: "${DAILY_BUDGET:-50.0}"
+
+  # Monthly budget for AI API calls (USD)
+  monthly_budget: "${MONTHLY_BUDGET:-1000.0}"
+
+# === MONITORING & REPORTING ===
+monitoring:
+  # How long to keep analysis reports (days)
+  report_retention_days: "${REPORT_RETENTION_DAYS:-30}"
+
+  # Sentry DSN for error tracking (optional)
+  sentry_dsn: "${SENTRY_DSN:-}"
+
+# === RAG QUALITY VALIDATION ===
+# Test queries used to validate RAG pipeline quality
+rag_test_queries:
+  - "high priority bugs in frontend components"
+  - "technical debt in authentication system"
+  - "scope changes in Epic ABC-123"
+  - "blocked dependencies for mobile team"
+  - "stories added to Epic XYZ-456 after initial planning"
+  - "performance issues reported last sprint"

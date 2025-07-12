@@ -179,7 +179,7 @@ class SSEAuthenticator:
             return tokens
 
         except Exception as e:
-            logger.error(f"Authentication failed: {e}")
+            logger.exception(f"Authentication failed: {e}")
             raise AuthError(f"Authentication failed: {e}") from e
 
     async def _perform_oauth_flow(self) -> AuthTokens:
@@ -220,8 +220,7 @@ class SSEAuthenticator:
                             f"Could not find an available port after {max_retries} attempts"
                         )
                     continue
-                else:
-                    raise  # Re-raise other OSErrors
+                raise  # Re-raise other OSErrors
 
         server_thread = threading.Thread(target=server.serve_forever, daemon=True)
         server_thread.start()
@@ -246,9 +245,10 @@ class SSEAuthenticator:
             full_auth_url = f"{auth_url}?" + urllib.parse.urlencode(auth_params)
 
             # Open browser for authentication
-
             if not webbrowser.open(full_auth_url):
-                pass
+                logger.warning("Failed to open browser automatically")
+                logger.info(f"Please manually open this URL to authenticate: {full_auth_url}")
+                # Continue with authentication flow - the user can still complete it manually
 
             # Wait for callback
             timeout = 300  # 5 minutes
@@ -407,11 +407,10 @@ class SSEAuthenticator:
         """Load tokens from cache file."""
         try:
             if self.cache_file.exists():
-                with open(self.cache_file) as f:
-                    data = json.load(f)
-                    tokens = AuthTokens.from_dict(data)
-                    logger.debug(f"Loaded cached tokens, expires at: {tokens.expires_at}")
-                    return tokens
+                data = json.loads(self.cache_file.read_text())
+                tokens = AuthTokens.from_dict(data)
+                logger.debug(f"Loaded cached tokens, expires at: {tokens.expires_at}")
+                return tokens
         except Exception as e:
             logger.debug(f"Failed to load cached tokens: {e}")
         return None
@@ -420,8 +419,7 @@ class SSEAuthenticator:
         """Save tokens to cache file."""
         try:
             self.cache_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.cache_file, "w") as f:
-                json.dump(tokens.to_dict(), f, indent=2)
+            self.cache_file.write_text(json.dumps(tokens.to_dict(), indent=2))
             # Set file permissions to be readable only by user
             self.cache_file.chmod(0o600)
             logger.debug(f"Saved tokens to cache: {self.cache_file}")

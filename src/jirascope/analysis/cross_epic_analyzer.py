@@ -2,6 +2,7 @@
 
 import time
 from collections import defaultdict
+from datetime import datetime
 
 from ..clients.claude_client import ClaudeClient
 from ..clients.lmstudio_client import LMStudioClient
@@ -69,7 +70,19 @@ class CrossEpicAnalyzer:
                 logger.debug(f"Analyzing Epic {epic_key} with {len(epic_items)} items")
 
                 # Calculate Epic's thematic coherence
-                # Skip embedding calculation for now - not needed for this part
+                epic_items_objs = [WorkItem.model_validate(item) for item in epic_items]
+                # Create a valid epic object with all required fields
+                base_time = datetime.now()
+                epic_obj = WorkItem(
+                    key=epic_key,
+                    summary=f"Epic {epic_key}",
+                    issue_type="Epic",
+                    status="Open",
+                    created=base_time,
+                    updated=base_time,
+                    reporter="system",
+                )
+                epic_theme = await self._calculate_epic_theme_embedding(epic_obj, epic_items_objs)
 
                 # Check each work item against other Epics
                 for item_data in epic_items:
@@ -87,9 +100,10 @@ class CrossEpicAnalyzer:
                     if not cross_epic_matches:
                         continue
 
-                    # Calculate coherence with current Epic (placeholder for now)
-                    current_coherence = (
-                        0.5  # Will be properly calculated when epic theme embedding is implemented
+                    # Calculate coherence with current Epic
+                    item_obj = WorkItem.model_validate(item_data)
+                    current_coherence = await self._calculate_epic_coherence_score(
+                        epic_theme, [item_obj]
                     )
 
                     # Find best matching Epic
@@ -101,10 +115,27 @@ class CrossEpicAnalyzer:
 
                         # Calculate coherence with this Epic
                         if match_epic in epics_data:
-                            # Skip other epic theme calculation for now
-                            other_epic_theme = [0.0] * 1024  # Default embedding
-                            other_coherence = self.lm_client.calculate_similarity(
-                                item_embedding, other_epic_theme
+                            # Calculate other epic theme
+                            other_epic_items = epics_data[match_epic]
+                            other_epic_items_objs = [
+                                WorkItem.model_validate(item) for item in other_epic_items
+                            ]
+                            # Create a valid epic object with all required fields
+                            base_time = datetime.now()
+                            other_epic_obj = WorkItem(
+                                key=match_epic,
+                                summary=f"Epic {match_epic}",
+                                issue_type="Epic",
+                                status="Open",
+                                created=base_time,
+                                updated=base_time,
+                                reporter="system",
+                            )
+                            other_epic_theme = await self._calculate_epic_theme_embedding(
+                                other_epic_obj, other_epic_items_objs
+                            )
+                            other_coherence = await self._calculate_epic_coherence_score(
+                                other_epic_theme, [WorkItem.model_validate(item_data)]
                             )
 
                             if other_coherence > best_coherence + 0.15:  # Significant difference
@@ -153,8 +184,8 @@ class CrossEpicAnalyzer:
                 processing_cost=estimated_cost,
             )
 
-        except Exception as e:
-            logger.error("Failed to find misplaced work items", error=str(e))
+        except Exception:
+            logger.exception("Failed to find misplaced work items")
             raise
 
     async def _get_all_epics_with_items(
@@ -295,7 +326,7 @@ class CrossEpicAnalyzer:
         return cross_epic_matches
 
     def _generate_misplacement_reasoning(
-        self, item_data: dict, current_epic: str, best_match: dict, current_coherence: float
+        self, _item_data: dict, _current_epic: str, best_match: dict, current_coherence: float
     ) -> str:
         """Generate human-readable reasoning for why an item might be misplaced."""
         reasons = []
@@ -360,6 +391,12 @@ Respond in JSON format:
     "confidence": 0.0-1.0 (confidence in the recommendation)
 }}"""
 
+        default_response = {
+            "reasoning": "Unable to analyze misplacement due to analysis error",
+            "confidence": 0.5,
+            "cost": 0.0,
+        }
+
         try:
             response = await self.claude_client.analyze(
                 prompt=prompt, analysis_type="misplacement_analysis"
@@ -369,17 +406,13 @@ Respond in JSON format:
 
             analysis = json.loads(response.content)
             analysis["cost"] = response.cost
+        except Exception:
+            logger.exception(f"Failed to analyze misplacement for {work_item.key}")
+            return default_response
+        else:
             return analysis
 
-        except Exception as e:
-            logger.warning(f"Failed to analyze misplacement for {work_item.key}: {e!s}")
-            return {
-                "reasoning": "Unable to analyze misplacement due to analysis error",
-                "confidence": 0.5,
-                "cost": 0.0,
-            }
-
-    async def calculate_epic_coherence(self, work_item: WorkItem, epic_key: str) -> float:
+    async def calculate_epic_coherence(self, _work_item: WorkItem, _epic_key: str) -> float:
         """Calculate how well a work item fits with an Epic's theme."""
         # This is a simplified version - in practice you'd want to get the Epic's
         # theme embedding and compare it with the work item's embedding

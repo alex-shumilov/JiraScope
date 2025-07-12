@@ -226,7 +226,7 @@ class TestQueryManager:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to load test queries from {file_path}", error=str(e))
+            logger.exception(f"Failed to load test queries from {file_path}", error=str(e))
             return False
 
     async def save_to_file(self, file_path: Path) -> bool:
@@ -265,7 +265,7 @@ class TestQueryManager:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to save test queries to {file_path}", error=str(e))
+            logger.exception(f"Failed to save test queries to {file_path}", error=str(e))
             return False
 
     async def update_expected_results(self, jira_client: MCPClient, limit: int = 5):
@@ -308,7 +308,9 @@ class TestQueryManager:
                         logger.debug(f"No results found for test {test.id}")
 
             except Exception as e:
-                logger.error(f"Failed to update expected results for test {test.id}", error=str(e))
+                logger.exception(
+                    f"Failed to update expected results for test {test.id}", error=str(e)
+                )
 
     async def generate_test_from_epic(
         self, epic_key: str, jira_client: MCPClient, claude_client: ClaudeClient
@@ -355,7 +357,7 @@ class TestQueryManager:
             return test
 
         except Exception as e:
-            logger.error(f"Failed to generate test from Epic {epic_key}", error=str(e))
+            logger.exception(f"Failed to generate test from Epic {epic_key}", error=str(e))
             return None
 
     def get_test_queries(self, category: str | None = None) -> list[RagTestQuery]:

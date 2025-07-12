@@ -47,14 +47,10 @@ class AssembledContext:
     @property
     def jira_keys(self) -> list[str]:
         """Get all Jira keys mentioned in this context."""
-        keys = []
-        for result in self.primary_results:
-            keys.append(result.jira_key)
-
-        for tree in self.hierarchical_context:
-            if tree.root_item.get("key"):
-                keys.append(tree.root_item["key"])
-
+        keys = [result.jira_key for result in self.primary_results]
+        keys.extend(
+            tree.root_item["key"] for tree in self.hierarchical_context if tree.root_item.get("key")
+        )
         return list(set(keys))
 
 
@@ -171,10 +167,9 @@ class ContextAssembler:
             if query_plan.priority_boost:
                 for boost_type, boost_value in query_plan.priority_boost.items():
                     if (
-                        boost_type == "priority_boost"
-                        and result.content.get("priority") == "High"
-                        or boost_type == "status_boost"
-                        and result.content.get("status") == "Blocked"
+                        boost_type == "priority_boost" and result.content.get("priority") == "High"
+                    ) or (
+                        boost_type == "status_boost" and result.content.get("status") == "Blocked"
                     ):
                         relevance_score *= boost_value
 

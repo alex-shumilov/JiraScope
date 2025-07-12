@@ -47,7 +47,6 @@ class TestRAGQualityTester:
 
         with patch("jirascope.pipeline.rag_quality_tester.LMStudioClient") as mock_lm:
             with patch("jirascope.clients.qdrant_client.QdrantVectorClient") as mock_qdrant:
-
                 # Simple mock setup
                 mock_lm_instance = AsyncMock()
                 mock_lm_instance.generate_embeddings.return_value = [mock_helper.mock_embedding()]

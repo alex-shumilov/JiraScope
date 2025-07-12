@@ -1,5 +1,5 @@
 ---
-description:
+description: Analysis module components for similarity, content, template, and structural analysis
 globs:
 alwaysApply: false
 ---

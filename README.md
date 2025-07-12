@@ -120,7 +120,7 @@ graph TB
 
 3. **Configure Environment**
    ```bash
-   cp .env.example .env
+   cp config/env.example .env
    # Edit .env with your Jira and LMStudio endpoints
    ```
 
@@ -168,7 +168,7 @@ Once configured, simply chat with LMStudio using natural language:
 - "Show me scope changes for Epic ABC-123"
 - "What's blocking the mobile team?"
 
-See `examples/lmstudio_prompts.md` for comprehensive prompt patterns.
+See `docs/examples/lmstudio_prompts.md` for comprehensive prompt patterns.
 
 ### CLI Commands
 
@@ -202,7 +202,8 @@ jirascope/
 │   └── rag/               # RAG implementation
 ├── config/                 # Configuration files
 ├── scripts/               # Setup and utility scripts
-├── examples/              # Usage examples and prompts
+├── docs/                  # Documentation and guides
+│   └── examples/          # Usage examples and prompts
 └── tests/                # Test suite
 ```
 
@@ -289,10 +290,10 @@ omit = ["*/tests/*", "*/test_*", "*/__pycache__/*"]
 
 ## 📚 Documentation
 
-- **[CLI Usage Guide](CLI_USAGE.md)** - Command-line interface reference
-- **[Web Interface Guide](WEB_USAGE.md)** - Browser-based usage
-- **[LMStudio Prompts](examples/lmstudio_prompts.md)** - Natural language patterns
-- **[Phase Summaries](PHASE*_SUMMARY.md)** - Development history
+- **[CLI Usage Guide](docs/CLI_USAGE.md)** - Command-line interface reference
+- **[Web Interface Guide](docs/WEB_USAGE.md)** - Browser-based usage
+- **[LMStudio Prompts](docs/examples/lmstudio_prompts.md)** - Natural language patterns
+- **[Phase Summaries](docs/PHASE*_SUMMARY.md)** - Development history
 
 ## 🔄 Development Phases
 

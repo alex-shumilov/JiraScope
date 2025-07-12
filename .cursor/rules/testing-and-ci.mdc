@@ -1,5 +1,5 @@
 ---
-description:
+description: Testing strategy, pre-commit hooks, and CI/CD workflow configuration
 globs:
 alwaysApply: false
 ---

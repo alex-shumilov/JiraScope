@@ -47,7 +47,7 @@ class MCPClient:
                 )
                 logger.debug("SSE authentication configured")
             except Exception as e:
-                logger.error(f"Failed to authenticate with SSE endpoint: {e}")
+                logger.exception(f"Failed to authenticate with SSE endpoint: {e}")
                 raise
 
         self.session = httpx.AsyncClient(
@@ -103,7 +103,7 @@ class MCPClient:
             return work_items
 
         except httpx.HTTPError as e:
-            logger.error(f"Failed to fetch work items: {e}")
+            logger.exception(f"Failed to fetch work items: {e}")
             raise
 
     async def get_work_item(self, key: str) -> WorkItem | None:
@@ -127,7 +127,7 @@ class MCPClient:
             return self._parse_work_item(issue_data)
 
         except httpx.HTTPError as e:
-            logger.error(f"Failed to fetch work item {key}: {e}")
+            logger.exception(f"Failed to fetch work item {key}: {e}")
             raise
 
     async def update_work_item(
@@ -155,7 +155,7 @@ class MCPClient:
             return True
 
         except httpx.HTTPError as e:
-            logger.error(f"Failed to update work item {key}: {e}")
+            logger.exception(f"Failed to update work item {key}: {e}")
             return False
 
     def _parse_work_item(self, issue_data: dict[str, Any]) -> WorkItem:

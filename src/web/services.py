@@ -210,15 +210,14 @@ class AnalysisService:
                     "quality_score": 3.5,  # Demo score
                     "cost": epic_report.processing_cost,
                 }
-            else:
-                # Basic analysis
-                return {
-                    "epic_key": epic_key,
-                    "total_items": 12,  # Demo data
-                    "duplicates_found": 1,
-                    "quality_score": 3.7,
-                    "cost": 0.02,
-                }
+            # Basic analysis
+            return {
+                "epic_key": epic_key,
+                "total_items": 12,  # Demo data
+                "duplicates_found": 1,
+                "quality_score": 3.7,
+                "cost": 0.02,
+            }
 
         except Exception as e:
             # Return demo data if analysis fails

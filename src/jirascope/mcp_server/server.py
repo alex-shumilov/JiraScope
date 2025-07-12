@@ -46,7 +46,7 @@ async def init_components():
         logger.info("JiraScope MCP Server components initialized successfully")
 
     except Exception as e:
-        logger.error(f"Failed to initialize components: {e}")
+        logger.exception(f"Failed to initialize components: {e}")
         raise
 
 
@@ -85,7 +85,7 @@ async def search_jira_issues(query: str, limit: int | None = 10) -> dict[str, An
         }
 
     except Exception as e:
-        logger.error(f"Error in search_jira_issues: {e}")
+        logger.exception(f"Error in search_jira_issues: {e}")
         return {"status": "error", "error": str(e), "query": query}
 
 
@@ -121,7 +121,7 @@ async def analyze_technical_debt(
         }
 
     except Exception as e:
-        logger.error(f"Error in analyze_technical_debt: {e}")
+        logger.exception(f"Error in analyze_technical_debt: {e}")
         return {"status": "error", "error": str(e), "component": component}
 
 
@@ -154,7 +154,7 @@ async def detect_scope_drift(epic_key: str) -> dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Error in detect_scope_drift: {e}")
+        logger.exception(f"Error in detect_scope_drift: {e}")
         return {"status": "error", "error": str(e), "epic_key": epic_key}
 
 
@@ -195,7 +195,7 @@ async def map_dependencies(epic_key: str | None = None, team: str | None = None)
         }
 
     except Exception as e:
-        logger.error(f"Error in map_dependencies: {e}")
+        logger.exception(f"Error in map_dependencies: {e}")
         return {"status": "error", "error": str(e), "epic_key": epic_key, "team": team}
 
 
@@ -261,7 +261,7 @@ async def main():
         mcp.run()
 
     except Exception as e:
-        logger.error(f"Failed to start MCP server: {e}")
+        logger.exception(f"Failed to start MCP server: {e}")
         raise
 
 

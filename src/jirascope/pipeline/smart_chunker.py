@@ -388,8 +388,39 @@ class SmartChunker:
 
     def _split_into_sentences(self, text: str) -> list[str]:
         """Split text into sentences using simple heuristics."""
-        # Simple sentence splitting - can be enhanced with more sophisticated NLP
-        sentences = re.split(r"[.!?]+\s+", text)
+        if not text.strip():
+            return []
+
+        # Common abbreviations that should not end sentences
+        abbrevs = {
+            "Dr.",
+            "Mr.",
+            "Mrs.",
+            "Ms.",
+            "Prof.",
+            "Sr.",
+            "Jr.",
+            "vs.",
+            "etc.",
+            "Inc.",
+            "Ltd.",
+            "Co.",
+            "Corp.",
+            "St.",
+            "Ave.",
+            "Rd.",
+            "Blvd.",
+        }
+
+        # First, replace abbreviations with placeholders to protect them
+        for abbrev in abbrevs:
+            text = text.replace(abbrev, abbrev.replace(".", "###DOT###"))
+
+        # Split on sentence ending punctuation followed by space and capital letter, preserving punctuation
+        sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z])", text)
+
+        # Restore the periods in abbreviations
+        sentences = [s.replace("###DOT###", ".") for s in sentences]
 
         # Clean up and filter empty sentences
         return [s.strip() for s in sentences if s.strip()]

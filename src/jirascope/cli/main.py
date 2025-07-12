@@ -47,6 +47,7 @@ def cli(ctx, config, verbose, log_file):
         app_config = Config.load(config)
         ctx.obj["config"] = app_config
         ctx.obj["cost_tracker"] = cost_tracker
+        ctx.obj["verbose"] = verbose
 
         click.echo(f"JiraScope initialized with config from: {config or 'environment/defaults'}")
 
@@ -60,6 +61,7 @@ def cli(ctx, config, verbose, log_file):
 def health(ctx):
     """Check health of all connected services."""
     config = ctx.obj["config"]
+    verbose = ctx.obj.get("verbose", False)
     click.echo("Checking service health...")
 
     async def check_services():
@@ -71,7 +73,8 @@ def health(ctx):
                 results["qdrant"] = await qdrant.health_check()
         except Exception as e:
             results["qdrant"] = False
-            click.echo(f"Qdrant error: {e}")
+            if verbose:
+                click.echo(f"Qdrant error: {e}", err=True)
 
         # Check LMStudio
         try:
@@ -79,7 +82,8 @@ def health(ctx):
                 results["lmstudio"] = await lm.health_check()
         except Exception as e:
             results["lmstudio"] = False
-            click.echo(f"LMStudio error: {e}")
+            if verbose:
+                click.echo(f"LMStudio error: {e}", err=True)
 
         return results
 
@@ -91,7 +95,7 @@ def health(ctx):
     if all(results.values()):
         click.echo("All services healthy!")
     else:
-        click.echo("Some services are not responding")
+        click.echo("Some services are not responding", err=True)
         ctx.exit(1)
 
 
@@ -189,39 +193,38 @@ def search(ctx, query, limit):
     config = ctx.obj["config"]
 
     async def search_items():
-        async with LMStudioClient(config) as lm_client:
-            async with QdrantVectorClient(config) as qdrant_client:
-                # Generate query embedding
-                embeddings = await lm_client.generate_embeddings([query])
-                if not embeddings:
-                    click.echo("Failed to generate embedding for query")
-                    return
+        async with LMStudioClient(config) as lm_client, QdrantVectorClient(config) as qdrant_client:
+            # Generate query embedding
+            embeddings = await lm_client.generate_embeddings([query])
+            if not embeddings:
+                click.echo("Failed to generate embedding for query")
+                return
 
-                # Search for similar items
-                results = await qdrant_client.search_similar_work_items(embeddings[0], limit=limit)
+            # Search for similar items
+            results = await qdrant_client.search_similar_work_items(embeddings[0], limit=limit)
 
-                if not results:
-                    click.echo("No similar work items found")
-                    return
+            if not results:
+                click.echo("No similar work items found")
+                return
 
-                click.echo(f"\nFound {len(results)} similar work items for: '{query}'\n")
+            click.echo(f"\nFound {len(results)} similar work items for: '{query}'\n")
 
-                for i, result in enumerate(results, 1):
-                    work_item = result["work_item"]
-                    score = result["score"]
+            for i, result in enumerate(results, 1):
+                work_item = result["work_item"]
+                score = result["score"]
 
-                    click.echo(f"{i}. {work_item['key']}: {work_item['summary']}")
-                    click.echo(
-                        f"   Score: {score:.3f} | Type: {work_item['issue_type']} | Status: {work_item['status']}"
+                click.echo(f"{i}. {work_item['key']}: {work_item['summary']}")
+                click.echo(
+                    f"   Score: {score:.3f} | Type: {work_item['issue_type']} | Status: {work_item['status']}"
+                )
+                if work_item.get("description"):
+                    desc = (
+                        work_item["description"][:100] + "..."
+                        if len(work_item["description"]) > 100
+                        else work_item["description"]
                     )
-                    if work_item.get("description"):
-                        desc = (
-                            work_item["description"][:100] + "..."
-                            if len(work_item["description"]) > 100
-                            else work_item["description"]
-                        )
-                        click.echo(f"   Description: {desc}")
-                    click.echo()
+                    click.echo(f"   Description: {desc}")
+                click.echo()
 
     asyncio.run(search_items())
 
@@ -662,7 +665,7 @@ def extract(ctx, config_file: str | None, output_dir: str | None):
         console.print("[bold green]✓ Extraction completed successfully![/bold green]")
 
     except Exception as e:
-        logger.error(f"Extraction failed: {e}")
+        logger.exception(f"Extraction failed: {e}")
         console.print(f"[bold red]✗ Extraction failed: {e}[/bold red]")
         sys.exit(1)
 
@@ -692,7 +695,7 @@ def process(ctx, config_file: str | None, batch_size: int | None, force_reproces
         console.print("[bold green]✓ Processing completed successfully![/bold green]")
 
     except Exception as e:
-        logger.error(f"Processing failed: {e}")
+        logger.exception(f"Processing failed: {e}")
         console.print(f"[bold red]✗ Processing failed: {e}[/bold red]")
         sys.exit(1)
 
@@ -716,39 +719,39 @@ def query(ctx, config_file: str | None, query: str | None, interactive: bool):
         from ..clients.qdrant_client import QdrantVectorClient
 
         async def run_query():
-            async with QdrantVectorClient(config) as qdrant_client:
-                async with LMStudioClient(config) as lm_client:
-                    rag_pipeline = JiraRAGPipeline(qdrant_client, lm_client)
+            async with (
+                QdrantVectorClient(config) as qdrant_client,
+                LMStudioClient(config) as lm_client,
+            ):
+                rag_pipeline = JiraRAGPipeline(qdrant_client, lm_client)
 
-                    if interactive:
-                        console.print(
-                            "[bold blue]Interactive mode - type 'exit' to quit[/bold blue]"
-                        )
-                        while True:
-                            user_query = console.input("[bold yellow]Query: [/bold yellow]")
-                            if user_query.lower() in ["exit", "quit", "q"]:
-                                break
+                if interactive:
+                    console.print("[bold blue]Interactive mode - type 'exit' to quit[/bold blue]")
+                    while True:
+                        user_query = console.input("[bold yellow]Query: [/bold yellow]")
+                        if user_query.lower() in ["exit", "quit", "q"]:
+                            break
 
-                            result = await rag_pipeline.process_query(user_query)
-                            console.print("[bold green]Result:[/bold green]")
-                            console.print(result.get("formatted_context", "No results found"))
-                            console.print()
-
-                    elif query:
-                        result = await rag_pipeline.process_query(query)
+                        result = await rag_pipeline.process_query(user_query)
                         console.print("[bold green]Result:[/bold green]")
                         console.print(result.get("formatted_context", "No results found"))
+                        console.print()
 
-                    else:
-                        console.print(
-                            "[bold red]Please provide a query with -q or use -i for interactive mode[/bold red]"
-                        )
-                        sys.exit(1)
+                elif query:
+                    result = await rag_pipeline.process_query(query)
+                    console.print("[bold green]Result:[/bold green]")
+                    console.print(result.get("formatted_context", "No results found"))
+
+                else:
+                    console.print(
+                        "[bold red]Please provide a query with -q or use -i for interactive mode[/bold red]"
+                    )
+                    sys.exit(1)
 
         asyncio.run(run_query())
 
     except Exception as e:
-        logger.error(f"Query failed: {e}")
+        logger.exception(f"Query failed: {e}")
         console.print(f"[bold red]✗ Query failed: {e}[/bold red]")
         sys.exit(1)
 
@@ -790,7 +793,7 @@ def mcp_server(ctx, config_file: str | None, transport: str, port: int):
     except KeyboardInterrupt:
         console.print("\n[bold yellow]MCP Server stopped by user[/bold yellow]")
     except Exception as e:
-        logger.error(f"MCP Server failed: {e}")
+        logger.exception(f"MCP Server failed: {e}")
         console.print(f"[bold red]✗ MCP Server failed: {e}[/bold red]")
         sys.exit(1)
 
@@ -815,10 +818,33 @@ def status(ctx):
         else:
             console.print("[bold yellow]Data directory does not exist[/bold yellow]")
 
-        # TODO: Add checks for Qdrant connection, LM Studio availability, etc.
+        # Check component availability
+        async def check_component_status():
+            try:
+                # Check Qdrant connection
+                from ..clients.qdrant_client import QdrantVectorClient
+
+                async with QdrantVectorClient(config) as qdrant:
+                    await qdrant.health_check()
+                    console.print("[bold green]✓ Qdrant connection: OK[/bold green]")
+            except Exception as e:
+                console.print(f"[bold red]✗ Qdrant connection: FAILED ({e})[/bold red]")
+
+            try:
+                # Check LM Studio availability
+                from ..clients.lmstudio_client import LMStudioClient
+
+                async with LMStudioClient(config) as lm:
+                    await lm.health_check()
+                    console.print("[bold green]✓ LM Studio connection: OK[/bold green]")
+            except Exception as e:
+                console.print(f"[bold red]✗ LM Studio connection: FAILED ({e})[/bold red]")
+
+        # Run async status checks
+        asyncio.run(check_component_status())
 
     except Exception as e:
-        logger.error(f"Status check failed: {e}")
+        logger.exception(f"Status check failed: {e}")
         console.print(f"[bold red]✗ Status check failed: {e}[/bold red]")
         sys.exit(1)
 

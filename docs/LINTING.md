@@ -1,12 +1,11 @@
-# Linting and Code Quality
+# Code Quality and Type Checking
 
-This project uses a comprehensive linting setup for Python 3.13 with GitHub Actions integration.
+This project uses type checking and code formatting for Python 3.13 with GitHub Actions integration.
 
 ## Tools Used
 
-- **Ruff**: Fast Python linter and formatter (replaces pylint, flake8, isort, and more)
 - **MyPy**: Static type checker
-- **Black**: Code formatter (backup to Ruff)
+- **Black**: Code formatter
 
 ## Quick Start
 
@@ -16,82 +15,65 @@ This project uses a comprehensive linting setup for Python 3.13 with GitHub Acti
 make install-dev
 
 # Or manually
-pip install ruff mypy black
+pip install mypy black
 ```
 
-### Run Linting Locally
+### Run Type Checking Locally
 
 ```bash
-# Check all issues
-make check-all
-
-# Individual tools
-make lint           # Run ruff linter (check only)
-make lint-fix       # Run ruff linter with auto-fix
-make format         # Format code with ruff
-make format-check   # Check formatting without changes
-make type-check     # Run mypy type checker
+# Run type checking
+make type-check
 
 # Using the Python script
-python scripts/lint.py           # Check all
-python scripts/lint.py --fix     # Fix auto-fixable issues
+python scripts/lint.py           # Run type checking
+
+# Format code
+black src/
+black --check src/               # Check formatting without changes
 ```
 
 ## GitHub Actions Integration
 
-The linting runs automatically on:
+Type checking runs automatically on:
 - Push to `main` branch
 - Pull requests to `main` branch
 
 ### Features:
-- ✅ **GitHub Annotations**: Issues are highlighted directly in PR diffs
-- 🔧 **Auto-fix Suggestions**: PR checks show what can be auto-fixed
+- ✅ **GitHub Annotations**: Type errors are highlighted directly in PR diffs
 - 📊 **Summary Reports**: Clear results in GitHub Action summaries
-- ⚡ **Fast Execution**: Ruff is ~100x faster than pylint
+- 🔍 **Type Safety**: MyPy catches type-related bugs before runtime
 - 🐍 **Python 3.13 Only**: Enforces latest Python standards
 
-## Ruff Configuration
+## MyPy Configuration
 
-Our ruff setup includes these rule sets:
-- **E/W**: pycodestyle errors and warnings
-- **F**: Pyflakes (undefined names, imports)
-- **UP**: pyupgrade (modernize syntax)
-- **B**: flake8-bugbear (common bugs)
-- **SIM**: flake8-simplify (code simplification)
-- **I**: isort (import sorting)
-- **N**: pep8-naming (naming conventions)
-- **PL**: Pylint rules
-- **ARG**: unused arguments
-- **PTH**: prefer pathlib
-- **PERF**: performance lints
-- **RUF**: Ruff-specific rules
+Our mypy setup includes:
+- **Gradual typing**: Start lenient, gradually make stricter
+- **Type checking**: Focus on core modules with strict checking
+- **Error reporting**: Show error codes and pretty formatting
+- **Missing imports**: Currently ignored for external libraries
 
-### Ignored Rules
-- `E501`: Line too long (handled by formatter)
-- `PLR0913`: Too many function arguments (reasonable flexibility)
-- `TRY003`: Long exception messages (project preference)
-
-### Per-File Exceptions
-- **Tests**: Allow magic values, print statements, assertions
-- **Scripts**: Allow print statements and magic values
+### Configuration Highlights
+- `warn_return_any`: Disabled initially for gradual adoption
+- `disallow_untyped_defs`: Enabled for core modules only
+- `ignore_missing_imports`: True for external libraries
+- `show_error_codes`: Detailed error information
 
 ## IDE Integration
 
-Most modern IDEs support ruff automatically:
+Most modern IDEs support mypy and black:
 
 ### VS Code
-Install the "Ruff" extension for real-time linting and formatting.
+Install the "Python" extension which includes mypy support and black formatting.
 
 ### PyCharm/IntelliJ
-Enable ruff in Settings → Tools → External Tools or use the ruff plugin.
+Built-in support for mypy and black in the Python plugin.
 
 ### Vim/Neovim
-Use ALE, coc-ruff, or nvim-lspconfig with ruff-lsp.
+Use ALE or nvim-lspconfig with mypy and black support.
 
 ## Configuration Files
 
-- `pyproject.toml`: Main configuration (preferred)
-- `ruff.toml`: Standalone config for IDE integration
+- `pyproject.toml`: Main configuration for mypy and black
 - `.github/workflows/pylint.yml`: GitHub Actions workflow
 
 ## Troubleshooting
@@ -99,25 +81,20 @@ Use ALE, coc-ruff, or nvim-lspconfig with ruff-lsp.
 ### Common Issues
 
 1. **Module not found errors**: Install with `pip install -e .`
-2. **Ruff not found**: Install with `pip install ruff`
+2. **MyPy not found**: Install with `pip install mypy`
 3. **MyPy cache issues**: Run `make clean` to clear caches
+4. **Type errors**: Review mypy configuration in `pyproject.toml`
 
 ### Performance Tips
 
-- Ruff is extremely fast (~50ms for most projects)
-- Use `--fix` flag to auto-fix most issues
 - MyPy can be slow on first run but caches results
+- Black is very fast for code formatting
+- Use incremental type checking for better performance
 
-## Migration Notes
+## Philosophy
 
-This setup replaces the old pylint configuration:
-- ✅ **Faster**: Ruff is ~100x faster than pylint
-- ✅ **More Comprehensive**: Includes formatter, import sorter
-- ✅ **Better GHA Integration**: Native GitHub annotations
+This setup focuses on:
+- ✅ **Type Safety**: Catch errors before runtime with MyPy
+- ✅ **Simplicity**: Fewer tools, clearer purpose
+- ✅ **Reliability**: Well-established tools with broad community support
 - ✅ **Modern**: Uses latest Python 3.13 features
-
-Old commands are no longer supported:
-- `pylint` → `ruff check`
-- `flake8` → `ruff check`
-- `isort` → `ruff format` or `ruff check --select I`
-- `black` → `ruff format`
