@@ -1,0 +1,144 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-7.4.4, pluggy-1.6.0 -- /Users/alexshumilov/Library/Caches/pypoetry/virtualenvs/jirascope-dc5trbuI-py3.13/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/alexshumilov/Dev/my/JiraScope
+configfile: pyproject.toml
+plugins: anyio-4.9.0, cov-4.1.0, asyncio-0.21.2
+asyncio: mode=Mode.STRICT
+collecting ... collected 37 items
+
+tests/unit/clients/test_auth.py::TestAuthTokens::test_auth_tokens_creation PASSED [  2%]
+tests/unit/clients/test_auth.py::TestAuthTokens::test_auth_tokens_minimal_creation PASSED [  5%]
+tests/unit/clients/test_auth.py::TestAuthTokens::test_is_expired_not_expired PASSED [  8%]
+tests/unit/clients/test_auth.py::TestAuthTokens::test_is_expired_expired PASSED [ 10%]
+tests/unit/clients/test_auth.py::TestAuthTokens::test_is_expired_no_expiry PASSED [ 13%]
+tests/unit/clients/test_auth.py::TestAuthTokens::test_is_expired_buffer PASSED [ 16%]
+tests/unit/clients/test_auth.py::TestAuthTokens::test_to_dict PASSED     [ 18%]
+tests/unit/clients/test_auth.py::TestAuthTokens::test_from_dict PASSED   [ 21%]
+tests/unit/clients/test_auth.py::TestAuthError::test_auth_error_creation PASSED [ 24%]
+tests/unit/clients/test_auth.py::TestAuthError::test_auth_error_inheritance PASSED [ 27%]
+tests/unit/clients/test_auth.py::TestAuthHTTPServer::test_auth_http_server_initialization PASSED [ 29%]
+tests/unit/clients/test_auth.py::TestAuthHTTPServer::test_auth_http_server_attributes PASSED [ 32%]
+tests/unit/clients/test_auth.py::TestAuthCallbackHandler::test_callback_handler_success_path PASSED [ 35%]
+tests/unit/clients/test_auth.py::TestAuthCallbackHandler::test_callback_handler_error_path PASSED [ 37%]
+tests/unit/clients/test_auth.py::TestAuthCallbackHandler::test_callback_handler_log_message_suppressed PASSED [ 40%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_authenticator_initialization_basic PASSED [ 43%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_authenticator_initialization_with_params PASSED [ 45%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_authenticator_initialization_strips_endpoint_slash PASSED [ 48%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_authenticator_initialization_empty_endpoint_error PASSED [ 51%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_authenticator_cache_directory_creation PASSED [ 54%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_load_cached_tokens_no_file FAILED [ 56%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_load_cached_tokens_invalid_json FAILED [ 59%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_load_cached_tokens_success FAILED [ 62%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_save_tokens FAILED [ 64%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_clear_cache_file_exists FAILED [ 67%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_clear_cache_file_not_exists FAILED [ 70%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_validate_token_success PASSED [ 72%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_validate_token_failure PASSED [ 75%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_validate_token_network_error PASSED [ 78%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_get_auth_tokens_cached_valid PASSED [ 81%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_get_auth_tokens_force_refresh PASSED [ 83%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_refresh_tokens_success PASSED [ 86%]
+tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_refresh_tokens_http_error PASSED [ 89%]
+tests/unit/clients/test_auth.py::TestFindAvailablePort::test_find_available_port_default_range PASSED [ 91%]
+tests/unit/clients/test_auth.py::TestFindAvailablePort::test_find_available_port_custom_range PASSED [ 94%]
+tests/unit/clients/test_auth.py::TestFindAvailablePort::test_find_available_port_socket_operations FAILED [ 97%]
+tests/unit/clients/test_auth.py::TestFindAvailablePort::test_find_available_port_all_ports_busy FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestSSEAuthenticator.test_load_cached_tokens_no_file _____________
+tests/unit/clients/test_auth.py:303: in test_load_cached_tokens_no_file
+    tokens = self.authenticator._load_cached_tokens()
+E   AttributeError: 'TestSSEAuthenticator' object has no attribute 'authenticator'
+__________ TestSSEAuthenticator.test_load_cached_tokens_invalid_json ___________
+tests/unit/clients/test_auth.py:310: in test_load_cached_tokens_invalid_json
+    tokens = self.authenticator._load_cached_tokens()
+E   AttributeError: 'TestSSEAuthenticator' object has no attribute 'authenticator'
+_____________ TestSSEAuthenticator.test_load_cached_tokens_success _____________
+tests/unit/clients/test_auth.py:326: in test_load_cached_tokens_success
+    tokens = self.authenticator._load_cached_tokens()
+E   AttributeError: 'TestSSEAuthenticator' object has no attribute 'authenticator'
+____________________ TestSSEAuthenticator.test_save_tokens _____________________
+tests/unit/clients/test_auth.py:343: in test_save_tokens
+    self.authenticator._save_tokens(tokens)
+E   AttributeError: 'TestSSEAuthenticator' object has no attribute 'authenticator'
+______________ TestSSEAuthenticator.test_clear_cache_file_exists _______________
+tests/unit/clients/test_auth.py:357: in test_clear_cache_file_exists
+    self.authenticator.clear_cache()
+E   AttributeError: 'TestSSEAuthenticator' object has no attribute 'authenticator'
+____________ TestSSEAuthenticator.test_clear_cache_file_not_exists _____________
+tests/unit/clients/test_auth.py:364: in test_clear_cache_file_not_exists
+    self.authenticator.clear_cache()
+E   AttributeError: 'TestSSEAuthenticator' object has no attribute 'authenticator'
+_______ TestFindAvailablePort.test_find_available_port_socket_operations _______
+tests/unit/clients/test_auth.py:521: in test_find_available_port_socket_operations
+    mock_socket_class.assert_called_with(socket.AF_INET, socket.SOCK_STREAM)
+E   NameError: name 'socket' is not defined. Did you forget to import 'socket'?
+________ TestFindAvailablePort.test_find_available_port_all_ports_busy _________
+tests/unit/clients/test_auth.py:534: in test_find_available_port_all_ports_busy
+    find_available_port(start_port=8080, max_port=8081) # Small range to test quickly
+src/jirascope/clients/auth.py:467: in find_available_port
+    raise RuntimeError(f"No available ports found between {start_port} and {max_port}")
+E   RuntimeError: No available ports found between 8080 and 8081
+
+---------- coverage: platform darwin, python 3.13.5-final-0 ----------
+Name                                                     Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------------------------
+src/jirascope/__init__.py                                   10      0   100%
+src/jirascope/analysis/__init__.py                          11     11     0%   3-14
+src/jirascope/analysis/content_analyzer.py                 158    158     0%   3-444
+src/jirascope/analysis/cross_epic_analyzer.py              187    187     0%   3-428
+src/jirascope/analysis/similarity_analyzer.py              188    188     0%   3-422
+src/jirascope/analysis/structural_analyzer.py              349    349     0%   3-811
+src/jirascope/analysis/template_inference.py                85     85     0%   3-293
+src/jirascope/analysis/temporal_analyzer.py                152    152     0%   3-382
+src/jirascope/cli/__init__.py                                2      2     0%   3-5
+src/jirascope/cli/main.py                                  521    521     0%   3-850
+src/jirascope/clients/__init__.py                            5      0   100%
+src/jirascope/clients/auth.py                              247    105    57%   166-173, 182-184, 189-315, 333-341, 346-347, 350-352, 377, 393, 409-417, 421-428, 432-437, 457-458
+src/jirascope/clients/claude_client.py                      78     60    23%   19-21, 25, 33-35, 46-79, 85-143, 165-184, 192, 196, 201-229
+src/jirascope/clients/lmstudio_client.py                    63     50    21%   17-19, 23-27, 31-32, 38-54, 58-76, 80-98, 102-112
+src/jirascope/clients/mcp_client.py                         95     78    18%   20-30, 40-57, 61-62, 66-72, 78-108, 112-132, 138-160, 164-173
+src/jirascope/clients/qdrant_client.py                     136    108    21%   17, 50-52, 56-57, 64-81, 85-117, 121-143, 149-169, 179-220, 226-227, 233-234, 238-255, 259-269, 273-280, 284-294
+src/jirascope/core/__init__.py                               0      0   100%
+src/jirascope/core/config.py                                69     19    72%   65-77, 119-122, 127-134, 143, 156, 171
+src/jirascope/extractors/__init__.py                         2      0   100%
+src/jirascope/extractors/jira_extractor.py                 120     96    20%   44-45, 49-88, 92-137, 143-175, 179, 183, 187-200, 204-207, 211-227, 232-240, 244-250
+src/jirascope/mcp_server/__init__.py                         2      2     0%   3-5
+src/jirascope/mcp_server/server.py                         100    100     0%   3-265
+src/jirascope/mcp_server/tools.py                           41     41     0%   7-125
+src/jirascope/models/__init__.py                             4      0   100%
+src/jirascope/models/analysis.py                           126      0   100%
+src/jirascope/models/metadata_schema.py                     52     18    65%   45-58, 62, 101-108
+src/jirascope/models/work_item.py                          104     30    71%   47-48, 52-64, 78, 83, 103, 117-121, 140-143, 160-162, 191-201
+src/jirascope/pipeline/__init__.py                          18      0   100%
+src/jirascope/pipeline/comprehensive_quality_tester.py     201    154    23%   59-62, 68-153, 157-166, 177-236, 240-317, 321-333, 339-345, 354-386, 402-415
+src/jirascope/pipeline/embedding_processor.py              220    189    14%   23-25, 29-56, 60-65, 69, 76-80, 84-156, 160-257, 263-298, 303-331, 336-356, 360-369, 373-374, 378-386, 390-396, 400
+src/jirascope/pipeline/incremental_processor.py            143    118    17%   21-28, 34-91, 99-101, 105-117, 121-128, 132-145, 149-163, 167-189, 193-204, 212-220, 224-234, 238-245, 249, 255-282
+src/jirascope/pipeline/quality_validator.py                 98     83    15%   32-33, 37-101, 115-140, 159-192, 196-254
+src/jirascope/pipeline/rag_quality_tester.py               217    148    32%   101, 148-167, 181-184, 188-343, 354-406, 414-459, 468-482, 496-512, 517-527, 534-535, 539-569, 579-591
+src/jirascope/pipeline/smart_chunker.py                    171    147    14%   22-23, 40-66, 94-119, 123-166, 170-214, 218-251, 255-266, 283-339, 345-387, 392-395, 402-428, 432-433
+src/jirascope/rag/__init__.py                               12     12     0%   3-15
+src/jirascope/rag/context_assembler.py                     133    133     0%   3-266
+src/jirascope/rag/pipeline.py                               77     77     0%   3-233
+src/jirascope/rag/query_processor.py                       221    221     0%   3-422
+src/jirascope/rag/retrieval_engine.py                       77     77     0%   3-166
+src/jirascope/utils/__init__.py                             20      0   100%
+src/jirascope/utils/cost_optimizer.py                      425    317    25%   128-138, 142, 146, 150-173, 186-223, 227-229, 233-235, 239-245, 249, 253, 257-267, 271-275, 279-292, 301-308, 318-338, 348-366, 377-429, 436-450, 454-503, 510-511, 517-529, 541-560, 564-624, 631-681, 689-740, 746-758, 762-781, 788-811, 824-836, 841-879, 885, 895-984
+src/jirascope/utils/cost_reporter.py                       283    206    27%   95-105, 138-181, 185-207, 221-247, 262-321, 335-355, 376-404, 422-462, 469-497, 508-544, 567-587, 591-593, 598-619, 626-639, 645-652, 656-667, 671, 675-678, 682-687, 697, 708, 722-742, 746-749, 753-762
+src/jirascope/utils/logging.py                              88     58    34%   15-16, 22-34, 38-41, 45-47, 64-66, 78-81, 89-132, 144-145, 149-150, 154-155, 159-160, 164-172, 178-179, 186-187
+--------------------------------------------------------------------------------------
+TOTAL                                                     5311   4300    19%
+Coverage HTML written to dir htmlcov
+
+FAIL Required test coverage of 75% not reached. Total coverage: 19.04%
+=========================== short test summary info ============================
+FAILED tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_load_cached_tokens_no_file
+FAILED tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_load_cached_tokens_invalid_json
+FAILED tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_load_cached_tokens_success
+FAILED tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_save_tokens
+FAILED tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_clear_cache_file_exists
+FAILED tests/unit/clients/test_auth.py::TestSSEAuthenticator::test_clear_cache_file_not_exists
+FAILED tests/unit/clients/test_auth.py::TestFindAvailablePort::test_find_available_port_socket_operations
+FAILED tests/unit/clients/test_auth.py::TestFindAvailablePort::test_find_available_port_all_ports_busy
+========================= 8 failed, 29 passed in 1.18s =========================

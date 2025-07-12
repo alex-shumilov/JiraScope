@@ -51,12 +51,14 @@ async def test_validate_embedding_quality_success(mock_config, sample_test_queri
     mock_qdrant_context.__aenter__.return_value = mock_qdrant_client
     mock_qdrant_context.__aexit__.return_value = None
 
-    with patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context):
-        with patch(
+    with (
+        patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context),
+        patch(
             "jirascope.pipeline.quality_validator.QdrantVectorClient",
             return_value=mock_qdrant_context,
-        ):
-            report = await validator.validate_embedding_quality()
+        ),
+    ):
+        report = await validator.validate_embedding_quality()
 
     assert isinstance(report, QualityReport)
     assert report.total_tests == 3
@@ -98,12 +100,14 @@ async def test_validate_embedding_quality_poor_results(mock_config, sample_test_
     mock_qdrant_context.__aenter__.return_value = mock_qdrant_client
     mock_qdrant_context.__aexit__.return_value = None
 
-    with patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context):
-        with patch(
+    with (
+        patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context),
+        patch(
             "jirascope.pipeline.quality_validator.QdrantVectorClient",
             return_value=mock_qdrant_context,
-        ):
-            report = await validator.validate_embedding_quality()
+        ),
+    ):
+        report = await validator.validate_embedding_quality()
 
     assert report.passed_tests == 0  # All should fail due to low similarity
     assert report.overall_score == 0.0
@@ -133,12 +137,14 @@ async def test_validate_embedding_quality_no_results(mock_config, sample_test_qu
     mock_qdrant_context.__aenter__.return_value = mock_qdrant_client
     mock_qdrant_context.__aexit__.return_value = None
 
-    with patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context):
-        with patch(
+    with (
+        patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context),
+        patch(
             "jirascope.pipeline.quality_validator.QdrantVectorClient",
             return_value=mock_qdrant_context,
-        ):
-            report = await validator.validate_embedding_quality()
+        ),
+    ):
+        report = await validator.validate_embedding_quality()
 
     assert report.passed_tests == 0
     assert report.overall_score == 0.0
@@ -199,12 +205,14 @@ async def test_run_performance_test(mock_config, sample_test_queries):
     mock_qdrant_context.__aenter__.return_value = mock_qdrant_client
     mock_qdrant_context.__aexit__.return_value = None
 
-    with patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context):
-        with patch(
+    with (
+        patch("jirascope.pipeline.quality_validator.LMStudioClient", return_value=mock_lm_context),
+        patch(
             "jirascope.pipeline.quality_validator.QdrantVectorClient",
             return_value=mock_qdrant_context,
-        ):
-            metrics = await validator.run_performance_test(num_queries=2)
+        ),
+    ):
+        metrics = await validator.run_performance_test(num_queries=2)
 
     assert "total_test_time" in metrics
     assert "queries_per_second" in metrics

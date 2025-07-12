@@ -410,7 +410,7 @@ class TestCrossEpicAnalyzerCoverage:
     @patch("jirascope.analysis.cross_epic_analyzer.LMStudioClient")
     @patch("jirascope.analysis.cross_epic_analyzer.ClaudeClient")
     async def test_misplacement_detection_with_insufficient_data(
-        self, mock_claude, mock_lm, mock_qdrant
+        self, _mock_claude, _mock_lm, _mock_qdrant
     ):
         """Test misplacement detection with insufficient data."""
         # Setup mocks
@@ -418,9 +418,9 @@ class TestCrossEpicAnalyzerCoverage:
         mock_lm_instance = AsyncMock()
         mock_claude_instance = AsyncMock()
 
-        mock_qdrant.return_value = mock_qdrant_instance
-        mock_lm.return_value = mock_lm_instance
-        mock_claude.return_value = mock_claude_instance
+        _mock_qdrant.return_value = mock_qdrant_instance
+        _mock_lm.return_value = mock_lm_instance
+        _mock_claude.return_value = mock_claude_instance
 
         # Mock insufficient epics data
         self.analyzer._get_all_epics_with_items = AsyncMock(

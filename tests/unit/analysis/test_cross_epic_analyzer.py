@@ -126,7 +126,6 @@ class TestCrossEpicAnalyzer:
         """Test epic theme embedding calculation through public interface."""
         qdrant_client, lm_client, claude_client = mock_clients
         # Ensure at least one epic with multiple work items, and at least one item missing embedding
-        sample_epics = AnalysisFixtures.create_sample_epics()
         sample_work_items = AnalysisFixtures.create_sample_work_items()[-2:]
         for item in sample_work_items:
             item.embedding = None  # Force embedding calculation
@@ -209,8 +208,6 @@ class TestCrossEpicAnalyzer:
     async def test_analyze_misplacement_with_claude(self, mock_config, mock_clients):
         """Test Claude analysis for work item misplacement through public interface."""
         qdrant_client, lm_client, claude_client = mock_clients
-        sample_work_items = AnalysisFixtures.create_sample_work_items()
-        sample_epics = AnalysisFixtures.create_sample_epics()
 
         with (
             patch(
@@ -321,8 +318,6 @@ class TestCrossEpicAnalyzer:
     async def test_error_handling_claude_failure(self, mock_config, mock_clients):
         """Test error handling when Claude analysis fails."""
         qdrant_client, lm_client, claude_client = mock_clients
-        sample_work_items = AnalysisFixtures.create_sample_work_items()
-        sample_epics = AnalysisFixtures.create_sample_epics()
 
         # Mock Claude failure
         claude_client.analyze.side_effect = Exception("Claude API error")
