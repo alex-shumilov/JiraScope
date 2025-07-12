@@ -27,13 +27,13 @@ repos:
   #     - id: ruff
   #       args: ["--config=pyproject.toml", "--fix"]
 
-  # Python import sorting
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ["--profile", "black", "--line-length", "100"]
-        stages: [pre-commit]
+  # # Python import sorting
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.13.2
+  #   hooks:
+  #     - id: isort
+  #       args: ["--profile", "black", "--line-length", "100"]
+  #       stages: [pre-commit]
 
   # Type checking with mypy
   # - repo: https://github.com/pre-commit/mirrors-mypy
