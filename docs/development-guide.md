@@ -39,10 +39,10 @@ pip install -e .
 
 - ✅ **Correct**: `poetry run python -m jirascope`
 - ✅ **Correct**: `poetry run pytest`
-- ✅ **Correct**: `poetry run ruff check .`
+- ✅ **Correct**: `poetry run mypy src/`
 - ❌ **Incorrect**: `python -m jirascope`
 - ❌ **Incorrect**: `pytest`
-- ❌ **Incorrect**: `ruff check .`
+- ❌ **Incorrect**: `mypy src/`
 
 ### Environment Configuration
 
@@ -78,18 +78,18 @@ pip install -e .
 ### Formatting and Linting
 
 - **Black Formatter**: 100 character line length
-- **Ruff Linter**: Comprehensive code quality checks
-- **Configuration**: [pyproject.toml](../pyproject.toml) and [ruff.toml](../ruff.toml)
+- **MyPy Type Checker**: Static type checking for Python
+- **Configuration**: [pyproject.toml](../pyproject.toml)
 
 ```bash
 # Format code
 poetry run black src/ tests/
 
 # Lint code
-poetry run ruff check .
+poetry run mypy src/
 
 # Auto-fix linting issues
-poetry run ruff check . --fix
+poetry run mypy src/ --fix
 
 # Type checking (if configured)
 poetry run mypy src/
@@ -327,7 +327,7 @@ git checkout -b feature/your-feature-name
 # 2. Make changes following code quality standards
 # 3. Add/update tests
 # 4. Run quality checks
-poetry run ruff check .
+poetry run mypy src/
 poetry run pytest
 
 # 5. Commit with descriptive message
@@ -447,7 +447,7 @@ poetry shell
 docker run -p 6333:6333 qdrant/qdrant
 
 # Code quality checks
-poetry run ruff check . --fix
+poetry run mypy src/ --fix
 poetry run pytest
 
 # Run application
@@ -458,7 +458,7 @@ poetry run jirascope mcp-server
 ### Before Committing
 ```bash
 # Full quality check
-poetry run ruff check .
+poetry run mypy src/
 poetry run pytest --cov-fail-under=80
 poetry run pre-commit run --all-files
 ```

@@ -161,7 +161,7 @@ The project evolved through several phases, each building upon the previous:
 | Tool | Purpose | Configuration |
 |------|---------|---------------|
 | **Poetry** | Dependency management | [pyproject.toml](../pyproject.toml) |
-| **Ruff** | Linting and formatting | [ruff.toml](../ruff.toml) |
+| **MyPy** | Type checking | [pyproject.toml](../pyproject.toml) |
 | **Pytest** | Testing framework | [Test Guide](../tests/README.md) |
 | **Pre-commit** | Code quality hooks | [.pre-commit-config.yaml](../.pre-commit-config.yaml) |
 | **Docker** | Containerization | [Dockerfile](../Dockerfile), [docker-compose.yml](../docker-compose.yml) |

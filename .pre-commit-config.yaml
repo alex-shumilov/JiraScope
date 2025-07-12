@@ -20,13 +20,6 @@ repos:
       - id: black
         args: ["--config=pyproject.toml"]
 
-  # Python linting with ruff (DISABLED)
-  # - repo: https://github.com/astral-sh/ruff-pre-commit
-  #   rev: v0.2.2
-  #   hooks:
-  #     - id: ruff
-  #       args: ["--config=pyproject.toml", "--fix"]
-
   # # Python import sorting
   # - repo: https://github.com/pycqa/isort
   #   rev: 5.13.2
