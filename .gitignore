@@ -73,6 +73,7 @@ models/
 .vscode/
 .idea/
 .cursor/
+!.cursor/rules
 *.swp
 *.swo
 *~

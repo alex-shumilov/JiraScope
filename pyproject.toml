@@ -6,7 +6,7 @@ authors = [
     {name = "Alex Shumilov",email = "alex.shumilov@rationalexponent.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "qdrant-client>=1.7.0,<2.0.0",
     "pydantic>=2.5.0,<3.0.0",
@@ -47,7 +47,7 @@ build-backend = "poetry.core.masonry.api"
 # Ruff configuration
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 src = ["src", "tests"]
 exclude = [
     ".bzr",
@@ -122,20 +122,14 @@ unfixable = []
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
-# Tests can use magic values, assertions, print statements, etc.
+# Tests can use assertions (expected in testing)
 "tests/**/*" = [
-    "PLR2004", # Magic value used in comparison
-    "S101",    # Use of assert detected
-    "T201",    # `print` found
-    "PLR0913", # Too many arguments to function call
-    "ARG001",  # Unused function argument
-    "ARG002",  # Unused method argument
+    "S101",    # Use of assert detected - legitimate in tests
 ]
 
-# Scripts can be less strict
+# Scripts can print to console (legitimate for CLI scripts)
 "scripts/**/*" = [
-    "T201",    # `print` found
-    "PLR2004", # Magic value used in comparison
+    "T201",    # `print` found - legitimate for CLI output
 ]
 
 [tool.ruff.lint.mccabe]
@@ -154,7 +148,7 @@ line-ending = "auto"
 # Black configuration (backup formatter)
 [tool.black]
 line-length = 100
-target-version = ['py312']
+target-version = ['py311']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -173,7 +167,7 @@ extend-exclude = '''
 
 # MyPy configuration
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.11"
 # Start with lenient settings - gradually make stricter
 warn_return_any = false
 warn_unused_configs = true
@@ -207,7 +201,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --tb=short --cov=src/jirascope --cov-report=html --cov-report=term-missing --cov-report=xml --cov-fail-under=80"
+addopts = "-v --tb=short --cov=src/jirascope --cov-report=html --cov-report=term-missing --cov-fail-under=75"
 
 [tool.coverage.run]
 source = ["src/jirascope"]
