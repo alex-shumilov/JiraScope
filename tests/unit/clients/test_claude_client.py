@@ -33,6 +33,8 @@ class TestClaudeClient:
             key="TEST-123",
             summary="Implement user authentication",
             description="Add OAuth2 authentication to the application",
+            parent_key=None,
+            epic_key=None,
             issue_type="Story",
             status="Open",
             created=datetime.now(UTC),
@@ -129,10 +131,13 @@ class TestClaudeClient:
             key="CONTEXT-1",
             summary="Related authentication feature",
             description="Context item",
+            parent_key=None,
+            epic_key=None,
             issue_type="Task",
             status="Done",
             created=datetime.now(UTC),
             updated=datetime.now(UTC),
+            assignee=None,
             reporter="test@example.com",
             embedding=[0.1, 0.2, 0.3] * 100,
         )
@@ -153,10 +158,13 @@ class TestClaudeClient:
                     key=f"CONTEXT-{i}",
                     summary=f"Context item {i}",
                     description="Context",
+                    parent_key=None,
+                    epic_key=None,
                     issue_type="Task",
                     status="Done",
                     created=datetime.now(UTC),
                     updated=datetime.now(UTC),
+                    assignee=None,
                     reporter="test@example.com",
                     embedding=[0.1, 0.2, 0.3] * 100,
                 )
@@ -199,7 +207,7 @@ class TestClaudeClient:
 
         assert result["raw_response"] == response
         assert result["confidence"] == 0.5
-        assert result["reasoning"] == "Invalid JSON response"
+        assert result["reasoning"] == "Failed to parse structured response"
 
     def test_parse_analysis_response_no_json(self):
         """Test parsing response with no JSON."""
@@ -236,8 +244,8 @@ class TestClaudeClient:
         mock_response.usage.input_tokens = 1000
         mock_response.usage.output_tokens = 500
 
-        with patch.object(self.client.client, "messages") as mock_messages:
-            mock_messages.create.return_value = mock_response
+        with patch.object(self.client, "client") as mock_anthropic:
+            mock_anthropic.messages.create.return_value = mock_response
 
             result = await self.client.analyze_work_item(self.work_item)
 
@@ -256,8 +264,8 @@ class TestClaudeClient:
         mock_response.usage.input_tokens = 1000
         mock_response.usage.output_tokens = 500
 
-        with patch.object(self.client.client, "messages") as mock_messages:
-            mock_messages.create.return_value = mock_response
+        with patch.object(self.client, "client") as mock_anthropic:
+            mock_anthropic.messages.create.return_value = mock_response
 
             result = await self.client.analyze_work_item(self.work_item, analysis_type="complexity")
 
@@ -273,8 +281,11 @@ class TestClaudeClient:
             description="Context",
             issue_type="Task",
             status="Done",
+            parent_key=None,
+            epic_key=None,
             created=datetime.now(UTC),
             updated=datetime.now(UTC),
+            assignee=None,
             reporter="test@example.com",
             embedding=[0.1, 0.2, 0.3] * 100,
         )
@@ -284,15 +295,15 @@ class TestClaudeClient:
         mock_response.usage.input_tokens = 1000
         mock_response.usage.output_tokens = 500
 
-        with patch.object(self.client.client, "messages") as mock_messages:
-            mock_messages.create.return_value = mock_response
+        with patch.object(self.client, "client") as mock_anthropic:
+            mock_anthropic.messages.create.return_value = mock_response
 
             result = await self.client.analyze_work_item(self.work_item, context=[context_item])
 
             assert isinstance(result, AnalysisResult)
             # Verify context was included in prompt
-            mock_messages.create.assert_called_once()
-            call_args = mock_messages.create.call_args
+            mock_anthropic.messages.create.assert_called_once()
+            call_args = mock_anthropic.messages.create.call_args
             prompt = call_args[1]["messages"][0]["content"]
             assert "CONTEXT-1" in prompt
 
@@ -308,8 +319,8 @@ class TestClaudeClient:
     @pytest.mark.asyncio
     async def test_analyze_work_item_api_error(self):
         """Test analysis when API call fails."""
-        with patch.object(self.client.client, "messages") as mock_messages:
-            mock_messages.create.side_effect = Exception("API Error")
+        with patch.object(self.client, "client") as mock_anthropic:
+            mock_anthropic.messages.create.side_effect = Exception("API Error")
 
             with pytest.raises(Exception, match="API Error"):
                 await self.client.analyze_work_item(self.work_item)
@@ -322,8 +333,8 @@ class TestClaudeClient:
         mock_response.usage.input_tokens = 500
         mock_response.usage.output_tokens = 250
 
-        with patch.object(self.client.client, "messages") as mock_messages:
-            mock_messages.create.return_value = mock_response
+        with patch.object(self.client, "client") as mock_anthropic:
+            mock_anthropic.messages.create.return_value = mock_response
 
             # Create a simple response class to match the implementation
             class SimpleResponse:
@@ -367,10 +378,14 @@ class TestClaudeClient:
         minimal_item = WorkItem(
             key="MIN-1",
             summary="Minimal item",
+            description=None,
+            parent_key=None,
+            epic_key=None,
             issue_type="Task",
             status="Open",
             created=datetime.now(UTC),
             updated=datetime.now(UTC),
+            assignee=None,
             reporter="test@example.com",
             embedding=[0.1, 0.2, 0.3] * 100,
         )
@@ -389,10 +404,13 @@ class TestClaudeClient:
             key="EMPTY-1",
             summary="Item with empty collections",
             description="Test description",
+            parent_key=None,
+            epic_key=None,
             issue_type="Bug",
             status="In Progress",
             created=datetime.now(UTC),
             updated=datetime.now(UTC),
+            assignee=None,
             reporter="test@example.com",
             components=[],  # Empty list
             labels=[],  # Empty list

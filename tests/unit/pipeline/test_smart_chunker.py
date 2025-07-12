@@ -476,7 +476,7 @@ class TestSmartChunker:
         assert chunk.chunk_type == "test_type"
         assert chunk.metadata.source_key == self.base_work_item.key
         assert chunk.metadata.chunk_index == 2
-        assert chunk.metadata.issue_type == self.base_work_item.issue_type
+        assert chunk.metadata.parent_metadata.item_type == self.base_work_item.issue_type
 
     def test_calculate_content_hash(self):
         """Test content hash calculation."""

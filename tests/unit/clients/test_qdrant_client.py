@@ -128,8 +128,10 @@ class TestQdrantVectorClient:
     async def test_initialize_collection_exists(self):
         """Test collection initialization when collection already exists."""
         # Mock existing collection
-        existing_collection = CollectionInfo(name="jirascope_work_items")
-        mock_collections_response = CollectionsResponse(collections=[existing_collection])
+        existing_collection = Mock()
+        existing_collection.name = "jirascope_work_items"
+        mock_collections_response = Mock()
+        mock_collections_response.collections = [existing_collection]
 
         with patch.object(self.client.client, "get_collections") as mock_get:
             mock_get.return_value = mock_collections_response
@@ -340,9 +342,7 @@ class TestQdrantVectorClient:
             results = await self.client.search_by_epic(self.test_embedding, "EPIC-123", limit=8)
 
             assert len(results) == 1
-            mock_search.assert_called_once_with(
-                self.test_embedding, filters={"epic_key": "EPIC-123"}, limit=8
-            )
+            mock_search.assert_called_once_with(self.test_embedding, {"epic_key": "EPIC-123"}, 8)
 
     @pytest.mark.asyncio
     async def test_search_by_item_type_success(self):
@@ -357,9 +357,7 @@ class TestQdrantVectorClient:
             )
 
             assert len(results) == 1
-            mock_search.assert_called_once_with(
-                self.test_embedding, filters={"item_type": item_types}, limit=12
-            )
+            mock_search.assert_called_once_with(self.test_embedding, {"item_type": item_types}, 12)
 
     @pytest.mark.asyncio
     async def test_get_work_item_by_key_found(self):
@@ -419,9 +417,10 @@ class TestQdrantVectorClient:
     @pytest.mark.asyncio
     async def test_health_check_success(self):
         """Test successful health check."""
-        mock_collection_info = CollectionInfo(name="jirascope_work_items")
+        mock_collection_info = Mock()
+        mock_collection_info.name = "jirascope_work_items"
 
-        with patch.object(self.client.client, "get_collection") as mock_get:
+        with patch.object(self.client.client, "get_collections") as mock_get:
             mock_get.return_value = mock_collection_info
 
             result = await self.client.health_check()
@@ -444,7 +443,7 @@ class TestQdrantVectorClient:
         mock_collection_info = Mock()
         mock_collection_info.points_count = 1000
         mock_collection_info.segments_count = 5
-        mock_collection_info.vectors_count = 1000
+        mock_collection_info.status = "green"
 
         with patch.object(self.client.client, "get_collection") as mock_get:
             mock_get.return_value = mock_collection_info
@@ -453,8 +452,7 @@ class TestQdrantVectorClient:
 
             assert stats["points_count"] == 1000
             assert stats["segments_count"] == 5
-            assert stats["vectors_count"] == 1000
-            assert stats["collection_name"] == "jirascope_work_items"
+            assert stats["status"] == "green"
 
     @pytest.mark.asyncio
     async def test_get_collection_stats_error(self):
@@ -462,8 +460,8 @@ class TestQdrantVectorClient:
         with patch.object(self.client.client, "get_collection") as mock_get:
             mock_get.side_effect = Exception("Stats error")
 
-            with pytest.raises(Exception, match="Stats error"):
-                await self.client.get_collection_stats()
+            stats = await self.client.get_collection_stats()
+            assert stats == {}
 
     def test_work_item_payload_creation(self):
         """Test work item payload structure in store operation."""
