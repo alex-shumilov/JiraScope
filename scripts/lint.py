@@ -4,7 +4,7 @@ Local linting script for JiraScope project.
 Runs ruff linter, formatter, and mypy type checker with proper output formatting.
 """
 
-import subprocess
+import subprocess  # nosec B404 - subprocess needed for running linting tools
 import sys
 from pathlib import Path
 
@@ -18,7 +18,7 @@ def run_command(cmd: list[str], description: str, fix_mode: bool = False) -> boo
         if fix_mode and "ruff check" in " ".join(cmd):
             cmd.append("--fix")
 
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)  # nosec B603
 
         if result.stdout:
             print(result.stdout)
@@ -41,7 +41,7 @@ def main():
     """Run all linting tools."""
     # Change to project root
     project_root = Path(__file__).parent.parent
-    subprocess.run(
+    subprocess.run(  # nosec B603 B607
         ["git", "rev-parse", "--show-toplevel"], capture_output=True, cwd=project_root, check=False
     )
 

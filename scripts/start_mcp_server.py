@@ -126,10 +126,11 @@ class MCPServerManager:
                     self.config.lmstudio_endpoint if self.config else "http://localhost:1234/v1"
                 )
                 response = await client.get(f"{endpoint}/models")
-                return response.status_code == 200
         except Exception:
             console.print("⚠️  LMStudio not running (optional for MCP server)")
             return True  # Non-critical for MCP server operation
+        else:
+            return response.status_code == 200
 
     async def _check_qdrant(self) -> bool:
         """Check Qdrant availability."""
@@ -137,10 +138,11 @@ class MCPServerManager:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 qdrant_url = self.config.qdrant_url if self.config else "http://localhost:6333"
                 response = await client.get(f"{qdrant_url}/collections")
-                return response.status_code == 200
         except Exception:
             console.print("⚠️  Qdrant not running (required for vector search)")
             return False
+        else:
+            return response.status_code == 200
 
     async def start_server(self) -> bool:
         """Start the JiraScope MCP server."""

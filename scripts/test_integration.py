@@ -167,7 +167,6 @@ class IntegrationTester:
             # Try importing the MCP server module
             from jirascope.core.config import Config  # noqa: F401
             from jirascope.mcp_server.server import mcp  # noqa: F401
-
         except ImportError as e:
             return {"success": False, "message": f"Import failed: {e}"}
         except Exception as e:
@@ -192,7 +191,6 @@ class IntegrationTester:
             Config.from_env()
 
             elapsed = time.time() - start_time
-
         except Exception as e:
             return {"success": False, "message": f"Server startup test failed: {e}"}
         else:
@@ -237,7 +235,7 @@ class IntegrationTester:
         lmstudio_config = self.config_dir / "lmstudio_mcp_config.json"
         if lmstudio_config.exists():
             console.print(f"\n📁 LMStudio config: {lmstudio_config}")
-            console.print("📖 Usage guide: examples/lmstudio_prompts.md")
+            console.print("📖 Usage guide: docs/examples/lmstudio_prompts.md")
 
 
 async def main():
