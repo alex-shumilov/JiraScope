@@ -5,7 +5,7 @@ import logging
 import httpx
 import numpy as np
 
-from ..core.config import EMBEDDING_CONFIG, Config
+from ..core.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class LMStudioClient:
     async def __aenter__(self):
         """Async context manager entry."""
         self.session = httpx.AsyncClient(
-            timeout=httpx.Timeout(EMBEDDING_CONFIG["timeout"]),
+            timeout=httpx.Timeout(self.config.embedding_timeout),
             limits=httpx.Limits(max_connections=5),
         )
         return self
@@ -58,13 +58,13 @@ class LMStudioClient:
         try:
             # Prepare texts with instruction prefix
             prepared_texts = [
-                f"{EMBEDDING_CONFIG['instruction_prefix']}{text[:EMBEDDING_CONFIG['max_tokens']]}"
+                f"{self.config.embedding_instruction_prefix}{text[:self.config.embedding_max_tokens]}"
                 for text in texts
             ]
 
             response = await self.session.post(
                 f"{self.endpoint}/embeddings",
-                json={"model": EMBEDDING_CONFIG["model"], "input": prepared_texts},
+                json={"model": self.config.embedding_model, "input": prepared_texts},
             )
             response.raise_for_status()
 
@@ -72,7 +72,7 @@ class LMStudioClient:
             return [item["embedding"] for item in data["data"]]
 
         except httpx.HTTPError as e:
-            logger.error(f"Failed to generate embeddings: {e}")
+            logger.exception(f"Failed to generate embeddings: {e}")
             raise
 
     async def health_check(self) -> bool:
@@ -87,14 +87,14 @@ class LMStudioClient:
             models = response.json()
             available_models = [model["id"] for model in models.get("data", [])]
 
-            if EMBEDDING_CONFIG["model"] in available_models:
+            if self.config.embedding_model in available_models:
                 logger.info("LMStudio health check passed")
                 return True
-            logger.warning(f"Embedding model {EMBEDDING_CONFIG['model']} not available")
+            logger.warning(f"Embedding model {self.config.embedding_model} not available")
             return False
 
         except httpx.HTTPError as e:
-            logger.error(f"LMStudio health check failed: {e}")
+            logger.exception(f"LMStudio health check failed: {e}")
             return False
 
     def calculate_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:

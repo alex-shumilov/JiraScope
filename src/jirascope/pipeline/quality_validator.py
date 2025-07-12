@@ -58,7 +58,7 @@ class EmbeddingQualityValidator:
                             )
 
                         except Exception as e:
-                            logger.error(f"Failed test query '{query}'", error=str(e))
+                            logger.exception(f"Failed test query '{query}'", error=str(e))
                             results.append(
                                 {
                                     "query": query,
@@ -96,7 +96,7 @@ class EmbeddingQualityValidator:
             return report
 
         except Exception as e:
-            logger.error("Failed to validate embedding quality", error=str(e))
+            logger.exception("Failed to validate embedding quality", error=str(e))
             # Return minimal report on failure
             return QualityReport(
                 total_tests=len(self.test_queries),
@@ -250,5 +250,5 @@ class EmbeddingQualityValidator:
             return performance_metrics
 
         except Exception as e:
-            logger.error("Performance test failed", error=str(e))
+            logger.exception("Performance test failed", error=str(e))
             return {"error": str(e)}

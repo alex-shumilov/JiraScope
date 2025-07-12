@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ..clients.lmstudio_client import LMStudioClient
 from ..clients.qdrant_client import QdrantVectorClient
-from ..core.config import EMBEDDING_CONFIG, Config
+from ..core.config import Config
 from ..models import ProcessingResult, WorkItem
 from ..pipeline.smart_chunker import SmartChunker
 from ..utils.logging import StructuredLogger
@@ -86,53 +86,53 @@ class EmbeddingProcessor:
         result = ProcessingResult()
 
         try:
-            async with LMStudioClient(self.config) as lm_client:
-                async with QdrantVectorClient(self.config) as qdrant_client:
-                    # Filter out items that haven't changed (for incremental processing)
-                    items_to_process = self._filter_unchanged_items(items)
-                    result.skipped_items = len(items) - len(items_to_process)
+            async with (
+                LMStudioClient(self.config) as lm_client,
+                QdrantVectorClient(self.config) as qdrant_client,
+            ):
+                # Filter out items that haven't changed (for incremental processing)
+                items_to_process = self._filter_unchanged_items(items)
+                result.skipped_items = len(items) - len(items_to_process)
 
-                    if not items_to_process:
-                        logger.info("No items need processing")
-                        return result
+                if not items_to_process:
+                    logger.info("No items need processing")
+                    return result
 
-                    # Process in adaptive batches
-                    batch_size = self.batcher.calculate_optimal_batch_size(items_to_process)
+                # Process in adaptive batches
+                batch_size = self.batcher.calculate_optimal_batch_size(items_to_process)
 
-                    for i in range(0, len(items_to_process), batch_size):
-                        batch_start = time.time()
-                        batch = items_to_process[i : i + batch_size]
+                for i in range(0, len(items_to_process), batch_size):
+                    batch_start = time.time()
+                    batch = items_to_process[i : i + batch_size]
 
-                        try:
-                            batch_result = await self._process_batch(
-                                batch, lm_client, qdrant_client
-                            )
+                    try:
+                        batch_result = await self._process_batch(batch, lm_client, qdrant_client)
 
-                            result.processed_items += batch_result.processed_items
-                            result.failed_items += batch_result.failed_items
-                            result.total_cost += batch_result.total_cost
-                            result.errors.extend(batch_result.errors)
+                        result.processed_items += batch_result.processed_items
+                        result.failed_items += batch_result.failed_items
+                        result.total_cost += batch_result.total_cost
+                        result.errors.extend(batch_result.errors)
 
-                            # Record performance for adaptive batching
-                            batch_time = time.time() - batch_start
-                            self.batcher.record_performance(len(batch), batch_time, len(batch))
+                        # Record performance for adaptive batching
+                        batch_time = time.time() - batch_start
+                        self.batcher.record_performance(len(batch), batch_time, len(batch))
 
-                            # Update batch stats
-                            batch_num = i // batch_size + 1
-                            result.batch_stats[f"batch_{batch_num}_time"] = batch_time
-                            result.batch_stats[f"batch_{batch_num}_items"] = len(batch)
+                        # Update batch stats
+                        batch_num = i // batch_size + 1
+                        result.batch_stats[f"batch_{batch_num}_time"] = batch_time
+                        result.batch_stats[f"batch_{batch_num}_items"] = len(batch)
 
-                            logger.debug(
-                                f"Processed batch {batch_num}: {len(batch)} items in {batch_time:.2f}s"
-                            )
+                        logger.debug(
+                            f"Processed batch {batch_num}: {len(batch)} items in {batch_time:.2f}s"
+                        )
 
-                        except Exception as e:
-                            logger.error(
-                                f"Failed to process batch {i//batch_size + 1}", error=str(e)
-                            )
-                            result.failed_items += len(batch)
-                            result.errors.append(f"Batch {i//batch_size + 1}: {e!s}")
-                            continue
+                    except Exception as e:
+                        logger.exception(
+                            f"Failed to process batch {i//batch_size + 1}", error=str(e)
+                        )
+                        result.failed_items += len(batch)
+                        result.errors.append(f"Batch {i//batch_size + 1}: {e!s}")
+                        continue
 
             result.processing_time = time.time() - start_time
 
@@ -149,7 +149,7 @@ class EmbeddingProcessor:
             return result
 
         except Exception as e:
-            logger.error("Failed to process work items", error=str(e))
+            logger.exception("Failed to process work items", error=str(e))
             result.errors.append(f"Processing failed: {e!s}")
             result.processing_time = time.time() - start_time
             return result
@@ -162,76 +162,78 @@ class EmbeddingProcessor:
         result = ProcessingResult()
 
         try:
-            async with LMStudioClient(self.config) as lm_client:
-                async with QdrantVectorClient(self.config) as qdrant_client:
-                    # Filter unchanged items
-                    items_to_process = self._filter_unchanged_items(items)
-                    result.skipped_items = len(items) - len(items_to_process)
+            async with (
+                LMStudioClient(self.config) as lm_client,
+                QdrantVectorClient(self.config) as qdrant_client,
+            ):
+                # Filter unchanged items
+                items_to_process = self._filter_unchanged_items(items)
+                result.skipped_items = len(items) - len(items_to_process)
 
-                    if not items_to_process:
-                        logger.info("No items need processing")
-                        return result
+                if not items_to_process:
+                    logger.info("No items need processing")
+                    return result
 
-                    # Generate chunks for all items
-                    all_chunks = []
-                    for item in items_to_process:
-                        chunks = self.chunker.chunk_work_item(item)
-                        all_chunks.extend(chunks)
+                # Generate chunks for all items
+                all_chunks = []
+                for item in items_to_process:
+                    chunks = self.chunker.chunk_work_item(item)
+                    all_chunks.extend(chunks)
 
-                    logger.info(
-                        f"Generated {len(all_chunks)} chunks from {len(items_to_process)} items"
-                    )
+                logger.info(
+                    f"Generated {len(all_chunks)} chunks from {len(items_to_process)} items"
+                )
 
-                    # Process chunks in batches
-                    batch_size = self.batcher.calculate_optimal_batch_size(items_to_process)
+                # Process chunks in batches
+                batch_size = self.batcher.calculate_optimal_batch_size(items_to_process)
 
-                    for i in range(0, len(all_chunks), batch_size):
-                        batch_start = time.time()
-                        chunk_batch = all_chunks[i : i + batch_size]
+                for i in range(0, len(all_chunks), batch_size):
+                    batch_start = time.time()
+                    chunk_batch = all_chunks[i : i + batch_size]
 
-                        try:
-                            # Extract text from chunks
-                            texts = [chunk.text for chunk in chunk_batch]
+                    try:
+                        # Extract text from chunks
+                        texts = [chunk.text for chunk in chunk_batch]
 
-                            # Generate embeddings
-                            embeddings = await lm_client.generate_embeddings(texts)
+                        # Generate embeddings
+                        embeddings = await lm_client.generate_embeddings(texts)
 
-                            if len(embeddings) != len(chunk_batch):
-                                raise ValueError(
-                                    f"Embedding count mismatch: {len(embeddings)} != {len(chunk_batch)}"
-                                )
-
-                            # Store chunks in Qdrant
-                            await qdrant_client.store_chunks(chunk_batch, embeddings)
-
-                            result.processed_items += len(chunk_batch)
-                            result.total_cost += len(chunk_batch) * 0.0001
-
-                            # Record performance
-                            batch_time = time.time() - batch_start
-                            self.batcher.record_performance(
-                                len(chunk_batch), batch_time, len(chunk_batch)
+                        if len(embeddings) != len(chunk_batch):
+                            raise ValueError(
+                                f"Embedding count mismatch: {len(embeddings)} != {len(chunk_batch)}"
                             )
 
-                            batch_num = i // batch_size + 1
-                            result.batch_stats[f"batch_{batch_num}_time"] = batch_time
-                            result.batch_stats[f"batch_{batch_num}_chunks"] = len(chunk_batch)
+                        # Store chunks in Qdrant
+                        await qdrant_client.store_chunks(chunk_batch, embeddings)
 
-                            logger.debug(
-                                f"Processed chunk batch {batch_num}: {len(chunk_batch)} chunks in {batch_time:.2f}s"
-                            )
+                        result.processed_items += len(chunk_batch)
+                        result.total_cost += len(chunk_batch) * 0.0001
 
-                        except Exception as e:
-                            logger.error(
-                                f"Failed to process chunk batch {i//batch_size + 1}", error=str(e)
-                            )
-                            result.failed_items += len(chunk_batch)
-                            result.errors.append(f"Chunk batch {i//batch_size + 1}: {e!s}")
-                            continue
+                        # Record performance
+                        batch_time = time.time() - batch_start
+                        self.batcher.record_performance(
+                            len(chunk_batch), batch_time, len(chunk_batch)
+                        )
 
-                    # Update cache hashes for processed items
-                    for item in items_to_process:
-                        self._update_cache_hash(item)
+                        batch_num = i // batch_size + 1
+                        result.batch_stats[f"batch_{batch_num}_time"] = batch_time
+                        result.batch_stats[f"batch_{batch_num}_chunks"] = len(chunk_batch)
+
+                        logger.debug(
+                            f"Processed chunk batch {batch_num}: {len(chunk_batch)} chunks in {batch_time:.2f}s"
+                        )
+
+                    except Exception as e:
+                        logger.exception(
+                            f"Failed to process chunk batch {i//batch_size + 1}", error=str(e)
+                        )
+                        result.failed_items += len(chunk_batch)
+                        result.errors.append(f"Chunk batch {i//batch_size + 1}: {e!s}")
+                        continue
+
+                # Update cache hashes for processed items
+                for item in items_to_process:
+                    self._update_cache_hash(item)
 
             result.processing_time = time.time() - start_time
 
@@ -248,7 +250,7 @@ class EmbeddingProcessor:
             return result
 
         except Exception as e:
-            logger.error("Failed to process work items with chunking", error=str(e))
+            logger.exception("Failed to process work items with chunking", error=str(e))
             result.errors.append(f"Chunked processing failed: {e!s}")
             result.processing_time = time.time() - start_time
             return result
@@ -320,8 +322,8 @@ class EmbeddingProcessor:
 
         text = " | ".join(parts)
 
-        # Ensure we don't exceed max tokens
-        max_chars = EMBEDDING_CONFIG["max_tokens"] * 4  # Rough estimate
+        # Ensure we don't exceed max tokens (default 512 tokens * 4 chars/token estimate)
+        max_chars = 512 * 4  # Rough estimate for max tokens
         if len(text) > max_chars:
             text = text[:max_chars] + "..."
 

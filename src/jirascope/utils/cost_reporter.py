@@ -753,5 +753,5 @@ class AdvancedCostReporter:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to save cost report to {file_path}", error=str(e))
+            logger.exception(f"Failed to save cost report to {file_path}", error=str(e))
             return False

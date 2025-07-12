@@ -342,7 +342,7 @@ class BatchContentAnalyzer:
                     error_msg = f"Batch {i//batch_size + 1} failed: {e!s}"
                     errors.append(error_msg)
                     failed_analyses += len(batch)
-                    logger.error(error_msg)
+                    logger.exception(error_msg)
 
             processing_time = time.time() - start_time
 

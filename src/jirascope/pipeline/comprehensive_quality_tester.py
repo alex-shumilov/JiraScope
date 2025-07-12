@@ -106,7 +106,7 @@ class ComprehensiveQualityTester:
         if test_plan.test_embedding_consistency:
             logger.info("Testing embedding consistency")
             consistency_report = await self.rag_tester.validate_analysis_consistency()
-            report.embedding_consistency = consistency_report.dict()
+            report.embedding_consistency = consistency_report.model_dump()
 
         # 3. Analysis Reproducibility Tests
         logger.info("Testing analysis reproducibility")
@@ -122,7 +122,7 @@ class ComprehensiveQualityTester:
         if test_plan.run_performance_benchmarks:
             logger.info("Running performance benchmarks")
             performance_benchmark = await self.rag_tester.benchmark_embedding_performance()
-            report.performance_regression["benchmarks"] = performance_benchmark.dict()
+            report.performance_regression["benchmarks"] = performance_benchmark.model_dump()
 
         # Generate health score and recommendations
         report.overall_health_score = self._calculate_health_score(report)
@@ -143,7 +143,7 @@ class ComprehensiveQualityTester:
             self._save_report(report, test_plan.report_file)
 
         # Add to previous reports
-        self.previous_reports.append(report.dict())
+        self.previous_reports.append(report.model_dump())
         if len(self.previous_reports) > 10:
             self.previous_reports.pop(0)  # Keep only the last 10 reports
 
@@ -241,11 +241,11 @@ class ComprehensiveQualityTester:
             f1_score = report.rag_quality.overall_f1_score
             if f1_score < 0.5:
                 recommendations.append(
-                    "Critical: RAG quality is poor (F1 < 0.5). Consider re-training embeddings or improving test queries."
+                    "Critical: RAG quality is poor (F1 < 0.5). Improve by re-training embeddings or improving test queries."
                 )
             elif f1_score < 0.7:
                 recommendations.append(
-                    "Moderate: RAG quality needs improvement (F1 < 0.7). Review semantic search implementation."
+                    "Moderate: RAG quality needs improvement (F1 < 0.7). Enhance semantic search implementation."
                 )
 
             # Check individual test categories
@@ -320,13 +320,13 @@ class ComprehensiveQualityTester:
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
             with open(file_path, "w") as f:
-                f.write(report.json(indent=2))
+                f.write(report.model_dump_json(indent=2))
 
             logger.info(f"Saved quality report to {file_path}")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to save quality report to {file_path}", error=str(e))
+            logger.exception(f"Failed to save quality report to {file_path}", error=str(e))
             return False
 
     async def test_with_custom_queries(
@@ -341,7 +341,7 @@ class ComprehensiveQualityTester:
 
         return {
             "test_name": test_name,
-            "quality_report": quality_report.dict(),
+            "quality_report": quality_report.model_dump(),
             "timestamp": datetime.now().isoformat(),
             "custom_query_count": len(queries),
         }

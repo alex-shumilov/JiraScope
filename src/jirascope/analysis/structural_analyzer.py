@@ -270,7 +270,7 @@ class TechDebtClusterer:
             )
 
         except Exception as e:
-            logger.error("Failed to cluster tech debt items", error=str(e))
+            logger.exception("Failed to cluster tech debt items", error=str(e))
             raise
 
     async def _find_tech_debt_items(self, project_key: str | None = None) -> list[dict[str, Any]]:
@@ -507,7 +507,7 @@ class StructuralAnalyzer:
             return analysis
 
         except Exception as e:
-            logger.error("Failed to analyze labeling patterns", error=str(e))
+            logger.exception("Failed to analyze labeling patterns", error=str(e))
             raise
 
     async def tech_debt_clustering(self, project_key: str | None = None) -> TechDebtReport:
@@ -643,10 +643,7 @@ class StructuralAnalyzer:
 
         # Check for common patterns
         common_words = set(label1_lower.split()) & set(label2_lower.split())
-        if common_words and len(common_words) >= len(label1_lower.split()) // 2:
-            return True
-
-        return False
+        return bool(common_words and len(common_words) >= len(label1_lower.split()) // 2)
 
     def _identify_tech_debt_items(self, work_items: list) -> list:
         """Identify tech debt items from a list of work items."""

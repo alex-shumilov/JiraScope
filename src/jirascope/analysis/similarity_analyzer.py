@@ -61,6 +61,7 @@ class MultiLevelSimilarityDetector:
             if similar_created and (original.created - similar_created).days < 30:
                 priority += 1
         except (TypeError, AttributeError):
+            # Gracefully handle missing or invalid date fields
             pass
 
         return min(priority, 5)
@@ -187,7 +188,7 @@ class MultiLevelSimilarityDetector:
                     )
 
         except Exception as e:
-            logger.error("Error during duplicate detection", error=str(e))
+            logger.exception("Error during duplicate detection", error=str(e))
             raise
 
         processing_time = time.time() - start_time
@@ -278,7 +279,7 @@ class SimilarityAnalyzer:
             return report
 
         except Exception as e:
-            logger.error("Failed to find potential duplicates", error=str(e))
+            logger.exception("Failed to find potential duplicates", error=str(e))
             raise
 
     async def hierarchical_coherence(self, epic_key: str) -> CoherenceAnalysis:
@@ -383,7 +384,15 @@ class SimilarityAnalyzer:
                 recommendations.append("Epic shows good coherence and theme consistency")
 
             processing_time = time.time() - start_time
-            estimated_cost = len(embeddings) * 0.0001  # noqa: F841
+            estimated_cost = len(embeddings) * 0.0001  # Cost estimate for similarity calculations
+
+            if logger.cost_tracker:
+                logger.log_cost(
+                    "similarity",
+                    "hierarchical_coherence",
+                    estimated_cost,
+                    {"epic_key": epic_key, "work_items_analyzed": len(work_item_data)},
+                )
 
             logger.log_operation(
                 "hierarchical_coherence",
@@ -393,6 +402,7 @@ class SimilarityAnalyzer:
                 work_items_count=len(work_item_data),
                 coherence_score=overall_coherence,
                 outliers_found=len(outlier_items),
+                analysis_cost=estimated_cost,
             )
 
             return CoherenceAnalysis(
@@ -405,5 +415,5 @@ class SimilarityAnalyzer:
             )
 
         except Exception as e:
-            logger.error(f"Failed to analyze coherence for Epic {epic_key}", error=str(e))
+            logger.exception(f"Failed to analyze coherence for Epic {epic_key}", error=str(e))
             raise

@@ -5,7 +5,7 @@ from typing import Any
 
 from anthropic import Anthropic
 
-from ..core.config import CLAUDE_CONFIG, Config
+from ..core.config import Config
 from ..models import AnalysisResult, WorkItem
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,8 @@ class ClaudeClient:
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Calculate the cost of a Claude API call."""
-        input_cost = input_tokens * CLAUDE_CONFIG["cost_per_token"]["input"]
-        output_cost = output_tokens * CLAUDE_CONFIG["cost_per_token"]["output"]
+        input_cost = input_tokens * self.config.claude_input_cost_per_token
+        output_cost = output_tokens * self.config.claude_output_cost_per_token
         return input_cost + output_cost
 
     async def analyze_work_item(
@@ -42,16 +42,16 @@ class ClaudeClient:
         """Analyze a work item using Claude."""
 
         # Check budget constraints
-        if self.session_cost >= CLAUDE_CONFIG["session_budget"]:
-            raise ValueError(f"Session budget of ${CLAUDE_CONFIG['session_budget']} exceeded")
+        if self.session_cost >= self.config.claude_session_budget:
+            raise ValueError(f"Session budget of ${self.config.claude_session_budget} exceeded")
 
         try:
             prompt = self._build_analysis_prompt(work_item, analysis_type, context)
 
             response = self.client.messages.create(
                 model=self.config.claude_model,
-                max_tokens=CLAUDE_CONFIG["max_tokens"],
-                temperature=CLAUDE_CONFIG["temperature"],
+                max_tokens=self.config.claude_max_tokens,
+                temperature=self.config.claude_temperature,
                 messages=[{"role": "user", "content": prompt}],
             )
 
@@ -74,7 +74,7 @@ class ClaudeClient:
             return result
 
         except Exception as e:
-            logger.error(f"Failed to analyze work item {work_item.key}: {e}")
+            logger.exception(f"Failed to analyze work item {work_item.key}: {e}")
             raise
 
     def _build_analysis_prompt(
@@ -197,14 +197,14 @@ Respond in JSON format with these fields:
     async def analyze(self, prompt: str, analysis_type: str = "general") -> AnalysisResult:
         """Generic analysis method using Claude."""
         # Check budget constraints
-        if self.session_cost >= CLAUDE_CONFIG["session_budget"]:
-            raise ValueError(f"Session budget of ${CLAUDE_CONFIG['session_budget']} exceeded")
+        if self.session_cost >= self.config.claude_session_budget:
+            raise ValueError(f"Session budget of ${self.config.claude_session_budget} exceeded")
 
         try:
             response = self.client.messages.create(
                 model=self.config.claude_model,
-                max_tokens=CLAUDE_CONFIG["max_tokens"],
-                temperature=CLAUDE_CONFIG["temperature"],
+                max_tokens=self.config.claude_max_tokens,
+                temperature=self.config.claude_temperature,
                 messages=[{"role": "user", "content": prompt}],
             )
 
@@ -224,5 +224,5 @@ Respond in JSON format with these fields:
             return result
 
         except Exception as e:
-            logger.error(f"Failed to analyze prompt: {e}")
+            logger.exception(f"Failed to analyze prompt: {e}")
             raise

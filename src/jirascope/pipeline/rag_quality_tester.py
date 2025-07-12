@@ -264,7 +264,7 @@ class RAGQualityTester:
                             )
 
                         except Exception as e:
-                            logger.error(f"Error testing query {test_query.id}", error=str(e))
+                            logger.exception(f"Error testing query {test_query.id}", error=str(e))
                             # Add a failed result
                             test_results.append(
                                 RAGTestResult(
@@ -336,7 +336,7 @@ class RAGQualityTester:
             return report
 
         except Exception as e:
-            logger.error("Failed to run RAG quality tests", error=str(e))
+            logger.exception("Failed to run RAG quality tests", error=str(e))
 
             # Return minimal report on failure
             return RAGQualityReport(

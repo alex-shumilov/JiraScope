@@ -137,7 +137,7 @@ Respond in JSON format:
             return template
 
         except Exception as e:
-            logger.error(f"Failed to infer template for {issue_type}", error=str(e))
+            logger.exception(f"Failed to infer template for {issue_type}", error=str(e))
             raise
 
     async def infer_multiple_templates(

@@ -44,9 +44,7 @@ class CrossEpicAnalyzer:
         if self.claude_client:
             await self.claude_client.__aexit__(exc_type, exc_val, exc_tb)
 
-    async def find_misplaced_work_items(  # noqa: PLR0912
-        self, project_key: str | None = None
-    ) -> CrossEpicReport:
+    async def find_misplaced_work_items(self, project_key: str | None = None) -> CrossEpicReport:
         """Find work items that might belong to different Epics."""
         logger.info(f"Starting cross-Epic analysis for project {project_key or 'all'}")
         start_time = time.time()

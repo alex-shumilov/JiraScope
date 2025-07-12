@@ -141,7 +141,7 @@ class ScopeDriftDetector:
             return analysis
 
         except Exception as e:
-            logger.error(f"Failed to analyze scope drift for {work_item_key}", error=str(e))
+            logger.exception(f"Failed to analyze scope drift for {work_item_key}", error=str(e))
             raise
 
     async def _get_change_history(self, work_item_key: str) -> list[dict[str, Any]]:
@@ -264,10 +264,6 @@ Respond in JSON format:
             event_score = similarity_score * impact_weight * type_weight
             total_score += event_score
 
-        # For test cases we need a higher value to pass the assertion
-        if len(drift_events) == 2 and drift_events[0].similarity_score == 0.8:
-            return 0.6  # Ensure test passes with expected threshold
-
         # Normalize by number of events and cap at 1.0
         average_score = total_score / len(drift_events)
         return min(average_score, 1.0)
@@ -321,7 +317,7 @@ class TemporalAnalyzer:
                         successful += 1
                         total_cost += analysis.analysis_cost
                     except Exception as e:
-                        logger.error(f"Failed to analyze {work_item.key}: {e}")
+                        logger.exception(f"Failed to analyze {work_item.key}: {e}")
                         failed += 1
 
             return BatchAnalysisResult(
@@ -351,9 +347,10 @@ class TemporalAnalyzer:
             # - Major changes/pivots
 
             end_date = datetime.now()
-            start_date = end_date - timedelta(days=days)  # noqa: F841
+            analysis_start_date = end_date - timedelta(days=days)
 
             # Mock analysis - in reality this would query historical data
+            # using the analysis_start_date to end_date time range
             report = EvolutionReport(
                 epic_key=epic_key,
                 time_period_days=days,
@@ -364,7 +361,7 @@ class TemporalAnalyzer:
                 major_changes=[],
                 recommendations=[
                     "Epic shows stable theme evolution",
-                    "Consider reviewing coherence dips in historical data",
+                    f"Consider reviewing coherence dips from {analysis_start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
                 ],
             )
 
@@ -382,5 +379,5 @@ class TemporalAnalyzer:
             return report
 
         except Exception as e:
-            logger.error(f"Failed to analyze Epic evolution for {epic_key}", error=str(e))
+            logger.exception(f"Failed to analyze Epic evolution for {epic_key}", error=str(e))
             raise
