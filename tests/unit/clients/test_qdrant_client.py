@@ -1,16 +1,10 @@
 """Tests for Qdrant client functionality."""
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
-from qdrant_client.http.models import (
-    CollectionInfo,
-    CollectionsResponse,
-    Distance,
-    PointStruct,
-    VectorParams,
-)
+from qdrant_client.http.models import CollectionsResponse, Distance, PointStruct, VectorParams
 
 from src.jirascope.clients.qdrant_client import JIRASCOPE_COLLECTION_CONFIG, QdrantVectorClient
 from src.jirascope.core.config import Config

@@ -1,7 +1,7 @@
 """Comprehensive tests for cost optimizer functionality."""
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -699,8 +699,8 @@ class TestUsagePatternAnalyzer:
         usage_data = []
         base_time = datetime.now()
 
-        for i in range(10):
-            usage_data.append(
+        usage_data.extend(
+            [
                 APICall(
                     service="claude",
                     operation="quality_analysis",
@@ -709,7 +709,9 @@ class TestUsagePatternAnalyzer:
                     output_tokens=50,
                     cost=0.02,
                 )
-            )
+                for i in range(10)
+            ]
+        )
 
         result = await self.analyzer._identify_batch_opportunities(usage_data)
 
@@ -723,8 +725,8 @@ class TestUsagePatternAnalyzer:
         usage_data = []
         base_time = datetime.now()
 
-        for i in range(5):
-            usage_data.append(
+        usage_data.extend(
+            [
                 APICall(
                     service="claude",
                     operation="quality_analysis",
@@ -733,7 +735,9 @@ class TestUsagePatternAnalyzer:
                     output_tokens=50,
                     cost=0.02,
                 )
-            )
+                for i in range(5)
+            ]
+        )
 
         result = self.analyzer._identify_potential_batches(usage_data)
 
@@ -767,8 +771,8 @@ class TestUsagePatternAnalyzer:
         base_time = datetime.now()
 
         # Add some duplicate-like operations
-        for i in range(3):
-            usage_data.append(
+        usage_data.extend(
+            [
                 APICall(
                     service="claude",
                     operation="quality_analysis",
@@ -777,7 +781,9 @@ class TestUsagePatternAnalyzer:
                     output_tokens=75,
                     cost=0.025,
                 )
-            )
+                for i in range(3)
+            ]
+        )
 
         result = await self.analyzer._identify_caching_opportunities(usage_data)
 
@@ -844,6 +850,6 @@ class TestUsagePatternAnalyzer:
         assert isinstance(result, dict)
         # Result is a dict where keys are operation names and values are operation data
         # Check that it contains operation analysis data
-        for op_name, op_data in result.items():
+        for op_data in result.values():
             if isinstance(op_data, dict):
                 assert "calls" in op_data or "count" in op_data

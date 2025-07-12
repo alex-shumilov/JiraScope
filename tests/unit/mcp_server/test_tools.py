@@ -1,6 +1,6 @@
 """Tests for MCP server tools functionality."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 

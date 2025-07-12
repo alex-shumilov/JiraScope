@@ -331,8 +331,7 @@ class JiraQueryProcessor:
 
         for pattern in assignee_patterns:
             matches = re.finditer(pattern, query, re.IGNORECASE)
-            for match in matches:
-                assignees.append(match.group(1))
+            assignees.extend(match.group(1) for match in matches)
 
         return assignees
 
@@ -344,8 +343,7 @@ class JiraQueryProcessor:
         epic_pattern = r"\b([A-Z]+-\d+)\b"
         matches = re.finditer(epic_pattern, query)
 
-        for match in matches:
-            epic_keys.append(match.group(1))
+        epic_keys = [match.group(1) for match in matches]
 
         return epic_keys
 

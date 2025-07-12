@@ -47,14 +47,10 @@ class AssembledContext:
     @property
     def jira_keys(self) -> list[str]:
         """Get all Jira keys mentioned in this context."""
-        keys = []
-        for result in self.primary_results:
-            keys.append(result.jira_key)
-
-        for tree in self.hierarchical_context:
-            if tree.root_item.get("key"):
-                keys.append(tree.root_item["key"])
-
+        keys = [result.jira_key for result in self.primary_results]
+        keys.extend(
+            tree.root_item["key"] for tree in self.hierarchical_context if tree.root_item.get("key")
+        )
         return list(set(keys))
 
 

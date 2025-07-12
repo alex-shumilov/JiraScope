@@ -1,8 +1,7 @@
 """Comprehensive tests for embedding processor functionality."""
 
 import tempfile
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -145,8 +144,8 @@ class TestAdaptiveBatcher:
             summary=summary,
             issue_type="Story",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="test@example.com",
             description=description,
             assignee="test@example.com",
@@ -345,8 +344,8 @@ class TestEmbeddingProcessor:
             item_type="Story",
             status="Open",
             priority="Medium",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
         )
 
         dummy_chunks = [
@@ -595,7 +594,7 @@ class TestEmbeddingProcessor:
         assert cache_file.exists()
 
         # Verify content
-        with open(cache_file, "r") as f:
+        with open(cache_file) as f:
             cached_content = f.read().strip()
 
         expected_hash = self.processor._calculate_item_hash(work_item)
@@ -623,8 +622,8 @@ class TestEmbeddingProcessor:
             summary=summary,
             issue_type="Story",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="test@example.com",
             description=description,
             assignee="test@example.com",

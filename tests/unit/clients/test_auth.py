@@ -2,9 +2,7 @@
 
 import json
 import socket
-import tempfile
 import time
-from pathlib import Path
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 import pytest

@@ -1,8 +1,7 @@
 """Tests for Claude client functionality."""
 
-import json
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -151,24 +150,23 @@ class TestClaudeClient:
 
     def test_build_analysis_prompt_with_multiple_context(self):
         """Test building prompt with multiple context items (should limit to 3)."""
-        context_items = []
-        for i in range(5):  # Create 5 context items
-            context_items.append(
-                WorkItem(
-                    key=f"CONTEXT-{i}",
-                    summary=f"Context item {i}",
-                    description="Context",
-                    parent_key=None,
-                    epic_key=None,
-                    issue_type="Task",
-                    status="Done",
-                    created=datetime.now(UTC),
-                    updated=datetime.now(UTC),
-                    assignee=None,
-                    reporter="test@example.com",
-                    embedding=[0.1, 0.2, 0.3] * 100,
-                )
+        context_items = [
+            WorkItem(
+                key=f"CONTEXT-{i}",
+                summary=f"Context item {i}",
+                description="Context",
+                parent_key=None,
+                epic_key=None,
+                issue_type="Task",
+                status="Done",
+                created=datetime.now(UTC),
+                updated=datetime.now(UTC),
+                assignee=None,
+                reporter="test@example.com",
+                embedding=[0.1, 0.2, 0.3] * 100,
             )
+            for i in range(5)  # Create 5 context items
+        ]
 
         prompt = self.client._build_analysis_prompt(self.work_item, "general", context_items)
 

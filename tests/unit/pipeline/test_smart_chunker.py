@@ -1,9 +1,6 @@
 """Comprehensive tests for smart chunker functionality."""
 
-from datetime import datetime, timezone
-from unittest.mock import Mock
-
-import pytest
+from datetime import UTC, datetime
 
 from src.jirascope.models.metadata_schema import ChunkMetadata
 from src.jirascope.models.work_item import WorkItem
@@ -16,7 +13,7 @@ class TestChunk:
     def test_chunk_creation(self):
         """Test creating a Chunk with all fields."""
         # Create parent metadata
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from src.jirascope.models.metadata_schema import JiraItemMetadata
 
@@ -25,8 +22,8 @@ class TestChunk:
             item_type="Story",
             status="Open",
             priority="Medium",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             content_hash="abc123",
         )
 
@@ -47,7 +44,7 @@ class TestChunk:
     def test_chunk_id_generation(self):
         """Test chunk ID generation."""
         # Create parent metadata
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from src.jirascope.models.metadata_schema import JiraItemMetadata
 
@@ -56,8 +53,8 @@ class TestChunk:
             item_type="Epic",
             status="Open",
             priority="High",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             content_hash="abc123",
         )
 
@@ -86,7 +83,7 @@ class TestChunk:
     def test_chunk_id_uniqueness(self):
         """Test that different chunks generate different IDs."""
         # Create parent metadata
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from src.jirascope.models.metadata_schema import JiraItemMetadata
 
@@ -95,8 +92,8 @@ class TestChunk:
             item_type="Story",
             status="Open",
             priority="Medium",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             content_hash="abc123",
         )
 
@@ -134,8 +131,8 @@ class TestSmartChunker:
             summary="Test work item summary",
             issue_type="Story",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="test@example.com",
             description="Test description",
             assignee="assignee@example.com",
@@ -194,8 +191,8 @@ class TestSmartChunker:
             summary="Improve checkout process",
             issue_type="Epic",
             status="In Progress",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="pm@example.com",
             description=epic_description,
             assignee="team@example.com",
@@ -241,8 +238,8 @@ class TestSmartChunker:
             summary="Save payment information feature",
             issue_type="Story",
             status="To Do",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="dev@example.com",
             description=story_description,
             assignee="dev@example.com",
@@ -286,8 +283,8 @@ class TestSmartChunker:
             summary="Payment form freezes on invalid input",
             issue_type="Bug",
             status="In Progress",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="qa@example.com",
             description=bug_description,
             assignee="dev@example.com",
@@ -326,8 +323,8 @@ class TestSmartChunker:
             summary="Generic task summary",
             issue_type="Task",  # Not Epic, Story, or Bug
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="user@example.com",
             description="This is a longer description that should be chunked generically since it's not a recognized issue type with specific patterns.",
             assignee="user@example.com",
@@ -348,8 +345,8 @@ class TestSmartChunker:
             summary="Item with no description",
             issue_type="Story",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="user@example.com",
             description=None,  # No description
             assignee="user@example.com",
@@ -370,8 +367,8 @@ class TestSmartChunker:
             summary="Item with empty description",
             issue_type="Epic",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="user@example.com",
             description="",  # Empty description
             assignee="user@example.com",
@@ -394,8 +391,8 @@ class TestSmartChunker:
             summary="Long content item",
             issue_type="Story",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="user@example.com",
             description=long_text,
             assignee="user@example.com",
@@ -492,8 +489,8 @@ class TestSmartChunker:
             summary="Different summary",
             issue_type="Bug",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="other@example.com",
             description="Different description",
             assignee="other@example.com",
@@ -570,8 +567,8 @@ class TestSmartChunker:
             summary="Metadata test item",
             issue_type="Epic",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="test@example.com",
             description="Goals: Test metadata. Success criteria: Consistent metadata across chunks.",
             assignee="test@example.com",
@@ -600,8 +597,8 @@ class TestSmartChunker:
             summary="Sequence test epic",
             issue_type="Epic",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="test@example.com",
             description=long_description,
             assignee="test@example.com",
@@ -621,8 +618,8 @@ class TestSmartChunker:
             summary="Count test item",
             issue_type="Story",
             status="Open",
-            created=datetime.now(timezone.utc),
-            updated=datetime.now(timezone.utc),
+            created=datetime.now(UTC),
+            updated=datetime.now(UTC),
             reporter="test@example.com",
             description="Simple description",
             assignee="test@example.com",

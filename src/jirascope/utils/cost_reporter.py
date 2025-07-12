@@ -520,21 +520,19 @@ class AdvancedCostReporter:
         )
 
         # Get active alerts
-        active_alerts = []
-
-        for threshold in self.budget.thresholds:
-            if monthly_percent >= threshold.threshold * 100 and threshold.enabled:
-                active_alerts.append(
-                    {
-                        "type": threshold.notification_type,
-                        "message": threshold.message_template.format(
-                            percent=f"{monthly_percent:.1f}",
-                            current=monthly_cost,
-                            total=self.budget.monthly_budget,
-                        ),
-                        "threshold": threshold.threshold,
-                    }
-                )
+        active_alerts = [
+            {
+                "type": threshold.notification_type,
+                "message": threshold.message_template.format(
+                    percent=f"{monthly_percent:.1f}",
+                    current=monthly_cost,
+                    total=self.budget.monthly_budget,
+                ),
+                "threshold": threshold.threshold,
+            }
+            for threshold in self.budget.thresholds
+            if monthly_percent >= threshold.threshold * 100 and threshold.enabled
+        ]
 
         return {
             "daily": {
