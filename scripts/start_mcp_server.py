@@ -25,8 +25,8 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
-from jirascope.core.config import Config
-from jirascope.utils.logging import StructuredLogger
+from jirascope.core.config import Config  # noqa: E402
+from jirascope.utils.logging import StructuredLogger  # noqa: E402
 
 console = Console()
 logger = StructuredLogger(__name__)
@@ -75,9 +75,10 @@ class MCPServerManager:
         """Check Python version compatibility."""
         try:
             version = sys.version_info
-            return version >= (3, 11)
         except Exception:
             return False
+        else:
+            return version >= (3, 11)
 
     async def _check_packages(self) -> bool:
         """Check that required packages are installed."""

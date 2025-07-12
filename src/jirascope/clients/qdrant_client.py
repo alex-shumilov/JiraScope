@@ -269,12 +269,12 @@ class QdrantVectorClient:
         """Check if Qdrant is running and accessible."""
         try:
             self.client.get_collections()
-            logger.info("Qdrant health check passed")
-            return True
-
         except Exception as e:
             logger.exception(f"Qdrant health check failed: {e}")
             return False
+        else:
+            logger.info("Qdrant health check passed")
+            return True
 
     async def get_collection_stats(self) -> dict[str, Any]:
         """Get statistics about the collection."""
