@@ -7,7 +7,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
 
-from ..core.config import EMBEDDING_CONFIG, Config
+from ..core.config import Config
 from ..models import WorkItem
 
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ class QdrantVectorClient:
                 self.client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(
-                        size=EMBEDDING_CONFIG["dimensions"], distance=Distance.COSINE
+                        size=self.config.embedding_dimensions, distance=Distance.COSINE
                     ),
                 )
                 logger.info(f"Created collection: {self.collection_name}")
@@ -74,7 +74,7 @@ class QdrantVectorClient:
                 logger.info(f"Collection {self.collection_name} already exists")
 
         except Exception as e:
-            logger.error(f"Failed to initialize collection: {e}")
+            logger.exception(f"Failed to initialize collection: {e}")
             raise
 
     async def store_work_items(self, work_items: list[WorkItem], embeddings: list[list[float]]):
@@ -110,7 +110,7 @@ class QdrantVectorClient:
             logger.info(f"Stored {len(points)} work items in Qdrant")
 
         except Exception as e:
-            logger.error(f"Failed to store work items: {e}")
+            logger.exception(f"Failed to store work items: {e}")
             raise
 
     async def store_chunks(self, chunks: list["Chunk"], embeddings: list[list[float]]):
@@ -125,7 +125,9 @@ class QdrantVectorClient:
             payload["text"] = chunk.text  # Include the actual text
 
             point = PointStruct(
-                id=abs(hash(chunk.chunk_id)), vector=embedding, payload=payload  # Use chunk ID hash
+                id=abs(hash(chunk.chunk_id)),
+                vector=embedding,
+                payload=payload,  # Use chunk ID hash
             )
             points.append(point)
 
@@ -134,7 +136,7 @@ class QdrantVectorClient:
             logger.info(f"Stored {len(points)} chunks in Qdrant")
 
         except Exception as e:
-            logger.error(f"Failed to store chunks: {e}")
+            logger.exception(f"Failed to store chunks: {e}")
             raise
 
     async def search_similar_work_items(
@@ -160,7 +162,7 @@ class QdrantVectorClient:
             return results
 
         except Exception as e:
-            logger.error(f"Failed to search similar work items: {e}")
+            logger.exception(f"Failed to search similar work items: {e}")
             raise
 
     async def search_with_filters(
@@ -211,7 +213,7 @@ class QdrantVectorClient:
             return results
 
         except Exception as e:
-            logger.error(f"Failed to search with filters: {e}")
+            logger.exception(f"Failed to search with filters: {e}")
             raise
 
     async def search_by_epic(
@@ -246,7 +248,7 @@ class QdrantVectorClient:
             return None
 
         except Exception as e:
-            logger.error(f"Failed to get work item {key}: {e}")
+            logger.exception(f"Failed to get work item {key}: {e}")
             raise
 
     async def delete_work_item(self, key: str) -> bool:
@@ -260,19 +262,19 @@ class QdrantVectorClient:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to delete work item {key}: {e}")
+            logger.exception(f"Failed to delete work item {key}: {e}")
             return False
 
     async def health_check(self) -> bool:
         """Check if Qdrant is running and accessible."""
         try:
             self.client.get_collections()
+        except Exception as e:
+            logger.exception(f"Qdrant health check failed: {e}")
+            return False
+        else:
             logger.info("Qdrant health check passed")
             return True
-
-        except Exception as e:
-            logger.error(f"Qdrant health check failed: {e}")
-            return False
 
     async def get_collection_stats(self) -> dict[str, Any]:
         """Get statistics about the collection."""
@@ -285,5 +287,5 @@ class QdrantVectorClient:
             }
 
         except Exception as e:
-            logger.error(f"Failed to get collection stats: {e}")
+            logger.exception(f"Failed to get collection stats: {e}")
             return {}

@@ -1,7 +1,5 @@
 ---
-description:
-globs:
-alwaysApply: false
+alwaysApply: true
 ---
 # Development Guide
 
@@ -18,6 +16,16 @@ poetry install
 poetry shell
 pip install -e .
 ```
+
+### ⚠️ Important: Always Use Poetry Run
+**The system Python is not compatible with this project.** Always use `poetry run` for Python commands:
+
+- ✅ Correct: `poetry run python -m jirascope`
+- ✅ Correct: `poetry run pytest`
+- ✅ Correct: `poetry run ruff check .`
+- ❌ Incorrect: `python -m jirascope`
+- ❌ Incorrect: `pytest`
+- ❌ Incorrect: `ruff check .`
 
 ### Environment Setup
 Copy [config/env.example](mdc:config/env.example) to configure required environment variables for Jira, Claude, and other service integrations.
@@ -49,10 +57,10 @@ All external service clients follow this pattern:
 ## Testing Guidelines
 
 ### Running Tests
-- Full suite: `pytest`
-- Unit tests: `pytest tests/unit/`
-- Integration tests: `pytest tests/integration/`
-- With coverage: `pytest --cov=src/jirascope`
+- Full suite: `poetry run pytest`
+- Unit tests: `poetry run pytest tests/unit/`
+- Integration tests: `poetry run pytest tests/integration/`
+- With coverage: `poetry run pytest --cov=src/jirascope`
 
 ### Test Structure
 - Test files follow `test_*.py` naming convention

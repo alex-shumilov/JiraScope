@@ -246,11 +246,10 @@ async def export_results(task_id: str, format: str = "json") -> dict:
 
     if format == "json":
         return results
-    elif format == "csv":
+    if format == "csv":
         # Simple CSV conversion for demo
         return {"csv_data": "key,value\n" + "\n".join(f"{k},{v}" for k, v in results.items())}
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported format")
+    raise HTTPException(status_code=400, detail="Unsupported format")
 
 
 # Background task functions

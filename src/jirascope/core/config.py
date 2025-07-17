@@ -37,6 +37,26 @@ class Config:
     jira_dry_run: bool = True
     sentry_dsn: str | None = None
 
+    # Embedding configuration (consolidated from EMBEDDING_CONFIG)
+    embedding_model: str = "text-embedding-bge-large-en-v1.5"
+    embedding_dimensions: int = 1024
+    embedding_instruction_prefix: str = "Represent this Jira work item for semantic search: "
+    embedding_max_tokens: int = 512
+    embedding_timeout: float = 30.0
+
+    # Claude configuration (consolidated from CLAUDE_CONFIG)
+    claude_max_tokens: int = 4096
+    claude_temperature: float = 0.1
+    claude_input_cost_per_token: float = 0.000003
+    claude_output_cost_per_token: float = 0.000015
+    claude_session_budget: float = 10.0
+
+    # Safety configuration (consolidated from SAFETY_CONFIG)
+    require_confirmation: bool = True
+    backup_before_changes: bool = True
+    max_bulk_operations: int = 50
+    rate_limit_requests: bool = True
+
     @classmethod
     def from_env(cls) -> "Config":
         """Load configuration from environment variables."""
@@ -74,6 +94,22 @@ class Config:
             monthly_budget=float(os.getenv("MONTHLY_BUDGET", "1000.0")),
             jira_dry_run=os.getenv("JIRA_DRY_RUN", "true").lower() == "true",
             sentry_dsn=os.getenv("SENTRY_DSN"),
+            # Extended configuration from environment
+            embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-bge-large-en-v1.5"),
+            embedding_dimensions=int(os.getenv("EMBEDDING_DIMENSIONS", "1024")),
+            embedding_max_tokens=int(os.getenv("EMBEDDING_MAX_TOKENS", "512")),
+            embedding_timeout=float(os.getenv("EMBEDDING_TIMEOUT", "30.0")),
+            claude_max_tokens=int(os.getenv("CLAUDE_MAX_TOKENS", "4096")),
+            claude_temperature=float(os.getenv("CLAUDE_TEMPERATURE", "0.1")),
+            claude_input_cost_per_token=float(os.getenv("CLAUDE_INPUT_COST_PER_TOKEN", "0.000003")),
+            claude_output_cost_per_token=float(
+                os.getenv("CLAUDE_OUTPUT_COST_PER_TOKEN", "0.000015")
+            ),
+            claude_session_budget=float(os.getenv("CLAUDE_SESSION_BUDGET", "10.0")),
+            require_confirmation=os.getenv("REQUIRE_CONFIRMATION", "true").lower() == "true",
+            backup_before_changes=os.getenv("BACKUP_BEFORE_CHANGES", "true").lower() == "true",
+            max_bulk_operations=int(os.getenv("MAX_BULK_OPERATIONS", "50")),
+            rate_limit_requests=os.getenv("RATE_LIMIT_REQUESTS", "true").lower() == "true",
         )
 
     @classmethod
@@ -97,29 +133,44 @@ class Config:
         return cls.from_env()
 
 
-EMBEDDING_CONFIG = {
-    "model": "text-embedding-bge-large-en-v1.5",
-    "api_base": "http://localhost:1234/v1",
-    "dimensions": 1024,
-    "batch_size": 32,
-    "instruction_prefix": "Represent this Jira work item for semantic search: ",
-    "max_tokens": 512,
-    "timeout": 30.0,
-}
+# Legacy support - will be removed in next version
+# These constants are now part of the Config class for better configurability
 
-CLAUDE_CONFIG = {
-    "model": "claude-3-5-sonnet-latest",
-    "max_tokens": 4096,
-    "temperature": 0.1,
-    "cost_per_token": {"input": 0.000003, "output": 0.000015},
-    "daily_budget": 50.0,
-    "session_budget": 10.0,
-}
 
-SAFETY_CONFIG = {
-    "jira_dry_run": True,
-    "require_confirmation": True,
-    "backup_before_changes": True,
-    "max_bulk_operations": 50,
-    "rate_limit_requests": True,
-}
+def get_embedding_config(config: "Config") -> dict:
+    """Get embedding configuration from Config object for backward compatibility."""
+    return {
+        "model": config.embedding_model,
+        "api_base": config.lmstudio_endpoint,
+        "dimensions": config.embedding_dimensions,
+        "batch_size": config.embedding_batch_size,
+        "instruction_prefix": config.embedding_instruction_prefix,
+        "max_tokens": config.embedding_max_tokens,
+        "timeout": config.embedding_timeout,
+    }
+
+
+def get_claude_config(config: "Config") -> dict:
+    """Get Claude configuration from Config object for backward compatibility."""
+    return {
+        "model": config.claude_model,
+        "max_tokens": config.claude_max_tokens,
+        "temperature": config.claude_temperature,
+        "cost_per_token": {
+            "input": config.claude_input_cost_per_token,
+            "output": config.claude_output_cost_per_token,
+        },
+        "daily_budget": config.daily_budget,
+        "session_budget": config.claude_session_budget,
+    }
+
+
+def get_safety_config(config: "Config") -> dict:
+    """Get safety configuration from Config object for backward compatibility."""
+    return {
+        "jira_dry_run": config.jira_dry_run,
+        "require_confirmation": config.require_confirmation,
+        "backup_before_changes": config.backup_before_changes,
+        "max_bulk_operations": config.max_bulk_operations,
+        "rate_limit_requests": config.rate_limit_requests,
+    }

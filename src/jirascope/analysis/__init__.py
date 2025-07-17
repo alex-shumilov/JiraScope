@@ -8,14 +8,14 @@ from .template_inference import TemplateInferenceEngine
 from .temporal_analyzer import ScopeDriftDetector, TemporalAnalyzer
 
 __all__ = [
-    "SimilarityAnalyzer",
-    "MultiLevelSimilarityDetector",
-    "CrossEpicAnalyzer",
-    "ContentAnalyzer",
     "BatchContentAnalyzer",
-    "TemplateInferenceEngine",
-    "TemporalAnalyzer",
+    "ContentAnalyzer",
+    "CrossEpicAnalyzer",
+    "MultiLevelSimilarityDetector",
     "ScopeDriftDetector",
+    "SimilarityAnalyzer",
     "StructuralAnalyzer",
     "TechDebtClusterer",
+    "TemplateInferenceEngine",
+    "TemporalAnalyzer",
 ]

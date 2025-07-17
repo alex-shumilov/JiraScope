@@ -6,15 +6,15 @@ from .query_processor import ExpandedQuery, FilterSet, JiraQueryProcessor, Query
 from .retrieval_engine import ContextTree, ContextualRetriever, RetrievalResult
 
 __all__ = [
-    "JiraQueryProcessor",
-    "QueryPlan",
+    "AssembledContext",
+    "ContextAssembler",
+    "ContextSummary",
+    "ContextTree",
+    "ContextualRetriever",
     "ExpandedQuery",
     "FilterSet",
-    "ContextualRetriever",
-    "RetrievalResult",
-    "ContextTree",
-    "ContextAssembler",
-    "AssembledContext",
-    "ContextSummary",
+    "JiraQueryProcessor",
     "JiraRAGPipeline",
+    "QueryPlan",
+    "RetrievalResult",
 ]

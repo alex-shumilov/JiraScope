@@ -180,3 +180,8 @@ class StructuredLogger:
             f"Cost: {service}.{operation} = ${cost:.4f}",
             extra={"cost": cost, "service": service, "operation": operation},
         )
+
+    def exception(self, message: str, **kwargs):
+        """Log exception message with structured data and exc_info."""
+        extra = {"structured_data": kwargs} if kwargs else {}
+        self.logger.error(message, exc_info=True, extra=extra)

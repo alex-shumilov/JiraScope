@@ -74,36 +74,46 @@ class TestCrossEpicAnalyzerCoverage:
         mock_claude_instance.__aexit__.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch("jirascope.analysis.cross_epic_analyzer.QdrantVectorClient")
-    @patch("jirascope.analysis.cross_epic_analyzer.LMStudioClient")
-    @patch("jirascope.analysis.cross_epic_analyzer.ClaudeClient")
-    async def test_find_misplaced_work_items_business_logic(
-        self, mock_claude, mock_lm, mock_qdrant
-    ):
+    async def test_find_misplaced_work_items_business_logic(self):
         """Test the main misplacement detection business logic."""
-        # Setup mocks
-        mock_qdrant_instance = AsyncMock()
-        mock_lm_instance = (
-            AsyncMock()
-        )  # Need AsyncMock for context manager, but calculate_similarity is sync
-        mock_claude_instance = AsyncMock()
+        # Mock clients directly
+        self.analyzer.qdrant_client = AsyncMock()
+        self.analyzer.lm_client = AsyncMock()
+        self.analyzer.claude_client = AsyncMock()
 
-        mock_qdrant.return_value = mock_qdrant_instance
-        mock_lm.return_value = mock_lm_instance
-        mock_claude.return_value = mock_claude_instance
+        # Ensure __aenter__ and __aexit__ are defined
+        self.analyzer.qdrant_client.__aenter__ = AsyncMock(return_value=self.analyzer.qdrant_client)
+        self.analyzer.qdrant_client.__aexit__ = AsyncMock()
+        self.analyzer.lm_client.__aenter__ = AsyncMock(return_value=self.analyzer.lm_client)
+        self.analyzer.lm_client.__aexit__ = AsyncMock()
+        self.analyzer.claude_client.__aenter__ = AsyncMock(return_value=self.analyzer.claude_client)
+        self.analyzer.claude_client.__aexit__ = AsyncMock()
 
-        # Mock the get_all_epics_with_items method
+        # Create proper work item data matching the model requirements
+        base_time = datetime.now(UTC)
         mock_epics_data = {
             "EPIC-1": [
                 {
                     "key": "PROJ-1",
                     "summary": "Authentication feature",
                     "embedding": [0.1, 0.2, 0.3] * 100,
+                    "issue_type": "Story",
+                    "status": "Open",
+                    "created": base_time,
+                    "updated": base_time,
+                    "reporter": "test@example.com",
+                    "epic_key": "EPIC-1",
                 },
                 {
                     "key": "PROJ-2",
                     "summary": "Login validation",
                     "embedding": [0.1, 0.2, 0.3] * 100,
+                    "issue_type": "Story",
+                    "status": "Open",
+                    "created": base_time,
+                    "updated": base_time,
+                    "reporter": "test@example.com",
+                    "epic_key": "EPIC-1",
                 },
             ],
             "EPIC-2": [
@@ -111,8 +121,24 @@ class TestCrossEpicAnalyzerCoverage:
                     "key": "PROJ-3",
                     "summary": "Database migration",
                     "embedding": [0.8, 0.9, 0.7] * 100,
+                    "issue_type": "Story",
+                    "status": "Open",
+                    "created": base_time,
+                    "updated": base_time,
+                    "reporter": "test@example.com",
+                    "epic_key": "EPIC-2",
                 },
-                {"key": "PROJ-4", "summary": "Data cleanup", "embedding": [0.8, 0.9, 0.7] * 100},
+                {
+                    "key": "PROJ-4",
+                    "summary": "Data cleanup",
+                    "embedding": [0.8, 0.9, 0.7] * 100,
+                    "issue_type": "Story",
+                    "status": "Open",
+                    "created": base_time,
+                    "updated": base_time,
+                    "reporter": "test@example.com",
+                    "epic_key": "EPIC-2",
+                },
             ],
         }
 
@@ -131,19 +157,24 @@ class TestCrossEpicAnalyzerCoverage:
             ]
         )
 
-        # Mock LMStudio similarity calculation (SYNC method, returns float directly)
-        mock_lm_instance.calculate_similarity = Mock(return_value=0.75)
-        # Ensure calculate_similarity is treated as sync even though instance is AsyncMock
-        mock_lm_instance.calculate_similarity.side_effect = None  # Clear any async side effects
+        # Mock _calculate_epic_theme_embedding method
+        self.analyzer._calculate_epic_theme_embedding = AsyncMock(
+            return_value=[0.1, 0.2, 0.3] * 100
+        )
+
+        # Mock _calculate_epic_coherence_score method
+        self.analyzer._calculate_epic_coherence_score = AsyncMock(return_value=0.65)
+
+        # Set lm_client's calculate_similarity as a regular method
+        self.analyzer.lm_client.calculate_similarity = Mock(return_value=0.75)
 
         # Test the method
-        async with self.analyzer as analyzer:
-            result = await analyzer.find_misplaced_work_items("TEST")
+        result = await self.analyzer.find_misplaced_work_items("TEST")
 
-            # Verify results
-            assert isinstance(result, CrossEpicReport)
-            assert result.epics_analyzed == 2
-            assert len(result.misplaced_items) >= 0
+        # Verify results
+        assert isinstance(result, CrossEpicReport)
+        assert result.epics_analyzed == 2
+        assert len(result.misplaced_items) >= 0
 
     @pytest.mark.asyncio
     async def test_get_all_epics_with_items_logic(self):
@@ -379,7 +410,7 @@ class TestCrossEpicAnalyzerCoverage:
     @patch("jirascope.analysis.cross_epic_analyzer.LMStudioClient")
     @patch("jirascope.analysis.cross_epic_analyzer.ClaudeClient")
     async def test_misplacement_detection_with_insufficient_data(
-        self, mock_claude, mock_lm, mock_qdrant
+        self, _mock_claude, _mock_lm, _mock_qdrant
     ):
         """Test misplacement detection with insufficient data."""
         # Setup mocks
@@ -387,9 +418,9 @@ class TestCrossEpicAnalyzerCoverage:
         mock_lm_instance = AsyncMock()
         mock_claude_instance = AsyncMock()
 
-        mock_qdrant.return_value = mock_qdrant_instance
-        mock_lm.return_value = mock_lm_instance
-        mock_claude.return_value = mock_claude_instance
+        _mock_qdrant.return_value = mock_qdrant_instance
+        _mock_lm.return_value = mock_lm_instance
+        _mock_claude.return_value = mock_claude_instance
 
         # Mock insufficient epics data
         self.analyzer._get_all_epics_with_items = AsyncMock(
@@ -562,21 +593,47 @@ class TestCrossEpicAnalyzerEdgeCases:
     @pytest.mark.asyncio
     async def test_large_dataset_performance(self):
         """Test performance with large datasets."""
-        # Create large mock dataset
+        # Mock clients directly
+        self.analyzer.qdrant_client = AsyncMock()
+        self.analyzer.lm_client = AsyncMock()
+        self.analyzer.claude_client = AsyncMock()
+
+        # Ensure __aenter__ and __aexit__ are defined
+        self.analyzer.qdrant_client.__aenter__ = AsyncMock(return_value=self.analyzer.qdrant_client)
+        self.analyzer.qdrant_client.__aexit__ = AsyncMock()
+        self.analyzer.lm_client.__aenter__ = AsyncMock(return_value=self.analyzer.lm_client)
+        self.analyzer.lm_client.__aexit__ = AsyncMock()
+        self.analyzer.claude_client.__aenter__ = AsyncMock(return_value=self.analyzer.claude_client)
+        self.analyzer.claude_client.__aexit__ = AsyncMock()
+
+        # Create large mock dataset with proper fields for WorkItem model
+        base_time = datetime.now(UTC)
         large_epics_data = {}
         for i in range(10):
             epic_key = f"EPIC-{i}"
             large_epics_data[epic_key] = [
-                {"key": f"PROJ-{i}-{j}", "summary": f"Item {j}", "embedding": [0.1, 0.2, 0.3] * 100}
+                {
+                    "key": f"PROJ-{i}-{j}",
+                    "summary": f"Item {j}",
+                    "embedding": [0.1, 0.2, 0.3] * 100,
+                    "issue_type": "Story",
+                    "status": "Open",
+                    "created": base_time,
+                    "updated": base_time,
+                    "reporter": "test@example.com",
+                    "epic_key": epic_key,
+                }
                 for j in range(20)
             ]
 
+        # Mock the internal methods
         self.analyzer._get_all_epics_with_items = AsyncMock(return_value=large_epics_data)
         self.analyzer._find_similar_across_epics = AsyncMock(return_value=[])
-
-        # Mock clients
-        self.analyzer.qdrant_client = AsyncMock()
-        self.analyzer.lm_client = AsyncMock()
+        self.analyzer._calculate_epic_theme_embedding = AsyncMock(
+            return_value=[0.1, 0.2, 0.3] * 100
+        )
+        self.analyzer._calculate_epic_coherence_score = AsyncMock(return_value=0.65)
+        self.analyzer.lm_client.calculate_similarity = Mock(return_value=0.75)
 
         # Test with large dataset (should complete without hanging)
         result = await self.analyzer.find_misplaced_work_items("TEST")

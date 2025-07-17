@@ -264,7 +264,7 @@ class RAGQualityTester:
                             )
 
                         except Exception as e:
-                            logger.error(f"Error testing query {test_query.id}", error=str(e))
+                            logger.exception(f"Error testing query {test_query.id}", error=str(e))
                             # Add a failed result
                             test_results.append(
                                 RAGTestResult(
@@ -336,7 +336,7 @@ class RAGQualityTester:
             return report
 
         except Exception as e:
-            logger.error("Failed to run RAG quality tests", error=str(e))
+            logger.exception("Failed to run RAG quality tests", error=str(e))
 
             # Return minimal report on failure
             return RAGQualityReport(
@@ -492,21 +492,19 @@ class RAGQualityTester:
         """Get sample work items for testing."""
         # This would normally load from database or API
         # Here we'll create some sample items
-        sample_items = []
-
-        for i in range(1, sample_size + 1):
-            sample_items.append(
-                WorkItem(
-                    key=f"SAMPLE-{i}",
-                    summary=f"Sample work item {i}",
-                    description=f"This is a sample work item for testing consistency with ID {i}",
-                    issue_type="Task",
-                    status="Open",
-                    created=time.time(),
-                    updated=time.time(),
-                    reporter="system",
-                )
+        sample_items = [
+            WorkItem(
+                key=f"SAMPLE-{i}",
+                summary=f"Sample work item {i}",
+                description=f"This is a sample work item for testing consistency with ID {i}",
+                issue_type="Task",
+                status="Open",
+                created=time.time(),
+                updated=time.time(),
+                reporter="system",
             )
+            for i in range(1, sample_size + 1)
+        ]
 
         return sample_items
 

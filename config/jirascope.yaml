@@ -1,7 +1,8 @@
-# JiraScope Configuration for LMStudio Integration
-# Copy this file and customize for your environment
+# JiraScope Configuration Template
+# Copy this file to jirascope.yaml and customize for your environment
+# Values shown use environment variable substitution with defaults
 
-# Jira Configuration
+# === JIRA CONFIGURATION ===
 jira:
   mcp_endpoint: "${JIRA_MCP_ENDPOINT}"  # Required: Your Jira MCP endpoint
   sse_client_id: "${JIRA_SSE_CLIENT_ID:-jirascope-cli}"

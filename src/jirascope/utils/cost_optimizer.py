@@ -235,12 +235,11 @@ class CostOptimizer:
         """Determine alert severity based on threshold."""
         if threshold >= 1.0:
             return "critical"
-        elif threshold >= 0.9:
+        if threshold >= 0.9:
             return "high"
-        elif threshold >= 0.75:
+        if threshold >= 0.75:
             return "medium"
-        else:
-            return "low"
+        return "low"
 
     def _alert_already_sent(self, alert_key: str) -> bool:
         """Check if an alert has already been sent."""
@@ -382,18 +381,20 @@ class CostOptimizer:
         usage_analysis = await self.analyze_api_usage_patterns()
 
         # Identify high-cost prompts
-        for category in usage_analysis.prompt_efficiency.categories:
-            if category.optimization_potential > 5.0:  # $5/month savings potential
-                optimizations.append(
-                    OptimizationSuggestion(
-                        type="prompt_optimization",
-                        current_value=f"{category.avg_input_tokens:.0f} tokens",
-                        suggested_value=f"{int(category.avg_input_tokens * 0.8):.0f} tokens",
-                        potential_savings=category.optimization_potential,
-                        risk_level="low",
-                        description=f"Optimize prompts for {category.category} to reduce token usage",
-                    )
+        optimizations.extend(
+            [
+                OptimizationSuggestion(
+                    type="prompt_optimization",
+                    current_value=f"{category.avg_input_tokens:.0f} tokens",
+                    suggested_value=f"{int(category.avg_input_tokens * 0.8):.0f} tokens",
+                    potential_savings=category.optimization_potential,
+                    risk_level="low",
+                    description=f"Optimize prompts for {category.category} to reduce token usage",
                 )
+                for category in usage_analysis.prompt_efficiency.categories
+                if category.optimization_potential > 5.0  # $5/month savings potential
+            ]
+        )
 
         # Check for caching opportunities
         if usage_analysis.caching_opportunities.get("potential_savings", 0.0) > 5.0:
@@ -541,19 +542,18 @@ class UsagePatternAnalyzer:
             return self._get_simulated_usage_data()
 
         # Convert cost tracker data to APICall objects
-        calls = []
-        for entry in self.cost_tracker.costs["claude"]:
-            calls.append(
-                APICall(
-                    service="claude",
-                    operation=entry.get("operation", "unknown"),
-                    timestamp=entry.get("timestamp", datetime.now().isoformat()),
-                    input_tokens=entry.get("details", {}).get("input_tokens", 0),
-                    output_tokens=entry.get("details", {}).get("output_tokens", 0),
-                    cost=entry.get("cost", 0.0),
-                    details=entry.get("details", {}),
-                )
+        calls = [
+            APICall(
+                service="claude",
+                operation=entry.get("operation", "unknown"),
+                timestamp=entry.get("timestamp", datetime.now().isoformat()),
+                input_tokens=entry.get("details", {}).get("input_tokens", 0),
+                output_tokens=entry.get("details", {}).get("output_tokens", 0),
+                cost=entry.get("cost", 0.0),
+                details=entry.get("details", {}),
             )
+            for entry in self.cost_tracker.costs["claude"]
+        ]
 
         return calls
 

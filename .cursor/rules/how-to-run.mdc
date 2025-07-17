@@ -1,11 +1,20 @@
 ---
-description:
-globs:
-alwaysApply: false
+alwaysApply: true
 ---
 # How to Run JiraScope
 
 There are multiple ways to run the `JiraScope` application.
+
+## ⚠️ Important: Python Environment
+
+**Always use `poetry run` for Python commands.** The system Python is not compatible with this project.
+
+- ✅ Correct: `poetry run python -m jirascope`
+- ✅ Correct: `poetry run ruff check .`
+- ✅ Correct: `poetry run pytest`
+- ❌ Incorrect: `python -m jirascope`
+- ❌ Incorrect: `ruff check .`
+- ❌ Incorrect: `pytest`
 
 ## CLI
 

@@ -5,7 +5,7 @@ import random
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -22,7 +22,7 @@ class TestConfig:
     TIME_DELTA_DAYS = 1
 
     # Score ranges (for realistic testing)
-    SCORE_RANGES = {
+    SCORE_RANGES: ClassVar[dict[str, tuple[float, float]]] = {
         "similarity": (0.5, 0.95),
         "quality": (1.0, 5.0),
         "confidence": (0.0, 1.0),
@@ -30,17 +30,17 @@ class TestConfig:
     }
 
     # Embedding dimensions (common sizes)
-    EMBEDDING_DIMS = {
+    EMBEDDING_DIMS: ClassVar[dict[str, int]] = {
         "small": 384,
         "medium": 768,
         "large": 1536,
     }
 
     # Batch sizes for testing
-    BATCH_SIZES = [8, 16, 32, 64]
+    BATCH_SIZES: ClassVar[list[int]] = [8, 16, 32, 64]
 
     # Sample keys (avoid hardcoding specific keys)
-    KEY_PREFIXES = ["TEST", "PROJ", "EPIC", "TASK"]
+    KEY_PREFIXES: ClassVar[list[str]] = ["TEST", "PROJ", "EPIC", "TASK"]
 
     @classmethod
     def random_score(cls, score_type: str) -> float:
@@ -280,16 +280,44 @@ def mock_helper():
 def mock_config():
     """Create a mock configuration object."""
     config = Mock(spec=Config)
+    # Basic connection settings
     config.jira_mcp_endpoint = "http://localhost:8000"
     config.jira_url = "https://test.atlassian.net"
     config.jira_username = "test@example.com"
     config.jira_password = "test_password"
     config.qdrant_url = "http://localhost:6333"
     config.qdrant_collection = "test_collection"
-    config.lmstudio_url = "http://localhost:1234"
+    config.lmstudio_endpoint = "http://localhost:1234/v1"
     config.lmstudio_model = "test-model"
     config.claude_model = "claude-3-5-sonnet-20241022"
     config.logging_level = "INFO"
+
+    # Embedding configuration (required by LMStudioClient and QdrantClient)
+    config.embedding_model = "text-embedding-bge-large-en-v1.5"
+    config.embedding_dimensions = 1024
+    config.embedding_batch_size = 32
+    config.embedding_instruction_prefix = "Represent this Jira work item for semantic search: "
+    config.embedding_max_tokens = 512
+    config.embedding_timeout = 30.0
+
+    # Claude configuration (required by ClaudeClient)
+    config.claude_max_tokens = 4096
+    config.claude_temperature = 0.1
+    config.claude_input_cost_per_token = 0.000003
+    config.claude_output_cost_per_token = 0.000015
+    config.claude_session_budget = 10.0
+
+    # Safety and other settings
+    config.jira_dry_run = False
+    config.cost_tracking = True
+    config.daily_budget = 50.0
+    config.monthly_budget = 1000.0
+    config.similarity_threshold = 0.8
+    config.require_confirmation = True
+    config.backup_before_changes = True
+    config.max_bulk_operations = 50
+    config.rate_limit_requests = True
+
     return config
 
 

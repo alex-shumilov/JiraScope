@@ -1,5 +1,5 @@
 ---
-description:
+description: Data processing pipeline components including extraction, embedding, chunking, and validation
 globs:
 alwaysApply: false
 ---
@@ -29,6 +29,17 @@ The data pipeline in [src/jirascope/pipeline/](mdc:src/jirascope/pipeline) handl
   - Storage in Qdrant vector database
 - **Input**: Work item objects
 - **Output**: Vector embeddings stored in Qdrant
+
+### Smart Chunking
+**File**: [src/jirascope/pipeline/smart_chunker.py](mdc:src/jirascope/pipeline/smart_chunker.py)
+- **Purpose**: Intelligently chunks large documents and work items
+- **Features**:
+  - Semantic-aware text chunking
+  - Overlap management for context preservation
+  - Configurable chunk sizes
+  - Maintains hierarchical relationships
+- **Input**: Large text documents
+- **Output**: Optimally-sized text chunks
 
 ### Incremental Processing
 **File**: [src/jirascope/pipeline/incremental_processor.py](mdc:src/jirascope/pipeline/incremental_processor.py)
@@ -77,10 +88,12 @@ The data pipeline in [src/jirascope/pipeline/](mdc:src/jirascope/pipeline) handl
 ## Data Flow
 
 1. **Extract**: Jira work items → [jira_extractor.py](mdc:src/jirascope/extractors/jira_extractor.py)
-2. **Transform**: Text → Embeddings via [embedding_processor.py](mdc:src/jirascope/pipeline/embedding_processor.py)
-3. **Store**: Embeddings → Qdrant via [qdrant_client.py](mdc:src/jirascope/clients/qdrant_client.py)
-4. **Analyze**: Embeddings → Insights via [analysis modules](mdc:src/jirascope/analysis)
-5. **Validate**: Quality checks via [quality_validator.py](mdc:src/jirascope/pipeline/quality_validator.py)
+2. **Chunk**: Large documents → [smart_chunker.py](mdc:src/jirascope/pipeline/smart_chunker.py)
+3. **Transform**: Text → Embeddings via [embedding_processor.py](mdc:src/jirascope/pipeline/embedding_processor.py)
+4. **Store**: Embeddings → Qdrant via [qdrant_client.py](mdc:src/jirascope/clients/qdrant_client.py)
+5. **Search**: Natural language queries → [RAG pipeline](mdc:src/jirascope/rag/pipeline.py)
+6. **Analyze**: Embeddings → Insights via [analysis modules](mdc:src/jirascope/analysis)
+7. **Validate**: Quality checks via [quality_validator.py](mdc:src/jirascope/pipeline/quality_validator.py)
 
 ## Pipeline Configuration
 

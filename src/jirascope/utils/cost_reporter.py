@@ -520,21 +520,19 @@ class AdvancedCostReporter:
         )
 
         # Get active alerts
-        active_alerts = []
-
-        for threshold in self.budget.thresholds:
-            if monthly_percent >= threshold.threshold * 100 and threshold.enabled:
-                active_alerts.append(
-                    {
-                        "type": threshold.notification_type,
-                        "message": threshold.message_template.format(
-                            percent=f"{monthly_percent:.1f}",
-                            current=monthly_cost,
-                            total=self.budget.monthly_budget,
-                        ),
-                        "threshold": threshold.threshold,
-                    }
-                )
+        active_alerts = [
+            {
+                "type": threshold.notification_type,
+                "message": threshold.message_template.format(
+                    percent=f"{monthly_percent:.1f}",
+                    current=monthly_cost,
+                    total=self.budget.monthly_budget,
+                ),
+                "threshold": threshold.threshold,
+            }
+            for threshold in self.budget.thresholds
+            if monthly_percent >= threshold.threshold * 100 and threshold.enabled
+        ]
 
         return {
             "daily": {
@@ -728,14 +726,13 @@ class AdvancedCostReporter:
         # Determine trend direction
         if normalized_change > 5:
             return "sharply_increasing"
-        elif normalized_change > 2:
+        if normalized_change > 2:
             return "increasing"
-        elif normalized_change < -5:
+        if normalized_change < -5:
             return "sharply_decreasing"
-        elif normalized_change < -2:
+        if normalized_change < -2:
             return "decreasing"
-        else:
-            return "stable"
+        return "stable"
 
     async def _count_analyzed_calls(self) -> int:
         """Count the total number of API calls analyzed."""
@@ -754,5 +751,5 @@ class AdvancedCostReporter:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to save cost report to {file_path}", error=str(e))
+            logger.exception(f"Failed to save cost report to {file_path}", error=str(e))
             return False

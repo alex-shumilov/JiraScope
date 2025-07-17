@@ -7,12 +7,12 @@ from .models import AnalysisResult, EpicHierarchy, EpicTree, WorkItem
 from .pipeline import EmbeddingProcessor, EmbeddingQualityValidator, IncrementalProcessor
 
 __all__ = [
-    "JiraExtractor",
+    "AnalysisResult",
     "EmbeddingProcessor",
     "EmbeddingQualityValidator",
-    "IncrementalProcessor",
-    "WorkItem",
     "EpicHierarchy",
     "EpicTree",
-    "AnalysisResult",
+    "IncrementalProcessor",
+    "JiraExtractor",
+    "WorkItem",
 ]
